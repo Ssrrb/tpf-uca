@@ -1,0 +1,54 @@
+;;;; Máquina de estados canónica del GrupoTFG (RF-10).
+;;;; Los nombres de transición usan evento [guarda] / efecto.
+
+#{{:el :state-machine
+   :id :g11.state/grupo-tfg
+   :name "Máquina de estados del Grupo de TFG"
+   :g11/requirements #{:g11.req/rf-02 :g11.req/rf-03 :g11.req/rf-05
+                       :g11.req/rf-06 :g11.req/rf-07 :g11.req/rf-09
+                       :g11.req/rf-10 :g11.req/rnf-03 :g11.req/rnf-04
+                       :g11.req/rnf-05}
+   :ct [
+        {:el :start-state :id :g11.state/inicio}
+        {:el :state :id :g11.state/pendiente-inscripcion :name "Pendiente de inscripción"}
+        {:el :state :id :g11.state/inscripto :name "Inscripto"}
+        {:el :state :id :g11.state/tutor-asignado :name "Tutor asignado"}
+        {:el :state :id :g11.state/en-elaboracion :name "En elaboración de anteproyecto"}
+        {:el :choice :id :g11.state/validar-entrega :name "¿Entrega habilitada?"}
+        {:el :state :id :g11.state/anteproyecto-entregado :name "Anteproyecto entregado"}
+        {:el :end-state :id :g11.state/fin}
+
+        {:el :transition :id :g11.state/inicio-a-pendiente
+         :from :g11.state/inicio :to :g11.state/pendiente-inscripcion
+         :name "iniciarInscripcion"}
+        {:el :transition :id :g11.state/pendiente-a-inscripto
+         :from :g11.state/pendiente-inscripcion :to :g11.state/inscripto
+         :name "inscribirGrupo [datosCompletos and integrantesEntre1y3 and sinPertenenciaDuplicadaEnSemestre] / registrarInscripcion(fecha, usuario)"
+         :g11/operation :g11.cu02.control/inscribir-grupo}
+        {:el :transition :id :g11.state/pendiente-rechaza-inscripcion
+         :from :g11.state/pendiente-inscripcion :to :g11.state/pendiente-inscripcion
+         :name "inscribirGrupo [datosInvalidos or pertenenciaDuplicadaEnSemestre] / informarErroresDeInscripcion"
+         :g11/operation :g11.cu02.control/inscribir-grupo}
+        {:el :transition :id :g11.state/inscripto-a-tutor-asignado
+         :from :g11.state/inscripto :to :g11.state/tutor-asignado
+         :name "asignarTutor [actorEsComision and antesDeFechaPublicacion] / registrarAsignacion(fecha, usuario)"}
+        {:el :transition :id :g11.state/publicar-asignacion
+         :from :g11.state/tutor-asignado :to :g11.state/tutor-asignado
+         :name "publicarAsignacion / notificarGrupo"}
+        {:el :transition :id :g11.state/tutor-asignado-a-elaboracion
+         :from :g11.state/tutor-asignado :to :g11.state/en-elaboracion
+         :name "cargarVersionPreliminar [tituloProblemaObjetivoYAlcanceCompletos] / registrarVersionPreliminar(fecha, usuario)"}
+        {:el :transition :id :g11.state/elaboracion-a-validar-entrega
+         :from :g11.state/en-elaboracion :to :g11.state/validar-entrega
+         :name "entregarAnteproyecto"}
+        {:el :transition :id :g11.state/validar-a-entregado
+         :from :g11.state/validar-entrega :to :g11.state/anteproyecto-entregado
+         :name "[antesOEnFechaLimite or autorizacionExpresaComision] / registrarEntrega(fecha, usuario)"}
+        {:el :transition :id :g11.state/validar-a-elaboracion
+         :from :g11.state/validar-entrega :to :g11.state/en-elaboracion
+         :name "[fechaLimiteVencida and not autorizacionExpresaComision] / rechazarEntregaFueraDePlazo"}
+        {:el :transition :id :g11.state/entregado-a-fin
+         :from :g11.state/anteproyecto-entregado :to :g11.state/fin}]}
+  {:el :implements :id :g11.state/grupo-tfg-implementa-rf-10
+   :from :g11.state/grupo-tfg :to :g11.req/rf-10}
+}

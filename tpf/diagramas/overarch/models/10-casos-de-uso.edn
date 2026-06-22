@@ -1,0 +1,103 @@
+;;;; Actores, casos de uso y trazabilidad RF/RNF.
+;;;; Los cuatro actores provienen del caso oficial. Secretaría Académica no se
+;;;; asocia a un CU porque ningún RF le asigna una interacción con el sistema.
+
+#{
+  ;; Actores
+  {:el :person :id :g11.actor/estudiante :name "Estudiante"}
+  {:el :person :id :g11.actor/comision-tfg :name "Comisión de TFG"}
+  {:el :person :id :g11.actor/tutor :name "Tutor"}
+  {:el :person :id :g11.actor/secretaria-academica :name "Secretaría Académica"}
+
+  ;; Casos de uso: verbo + sustantivo. RF-02 y RF-03 comparten CU-02.
+  {:el :use-case :id :g11.cu/cu-01-configurar-semestre
+   :name "CU-01 Configurar semestre" :level :user-goal
+   :g11/requirements #{:g11.req/rf-01 :g11.req/rnf-01 :g11.req/rnf-03}}
+  {:el :use-case :id :g11.cu/cu-02-inscribir-grupo
+   :name "CU-02 Inscribir grupo" :level :user-goal
+   :g11/requirements #{:g11.req/rf-02 :g11.req/rf-03 :g11.req/rf-10
+                       :g11.req/rnf-02 :g11.req/rnf-04}}
+  {:el :use-case :id :g11.cu/cu-03-consultar-grupos-inscriptos
+   :name "CU-03 Consultar grupos inscriptos" :level :user-goal
+   :g11/requirements #{:g11.req/rf-04 :g11.req/rnf-06}}
+  {:el :use-case :id :g11.cu/cu-04-asignar-tutor
+   :name "CU-04 Asignar tutor" :level :user-goal
+   :g11/requirements #{:g11.req/rf-05 :g11.req/rf-10
+                       :g11.req/rnf-03 :g11.req/rnf-04}}
+  {:el :use-case :id :g11.cu/cu-05-publicar-asignacion-tutor
+   :name "CU-05 Publicar asignación de tutor" :level :user-goal
+   :g11/requirements #{:g11.req/rf-06 :g11.req/rnf-03}}
+  {:el :use-case :id :g11.cu/cu-06-cargar-version-preliminar
+   :name "CU-06 Cargar versión preliminar" :level :user-goal
+   :g11/requirements #{:g11.req/rf-07 :g11.req/rf-10 :g11.req/rnf-04}}
+  {:el :use-case :id :g11.cu/cu-07-registrar-observaciones
+   :name "CU-07 Registrar observaciones" :level :user-goal
+   :g11/requirements #{:g11.req/rf-08 :g11.req/rnf-04}}
+  {:el :use-case :id :g11.cu/cu-08-entregar-anteproyecto
+   :name "CU-08 Entregar anteproyecto" :level :user-goal
+   :g11/requirements #{:g11.req/rf-09 :g11.req/rf-10
+                       :g11.req/rnf-04 :g11.req/rnf-05}}
+  {:el :use-case :id :g11.cu/cu-09-consultar-estado-grupo
+   :name "CU-09 Consultar estado del grupo" :level :user-goal
+   :g11/requirements #{:g11.req/rf-11 :g11.req/rnf-01 :g11.req/rnf-06}}
+  {:el :use-case :id :g11.cu/cu-10-generar-listado-sin-entrega
+   :name "CU-10 Generar listado de grupos sin entrega" :level :user-goal
+   :g11/requirements #{:g11.req/rf-12 :g11.req/rnf-06}}
+
+  ;; Asociaciones actor-CU
+  {:el :uses :id :g11.actor/estudiante-usa-cu-02
+   :from :g11.actor/estudiante :to :g11.cu/cu-02-inscribir-grupo}
+  {:el :uses :id :g11.actor/estudiante-usa-cu-06
+   :from :g11.actor/estudiante :to :g11.cu/cu-06-cargar-version-preliminar}
+  {:el :uses :id :g11.actor/estudiante-usa-cu-08
+   :from :g11.actor/estudiante :to :g11.cu/cu-08-entregar-anteproyecto}
+  {:el :uses :id :g11.actor/estudiante-usa-cu-09
+   :from :g11.actor/estudiante :to :g11.cu/cu-09-consultar-estado-grupo}
+
+  {:el :uses :id :g11.actor/comision-usa-cu-01
+   :from :g11.actor/comision-tfg :to :g11.cu/cu-01-configurar-semestre}
+  {:el :uses :id :g11.actor/comision-usa-cu-03
+   :from :g11.actor/comision-tfg :to :g11.cu/cu-03-consultar-grupos-inscriptos}
+  {:el :uses :id :g11.actor/comision-usa-cu-04
+   :from :g11.actor/comision-tfg :to :g11.cu/cu-04-asignar-tutor}
+  {:el :uses :id :g11.actor/comision-usa-cu-05
+   :from :g11.actor/comision-tfg :to :g11.cu/cu-05-publicar-asignacion-tutor}
+  {:el :uses :id :g11.actor/comision-usa-cu-10
+   :from :g11.actor/comision-tfg :to :g11.cu/cu-10-generar-listado-sin-entrega}
+
+  {:el :uses :id :g11.actor/tutor-usa-cu-07
+   :from :g11.actor/tutor :to :g11.cu/cu-07-registrar-observaciones}
+
+  ;; Trazabilidad formal. A diferencia de :g11/requirements, estas referencias
+  ;; son resueltas por Overarch y hacen fallar la carga ante IDs inexistentes.
+  {:el :implements :id :g11.cu/cu-01-implementa-rf-01 :from :g11.cu/cu-01-configurar-semestre :to :g11.req/rf-01}
+  {:el :implements :id :g11.cu/cu-01-implementa-rnf-01 :from :g11.cu/cu-01-configurar-semestre :to :g11.req/rnf-01}
+  {:el :implements :id :g11.cu/cu-01-implementa-rnf-03 :from :g11.cu/cu-01-configurar-semestre :to :g11.req/rnf-03}
+  {:el :implements :id :g11.cu/cu-02-implementa-rf-02 :from :g11.cu/cu-02-inscribir-grupo :to :g11.req/rf-02}
+  {:el :implements :id :g11.cu/cu-02-implementa-rf-03 :from :g11.cu/cu-02-inscribir-grupo :to :g11.req/rf-03}
+  {:el :implements :id :g11.cu/cu-02-implementa-rf-10 :from :g11.cu/cu-02-inscribir-grupo :to :g11.req/rf-10}
+  {:el :implements :id :g11.cu/cu-02-implementa-rnf-02 :from :g11.cu/cu-02-inscribir-grupo :to :g11.req/rnf-02}
+  {:el :implements :id :g11.cu/cu-02-implementa-rnf-04 :from :g11.cu/cu-02-inscribir-grupo :to :g11.req/rnf-04}
+  {:el :implements :id :g11.cu/cu-03-implementa-rf-04 :from :g11.cu/cu-03-consultar-grupos-inscriptos :to :g11.req/rf-04}
+  {:el :implements :id :g11.cu/cu-03-implementa-rnf-06 :from :g11.cu/cu-03-consultar-grupos-inscriptos :to :g11.req/rnf-06}
+  {:el :implements :id :g11.cu/cu-04-implementa-rf-05 :from :g11.cu/cu-04-asignar-tutor :to :g11.req/rf-05}
+  {:el :implements :id :g11.cu/cu-04-implementa-rf-10 :from :g11.cu/cu-04-asignar-tutor :to :g11.req/rf-10}
+  {:el :implements :id :g11.cu/cu-04-implementa-rnf-03 :from :g11.cu/cu-04-asignar-tutor :to :g11.req/rnf-03}
+  {:el :implements :id :g11.cu/cu-04-implementa-rnf-04 :from :g11.cu/cu-04-asignar-tutor :to :g11.req/rnf-04}
+  {:el :implements :id :g11.cu/cu-05-implementa-rf-06 :from :g11.cu/cu-05-publicar-asignacion-tutor :to :g11.req/rf-06}
+  {:el :implements :id :g11.cu/cu-05-implementa-rnf-03 :from :g11.cu/cu-05-publicar-asignacion-tutor :to :g11.req/rnf-03}
+  {:el :implements :id :g11.cu/cu-06-implementa-rf-07 :from :g11.cu/cu-06-cargar-version-preliminar :to :g11.req/rf-07}
+  {:el :implements :id :g11.cu/cu-06-implementa-rf-10 :from :g11.cu/cu-06-cargar-version-preliminar :to :g11.req/rf-10}
+  {:el :implements :id :g11.cu/cu-06-implementa-rnf-04 :from :g11.cu/cu-06-cargar-version-preliminar :to :g11.req/rnf-04}
+  {:el :implements :id :g11.cu/cu-07-implementa-rf-08 :from :g11.cu/cu-07-registrar-observaciones :to :g11.req/rf-08}
+  {:el :implements :id :g11.cu/cu-07-implementa-rnf-04 :from :g11.cu/cu-07-registrar-observaciones :to :g11.req/rnf-04}
+  {:el :implements :id :g11.cu/cu-08-implementa-rf-09 :from :g11.cu/cu-08-entregar-anteproyecto :to :g11.req/rf-09}
+  {:el :implements :id :g11.cu/cu-08-implementa-rf-10 :from :g11.cu/cu-08-entregar-anteproyecto :to :g11.req/rf-10}
+  {:el :implements :id :g11.cu/cu-08-implementa-rnf-04 :from :g11.cu/cu-08-entregar-anteproyecto :to :g11.req/rnf-04}
+  {:el :implements :id :g11.cu/cu-08-implementa-rnf-05 :from :g11.cu/cu-08-entregar-anteproyecto :to :g11.req/rnf-05}
+  {:el :implements :id :g11.cu/cu-09-implementa-rf-11 :from :g11.cu/cu-09-consultar-estado-grupo :to :g11.req/rf-11}
+  {:el :implements :id :g11.cu/cu-09-implementa-rnf-01 :from :g11.cu/cu-09-consultar-estado-grupo :to :g11.req/rnf-01}
+  {:el :implements :id :g11.cu/cu-09-implementa-rnf-06 :from :g11.cu/cu-09-consultar-estado-grupo :to :g11.req/rnf-06}
+  {:el :implements :id :g11.cu/cu-10-implementa-rf-12 :from :g11.cu/cu-10-generar-listado-sin-entrega :to :g11.req/rf-12}
+  {:el :implements :id :g11.cu/cu-10-implementa-rnf-06 :from :g11.cu/cu-10-generar-listado-sin-entrega :to :g11.req/rnf-06}
+}

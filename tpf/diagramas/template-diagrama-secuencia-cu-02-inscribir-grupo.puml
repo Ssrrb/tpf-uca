@@ -1,0 +1,109 @@
+@startuml
+' Template personalizado — IS1 TPF 2026, Grupo G11
+' CU-02: Inscribir grupo.
+' Trazabilidad: RF-02, RF-03; RNF-02, RNF-04; Minuta 02.
+' Uso: duplicar este archivo por CU y reemplazar participantes, mensajes y fragments
+' con base en la especificación textual y el diagrama de clases BCE correspondiente.
+' FUENTE CANÓNICA OVERARCH: overarch/models/20-cu-02-analisis.edn
+' Overarch no genera secuencias UML. Cada operación de esta vista debe resolver
+' al ID canónico indicado mediante el comentario ' op:; no renombrarla localmente.
+
+!pragma layout smetana
+skinparam style strictuml
+skinparam BackgroundColor White
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #475569
+  ActorBorderColor #334155
+  ActorFontColor #0F172A
+  LifeLineBorderColor #64748B
+  LifeLineBackgroundColor #F8FAFC
+  ParticipantBorderColor #334155
+  ParticipantBackgroundColor #F8FAFC
+  ParticipantFontColor #0F172A
+  GroupBorderColor #2563EB
+  GroupHeaderFontColor #1E3A8A
+  DividerBackgroundColor #DBEAFE
+  DividerBorderColor #2563EB
+}
+
+title CU-02 — Inscribir grupo\nDiagrama de secuencia de análisis — RF-02 y RF-03
+
+actor Estudiante as ActorEstudiante
+boundary ":IU Inscripción de Grupo" as IUInscripcion
+control ":ControlInscripcionGrupo" as ControlInscripcion
+entity ":SemestreTFG" as Semestre
+entity ":Estudiante" as EstudianteEntidad
+entity ":GrupoTFG" as Grupo
+
+ActorEstudiante -> IUInscripcion : solicitarInscripcion()
+' op: :g11.cu02.iu/solicitar-inscripcion
+activate IUInscripcion
+IUInscripcion --> ActorEstudiante : mostrarFormularioInscripcion()
+' op: :g11.cu02.iu/mostrar-formulario-inscripcion
+
+ActorEstudiante -> IUInscripcion : ingresarDatosGrupo(temaTentativo,\n integrantes, medioContacto)
+' op: :g11.cu02.iu/ingresar-datos-grupo
+IUInscripcion -> ControlInscripcion : inscribirGrupo(temaTentativo,\n integrantes, medioContacto, usuarioActual)
+' op: :g11.cu02.control/inscribir-grupo
+activate ControlInscripcion
+
+ControlInscripcion -> Semestre : obtenerSemestreVigente()
+' op: :g11.cu02.semestre/obtener-semestre-vigente
+activate Semestre
+Semestre --> ControlInscripcion : semestre, fechaCierreInscripcion
+deactivate Semestre
+
+ControlInscripcion -> ControlInscripcion : validarDatosObligatorios(temaTentativo,\n integrantes, medioContacto)
+' op: :g11.cu02.control/validar-datos-obligatorios
+ControlInscripcion -> ControlInscripcion : validarCantidadIntegrantes(integrantes)
+' op: :g11.cu02.control/validar-cantidad-integrantes
+ControlInscripcion -> ControlInscripcion : validarPertenenciaUnica(integrantes, semestre)
+' op: :g11.cu02.control/validar-pertenencia-unica
+
+loop por cada integrante
+  ControlInscripcion -> EstudianteEntidad : perteneceAOtroGrupo(semestre)
+' op: :g11.cu02.estudiante/pertenece-a-otro-grupo
+  activate EstudianteEntidad
+  EstudianteEntidad --> ControlInscripcion : perteneceOtroGrupo
+  deactivate EstudianteEntidad
+end
+
+alt datos incompletos o cantidad fuera de 1..3
+  ControlInscripcion --> IUInscripcion : erroresDeValidacion
+  IUInscripcion --> ActorEstudiante : informarErroresDeInscripcion(erroresDeValidacion)
+' op: :g11.cu02.iu/informar-errores-inscripcion
+else algún integrante ya pertenece a otro grupo del semestre
+  ControlInscripcion --> IUInscripcion : pertenenciaDuplicada
+  IUInscripcion --> ActorEstudiante : informarPertenenciaDuplicada()
+' op: :g11.cu02.iu/informar-pertenencia-duplicada
+else inscripción válida
+  ControlInscripcion -> Grupo : registrarInscripcion(temaTentativo, integrantes,\n medioContacto, semestre, fechaActual, usuarioActual)
+' op: :g11.cu02.grupo/registrar-inscripcion
+  activate Grupo
+  Grupo -> Grupo : cambiarEstado("Inscripto")
+' op: :g11.cu02.grupo/cambiar-estado
+  Grupo --> ControlInscripcion : grupoInscripto
+  deactivate Grupo
+
+  ControlInscripcion --> IUInscripcion : confirmacion(grupoInscripto)
+  IUInscripcion --> ActorEstudiante : mostrarConfirmacionInscripcion(grupoInscripto)
+' op: :g11.cu02.iu/mostrar-confirmacion-inscripcion
+end
+
+deactivate ControlInscripcion
+deactivate IUInscripcion
+
+legend right
+  |= Participante |= Estereotipo / responsabilidad |
+  | Estudiante | Actor que inicia CU-02 |
+  | IU Inscripción de Grupo | boundary: interacción web |
+  | ControlInscripcionGrupo | control: coordina flujo y validaciones |
+  | SemestreTFG, Estudiante, GrupoTFG | entity: información del dominio |
+  |= Fragmento |= Fuente |
+  | loop por integrante | RF-03; Minuta 02 |
+  | alt datos inválidos / duplicados / válidos | RF-02, RF-03 |
+  | fechaActual y usuarioActual | RNF-04 |
+endlegend
+
+@enduml

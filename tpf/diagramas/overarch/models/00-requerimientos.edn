@@ -1,0 +1,24 @@
+;;;; Fuente canónica de requerimientos del TPF.
+;;;; No modificar nombres ni IDs desde una vista o un .puml derivado.
+
+#{
+  {:el :requirement :id :g11.req/rf-01 :name "RF-01" :tags #{"funcional" "minuta-01"}}
+  {:el :requirement :id :g11.req/rf-02 :name "RF-02" :tags #{"funcional" "minuta-02"}}
+  {:el :requirement :id :g11.req/rf-03 :name "RF-03" :tags #{"funcional" "minuta-02"}}
+  {:el :requirement :id :g11.req/rf-04 :name "RF-04" :tags #{"funcional" "minuta-03"}}
+  {:el :requirement :id :g11.req/rf-05 :name "RF-05" :tags #{"funcional" "minuta-03"}}
+  {:el :requirement :id :g11.req/rf-06 :name "RF-06" :tags #{"funcional" "minuta-03"}}
+  {:el :requirement :id :g11.req/rf-07 :name "RF-07" :tags #{"funcional" "minuta-04"}}
+  {:el :requirement :id :g11.req/rf-08 :name "RF-08" :tags #{"funcional" "minuta-05"}}
+  {:el :requirement :id :g11.req/rf-09 :name "RF-09" :tags #{"funcional" "minuta-06"}}
+  {:el :requirement :id :g11.req/rf-10 :name "RF-10" :tags #{"funcional" "minuta-06"}}
+  {:el :requirement :id :g11.req/rf-11 :name "RF-11" :tags #{"funcional" "minuta-05"}}
+  {:el :requirement :id :g11.req/rf-12 :name "RF-12" :tags #{"funcional" "minuta-06"}}
+
+  {:el :requirement :id :g11.req/rnf-01 :name "RNF-01" :tags #{"no-funcional" "minuta-01"}}
+  {:el :requirement :id :g11.req/rnf-02 :name "RNF-02" :tags #{"no-funcional" "minuta-02"}}
+  {:el :requirement :id :g11.req/rnf-03 :name "RNF-03" :tags #{"no-funcional" "minuta-03"}}
+  {:el :requirement :id :g11.req/rnf-04 :name "RNF-04" :tags #{"no-funcional" "minuta-05"}}
+  {:el :requirement :id :g11.req/rnf-05 :name "RNF-05" :tags #{"no-funcional" "minuta-06"}}
+  {:el :requirement :id :g11.req/rnf-06 :name "RNF-06" :tags #{"no-funcional" "minuta-03" "minuta-05"}}
+}

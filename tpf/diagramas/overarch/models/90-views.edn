@@ -1,0 +1,43 @@
+;;;; Vistas derivadas del mismo modelo. Overarch genera PlantUML desde aquí.
+
+#{
+  {:el :use-case-view
+   :id :g11.view/casos-de-uso
+   :title "Sistema de gestión de la primera etapa del TFG — Casos de uso"
+   :layout :left-right
+   :plantuml {:skinparams {"BackgroundColor" "White"
+                           "shadowing" "false"}}
+   :selection [{:namespace-prefix "g11.actor"}
+               {:namespace-prefix "g11.cu"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-02-clases-analisis
+   :title "CU-02 — Inscribir grupo — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :plantuml {:skinparams {"BackgroundColor" "White"
+                           "shadowing" "false"
+                           "classAttributeIconSize" "0"}}
+   :selection [{:namespace-prefix "g11.cu02"}
+               {:namespace-prefix "g11.domain"}]
+   :include :relations
+   :ct []}
+
+  {:el :state-machine-view
+   :id :g11.view/estados-grupo-tfg
+   :title "Máquina de estados del Grupo de TFG — Primera etapa — RF-10"
+   :layout :left-right
+   :plantuml {:skinparams {"BackgroundColor" "White"
+                           "shadowing" "false"}}
+   :include :relations
+   :ct [{:ref :g11.state/grupo-tfg}]}
+
+  ;; Vista diagnóstica: permite detectar elementos huérfanos o enlaces rotos.
+  {:el :model-view
+   :id :g11.view/modelo-completo
+   :title "Modelo integral G11 — diagnóstico de consistencia"
+   :selection {:namespace-prefix "g11"}
+   :ct []}
+}
