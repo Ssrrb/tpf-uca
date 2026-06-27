@@ -38,6 +38,8 @@ junio 2026
   - Matriz de Requerimientos vs Casos de Uso
   - Microestudio formativo
 - Modelo de Diseño
+  - Diagrama de Estados
+  - Diagrama de Actividades
   - Diagrama de Clases Persistentes
   - Diagrama de Entidad Relación
 - Referencias
@@ -511,28 +513,36 @@ El sistema modelado cubre la primera etapa del Trabajo Final de Grado de la Lice
 
 ![](diagramas/10-generar-listado-sin-entrega-secuencia.svg)
 
+```{=openxml}
+<w:p><w:r><w:br w:type="page" /></w:r></w:p>
+```
+
 ## Matriz de Requerimientos vs Casos de Uso
 
 | Requerimiento | CU-01 | CU-02 | CU-03 | CU-04 | CU-05 | CU-06 | CU-07 | CU-08 | CU-09 | CU-10 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| RF-01 | X |  |  |  |  |  |  |  |  |  |
-| RF-02 |  | X |  |  |  |  |  |  |  |  |
-| RF-03 |  | X |  |  |  |  |  |  |  |  |
-| RF-04 |  |  | X |  |  |  |  |  |  |  |
-| RF-05 |  |  |  | X |  |  |  |  |  |  |
-| RF-06 |  |  |  |  | X |  |  |  |  |  |
-| RF-07 |  |  |  |  |  | X |  |  |  |  |
-| RF-08 |  |  |  |  |  |  | X |  |  |  |
-| RF-09 |  |  |  |  |  |  |  | X |  |  |
-| RF-10 |  |  |  |  |  |  |  | X |  |  |
-| RF-11 |  |  |  |  |  |  |  |  | X |  |
-| RF-12 |  |  |  |  |  |  |  |  |  | X |
-| RNF-01 | X |  |  |  |  |  |  |  | X |  |
-| RNF-02 |  | X |  |  |  |  |  |  |  |  |
-| RNF-03 | X |  |  | X | X |  |  |  |  |  |
-| RNF-04 |  | X |  | X |  | X | X | X |  |  |
-| RNF-05 |  |  |  |  |  |  |  | X |  |  |
-| RNF-06 |  |  | X |  |  |  |  |  | X | X |
+| RF-01 | ● |  |  |  |  |  |  |  |  |  |
+| RF-02 |  | ● |  |  |  |  |  |  |  |  |
+| RF-03 |  | ● |  |  |  |  |  |  |  |  |
+| RF-04 |  |  | ● |  |  |  |  |  |  |  |
+| RF-05 |  |  |  | ● |  |  |  |  |  |  |
+| RF-06 |  |  |  |  | ● |  |  |  |  |  |
+| RF-07 |  |  |  |  |  | ● |  |  |  |  |
+| RF-08 |  |  |  |  |  |  | ● |  |  |  |
+| RF-09 |  |  |  |  |  |  |  | ● |  |  |
+| RF-10 |  |  |  |  |  |  |  | ● |  |  |
+| RF-11 |  |  |  |  |  |  |  |  | ● |  |
+| RF-12 |  |  |  |  |  |  |  |  |  | ● |
+| RNF-01 | ● |  |  |  |  |  |  |  | ● |  |
+| RNF-02 |  | ● |  |  |  |  |  |  |  |  |
+| RNF-03 | ● |  |  | ● | ● |  |  |  |  |  |
+| RNF-04 |  | ● |  | ● |  | ● | ● | ● |  |  |
+| RNF-05 |  |  |  |  |  |  |  | ● |  |  |
+| RNF-06 |  |  | ● |  |  |  |  |  | ● | ● |
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page" /></w:r></w:p>
+```
 
 ## Microestudio formativo
 
@@ -567,6 +577,10 @@ Advertencia metodológica: este microestudio tiene carácter formativo, descript
 ## Diagrama de Estados
 
 ![](diagramas/22-estados-grupo-tfg.svg)
+
+## Diagrama de Actividades del Proceso Inicial del TFG
+
+![](diagramas/25-actividades-proceso-inicial-tfg.svg)
 
 ## Diagrama de Clases Persistentes
 

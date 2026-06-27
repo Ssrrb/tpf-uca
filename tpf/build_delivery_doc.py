@@ -231,6 +231,8 @@ def build_markdown() -> str:
             "  - Matriz de Requerimientos vs Casos de Uso",
             "  - Microestudio formativo",
             "- Modelo de Diseño",
+            "  - Diagrama de Estados",
+            "  - Diagrama de Actividades",
             "  - Diagrama de Clases Persistentes",
             "  - Diagrama de Entidad Relación",
             "- Referencias",
@@ -322,6 +324,10 @@ El sistema modelado cubre la primera etapa del Trabajo Final de Grado de la Lice
 ## Diagrama de Estados
 
 ![](diagramas/22-estados-grupo-tfg.svg)
+
+## Diagrama de Actividades del Proceso Inicial del TFG
+
+![](diagramas/25-actividades-proceso-inicial-tfg.svg)
 
 ## Diagrama de Clases Persistentes
 

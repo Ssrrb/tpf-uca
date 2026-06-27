@@ -401,6 +401,10 @@ Este microestudio tiene carácter formativo, descriptivo y exploratorio. Los dat
 
 ![](diagramas/24-entidad-relacion.svg)
 
+### 25. Diagrama de actividades del proceso inicial del TFG
+
+![](diagramas/25-actividades-proceso-inicial-tfg.svg)
+
 ## Consistencia entre modelos
 
 Los diagramas mantienen la cadena de trazabilidad Minuta -> RF/RNF -> CU -> clases BCE -> secuencia -> estados/diseño. Las secuencias referencian operaciones canónicas mediante comentarios `op:` validados por `tpf/diagramas/overarch/validate_sequence_refs.py`. El estado del grupo usado en análisis y diseño respeta los cinco estados de RF-10 y no agrega estados de etapas posteriores.

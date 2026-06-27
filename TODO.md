@@ -1,6 +1,8 @@
 # TODO — Diagramas del TPF 2026 · Grupo G11
 
-Total previsto: **24 diagramas**.
+Total obligatorio previsto: **24 diagramas**. Se agrega además un diagrama
+complementario de actividades para cubrir la mención docente a actividades del
+proceso.
 
 Los diagramas deben mantener los mismos nombres de actores, casos de uso, clases,
 operaciones y estados. Cada uno debe indicar los RF relacionados para conservar la
@@ -63,6 +65,7 @@ trazabilidad `Minuta → RF → CU → Clases → Secuencia → Estados`.
 ### Comportamiento del grupo TFG
 
 - [x] **22. Diagrama de estados del grupo TFG (RF-10)** — Modelar `Pendiente de inscripción → Inscripto → Tutor asignado → En elaboración de anteproyecto → Anteproyecto entregado`, con eventos, guardas y acciones aplicables.
+- [x] **25. Diagrama de actividades del proceso inicial del TFG (RF-01..RF-12, RNF-01..RNF-06)** — Complementar el flujo global desde configuración del semestre hasta entrega formal del anteproyecto y listado de pendientes.
 
 ## Modelo de Diseño
 
@@ -77,4 +80,3 @@ trazabilidad `Minuta → RF → CU → Clases → Secuencia → Estados`.
 - [x] Comprobar la consistencia de nombres y relaciones entre clases de análisis, clases persistentes y modelo entidad–relación.
 - [x] Verificar la cobertura de RF-01 a RF-12 y RNF-01 a RNF-06 en la matriz RF/RNF vs. CU.
 - [x] Insertar los diagramas en el orden exigido por la plantilla y actualizar el índice del documento.
-

@@ -626,27 +626,30 @@ def write_sequence(cu: dict) -> None:
 def write_state_diagram() -> None:
     p = """@startuml
 !pragma layout smetana
-left to right direction
+top to bottom direction
 skinparam style strictuml
 skinparam shadowing false
+skinparam state {
+  MaximumWidth 220
+}
 title 22 — Diagrama de estados del Grupo TFG\\nRF-10 — primera etapa hasta entrega formal
 
 state "Pendiente de inscripción" as Pendiente
 state "Inscripto" as Inscripto
 state "Tutor asignado" as TutorAsignado
-state "En elaboración de anteproyecto" as Elaboracion
+state "En elaboración\\nde anteproyecto" as Elaboracion
 state "¿Entrega habilitada?" as ValidarEntrega <<choice>>
-state "Anteproyecto entregado" as Entregado
+state "Anteproyecto\\nentregado" as Entregado
 
 [*] --> Pendiente : iniciarInscripcion
-Pendiente --> Inscripto : inscribirGrupo [datosCompletos and integrantesEntre1y3 and sinDuplicados] / registrarInscripcion
-Pendiente --> Pendiente : inscribirGrupo [datosInvalidos or duplicado] / informarErrores
-Inscripto --> TutorAsignado : asignarTutor [Comisión and antesPublicacion] / registrarAsignacion
-TutorAsignado --> TutorAsignado : publicarAsignacion / notificarGrupo
-TutorAsignado --> Elaboracion : cargarVersionPreliminar [datosMinimos] / registrarVersion
+Pendiente --> Inscripto : inscribirGrupo\\n[datosCompletos and integrantesEntre1y3\\nand sinPertenenciaDuplicadaEnSemestre]\\n/ registrarInscripcion(fecha, usuario)
+Pendiente --> Pendiente : inscribirGrupo\\n[datosInvalidos or pertenenciaDuplicadaEnSemestre]\\n/ informarErroresDeInscripcion
+Inscripto --> TutorAsignado : asignarTutor\\n[actorEsComision and antesDeFechaPublicacion]\\n/ registrarAsignacion(fecha, usuario)
+TutorAsignado --> TutorAsignado : publicarAsignacion\\n/ notificarGrupo
+TutorAsignado --> Elaboracion : cargarVersionPreliminar\\n[tituloProblemaObjetivoYAlcanceCompletos]\\n/ registrarVersionPreliminar(fecha, usuario)
 Elaboracion --> ValidarEntrega : entregarAnteproyecto
-ValidarEntrega --> Entregado : [enPlazo or autorizacionComision] / registrarEntrega
-ValidarEntrega --> Elaboracion : [vencido and sinAutorizacion] / rechazarEntrega
+ValidarEntrega --> Entregado : [antesOEnFechaLimite\\nor autorizacionExpresaComision]\\n/ registrarEntrega(fecha, usuario)
+ValidarEntrega --> Elaboracion : [fechaLimiteVencida\\nand not autorizacionExpresaComision]\\n/ rechazarEntregaFueraDePlazo
 Entregado --> [*]
 
 legend bottom
@@ -655,6 +658,110 @@ endlegend
 @enduml
 """
     (ROOT / "22-estados-grupo-tfg.puml").write_text(p, encoding="utf-8")
+
+
+def write_activity_diagram() -> None:
+    p = """@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 25 — Diagrama de actividades del proceso inicial del TFG\\nRF-01..RF-12; RNF-01..RNF-06 — hasta entrega formal del anteproyecto
+
+start
+
+partition "Comisión de TFG" {
+  :Configurar semestre y fechas clave;
+}
+
+partition "Sistema" {
+  :Publicar cronograma inicial;
+}
+
+partition "Estudiante" {
+  :Consultar etapas y fechas clave;
+  :Registrar grupo con integrantes, tema tentativo y contacto;
+}
+
+partition "Sistema" {
+  :Validar datos obligatorios, cantidad de integrantes y pertenencia única;
+  if (¿Inscripción válida?) then (sí)
+    :Registrar grupo;
+    :Cambiar estado a Inscripto;
+  else (no)
+    :Informar errores de inscripción;
+    stop
+  endif
+}
+
+partition "Comisión de TFG" {
+  :Consultar grupos inscriptos;
+  :Asignar tutor antes de la fecha de publicación;
+}
+
+partition "Sistema" {
+  :Registrar tutor, fecha y responsable;
+  :Cambiar estado a Tutor asignado;
+}
+
+partition "Comisión de TFG" {
+  :Publicar asignación de tutor;
+}
+
+partition "Sistema" {
+  :Notificar al grupo;
+}
+
+partition "Estudiante" {
+  :Cargar versión preliminar del anteproyecto;
+}
+
+partition "Sistema" {
+  :Validar título, problema, objetivo general y alcance;
+  if (¿Datos mínimos completos?) then (sí)
+    :Registrar versión preliminar;
+    :Cambiar estado a En elaboración de anteproyecto;
+  else (no)
+    :Informar datos faltantes;
+    stop
+  endif
+}
+
+partition "Tutor" {
+  :Registrar observaciones de seguimiento;
+}
+
+partition "Sistema" {
+  :Guardar observación con fecha y responsable;
+}
+
+partition "Estudiante" {
+  :Consultar estado, tutor, fechas y observaciones;
+  :Entregar formalmente el anteproyecto;
+}
+
+partition "Sistema" {
+  :Verificar plazo de entrega o autorización excepcional;
+  if (¿Entrega habilitada?) then (sí)
+    :Registrar entrega formal;
+    :Cambiar estado a Anteproyecto entregado;
+  else (no)
+    :Bloquear entrega fuera de plazo;
+    :Mantener grupo en elaboración;
+  endif
+}
+
+partition "Comisión de TFG" {
+  :Generar listado de grupos sin entrega al acercarse el vencimiento;
+}
+
+stop
+
+legend bottom
+Actividad global de la primera etapa del TFG. No incorpora dictamen, defensa ni cierre.
+endlegend
+@enduml
+"""
+    (ROOT / "25-actividades-proceso-inicial-tfg.puml").write_text(p, encoding="utf-8")
 
 
 def write_persistent_and_er() -> None:
@@ -836,6 +943,7 @@ def main() -> None:
         write_class_diagram(cu)
         write_sequence(cu)
     write_state_diagram()
+    write_activity_diagram()
     write_persistent_and_er()
 
 

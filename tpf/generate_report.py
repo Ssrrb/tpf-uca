@@ -73,6 +73,7 @@ def diagram_markdown() -> str:
             ("22. Diagrama de estados del grupo TFG", "22-estados-grupo-tfg.svg"),
             ("23. Diagrama de clases persistentes", "23-clases-persistentes.svg"),
             ("24. Diagrama entidad-relación", "24-entidad-relacion.svg"),
+            ("25. Diagrama de actividades del proceso inicial del TFG", "25-actividades-proceso-inicial-tfg.svg"),
         ]
     )
     return "\n\n".join(f"### {title}\n\n![](diagramas/{file})" for title, file in diagrams)
