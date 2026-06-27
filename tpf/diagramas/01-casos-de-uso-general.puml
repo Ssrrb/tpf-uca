@@ -3,34 +3,39 @@
 left to right direction
 skinparam style strictuml
 skinparam shadowing false
+
 title 01 — Diagrama general de casos de uso\nSistema web de gestión de la primera etapa del TFG
+
 actor "Estudiante" as Estudiante
 actor "Comisión de TFG" as Comision
 actor "Tutor" as Tutor
 actor "Secretaría Académica" as Secretaria
+
 rectangle "Sistema web de gestión de la primera etapa del TFG" {
-  usecase "01. Configurar semestre" as UC01
-  usecase "02. Inscribir grupo" as UC02
-  usecase "03. Consultar grupos inscriptos" as UC03
-  usecase "04. Asignar tutor" as UC04
-  usecase "05. Publicar asignación de tutor" as UC05
-  usecase "06. Cargar versión preliminar" as UC06
-  usecase "07. Registrar observaciones" as UC07
-  usecase "08. Entregar anteproyecto" as UC08
-  usecase "09. Consultar estado del grupo" as UC09
-  usecase "10. Generar listado de grupos sin entrega" as UC10
+usecase "01. Configurar semestre" as UC01
+usecase "02. Inscribir grupo" as UC02
+usecase "03. Consultar grupos inscriptos" as UC03
+usecase "04. Asignar tutor" as UC04
+usecase "05. Publicar asignación de tutor" as UC05
+usecase "06. Cargar versión preliminar" as UC06
+usecase "07. Registrar observaciones" as UC07
+usecase "08. Entregar anteproyecto" as UC08
+usecase "09. Consultar estado del grupo" as UC09
+usecase "10. Generar listado de grupos sin entrega" as UC10
 }
+
 Estudiante -- UC02
 Estudiante -- UC06
 Estudiante -- UC08
 Estudiante -- UC09
-Comision -- UC01
+
+Secretaria -- UC01
+Secretaria -- UC02
+
 Comision -- UC03
 Comision -- UC04
 Comision -- UC05
 Comision -- UC10
+
 Tutor -- UC07
-legend bottom
-Trazabilidad: RF-01..RF-12; RNF-01..RNF-06. Secretaría Académica figura como actor del contexto oficial, sin RF propio de interacción directa.
-endlegend
 @enduml
