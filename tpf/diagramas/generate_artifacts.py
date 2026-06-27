@@ -495,12 +495,9 @@ def write_use_case_diagram() -> None:
     for actor, names in uses.items():
         for name in names:
             n = name[3:5]
-            lines.append(f"{actor} --> UC{n}")
+            lines.append(f"{actor} -- UC{n}")
     lines.extend(
         [
-            "Secretaria .. UC02 : intervención externa\\ninscripción académica",
-            "UC08 ..> UC09 : <<include>>\\nconsultar estado",
-            "UC04 ..> UC05 : <<extend>>\\npublicación posterior",
             "legend bottom",
             "Trazabilidad: RF-01..RF-12; RNF-01..RNF-06. Secretaría Académica figura como actor del contexto oficial, sin RF propio de interacción directa.",
             "endlegend",

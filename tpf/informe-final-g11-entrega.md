@@ -28,21 +28,32 @@ junio 2026
 <w:p><w:r><w:br w:type="page" /></w:r></w:p>
 ```
 
-**Contenido**
-
-- Modelo de Análisis
-  - Requerimientos
-  - Identificación de Actores
-  - Diagrama de Casos de Uso
-  - Casos de Uso
-  - Matriz de Requerimientos vs Casos de Uso
-  - Microestudio formativo
-- Modelo de Diseño
-  - Diagrama de Estados
-  - Diagrama de Actividades
-  - Diagrama de Clases Persistentes
-  - Diagrama de Entidad Relación
-- Referencias
+```{=openxml}
+<w:p><w:r><w:t>Modelo de Análisis</w:t><w:tab/><w:t>3</w:t></w:r></w:p>
+<w:p><w:r><w:t>Requerimientos</w:t><w:tab/><w:t>3</w:t></w:r></w:p>
+<w:p><w:r><w:t>Requerimientos Funcionales</w:t><w:tab/><w:t>3</w:t></w:r></w:p>
+<w:p><w:r><w:t>Requerimientos No Funcionales</w:t><w:tab/><w:t>4</w:t></w:r></w:p>
+<w:p><w:r><w:t>Identificación de Actores</w:t><w:tab/><w:t>4</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Casos de Uso</w:t><w:tab/><w:t>6</w:t></w:r></w:p>
+<w:p><w:r><w:t>Sistema …</w:t><w:tab/><w:t>6</w:t></w:r></w:p>
+<w:p><w:r><w:t>Caso de Uso &lt;nombre&gt;</w:t><w:tab/><w:t>7</w:t></w:r></w:p>
+<w:p><w:r><w:t>Especificación Caso de Uso</w:t><w:tab/><w:t>7</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Clases del Caso de Uso</w:t><w:tab/><w:t>8</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Interacción del Caso de Uso</w:t><w:tab/><w:t>8</w:t></w:r></w:p>
+<w:p><w:r><w:t>Caso de Uso &lt;nombre&gt;</w:t><w:tab/><w:t>9</w:t></w:r></w:p>
+<w:p><w:r><w:t>Especificación Caso de Uso</w:t><w:tab/><w:t>9</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Clases del Caso de Uso</w:t><w:tab/><w:t>10</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Interacción del Caso de Uso</w:t><w:tab/><w:t>11</w:t></w:r></w:p>
+<w:p><w:r><w:t>Caso de Uso &lt;nombre&gt;</w:t><w:tab/><w:t>12</w:t></w:r></w:p>
+<w:p><w:r><w:t>Especificación Caso de Uso</w:t><w:tab/><w:t>12</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Clases del Caso de Uso</w:t><w:tab/><w:t>12</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Interacción del Caso de Uso</w:t><w:tab/><w:t>12</w:t></w:r></w:p>
+<w:p><w:r><w:t>Matriz de Requerimientos vs Casos de Uso</w:t><w:tab/><w:t>13</w:t></w:r></w:p>
+<w:p><w:r><w:t>Modelo de Diseño</w:t><w:tab/><w:t>15</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Clases Persistentes</w:t><w:tab/><w:t>15</w:t></w:r></w:p>
+<w:p><w:r><w:t>Diagrama de Entidad Relación</w:t><w:tab/><w:t>15</w:t></w:r></w:p>
+<w:p><w:r><w:t>Referencias</w:t></w:r></w:p>
+```
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page" /></w:r></w:p>
@@ -548,7 +559,7 @@ El sistema modelado cubre la primera etapa del Trabajo Final de Grado de la Lice
 
 ### Preparación de datos
 
-El subconjunto `G11.tsv` contiene 10 casos anonimizados. Distribución por período: 2024 S2: 1, 2025 S1: 2, 2025 S2: 2, 2026 S1: 3, Otro: 2.
+El subconjunto `G11.tsv` contiene 10 casos anonimizados. Distribución por período: 2024 S2: 1, 2025 S1: 2, 2025 S2: 2, 2026 S1: 3, Otro: 2. La revisión de P1 a P4 encontró:
 
 | Ítem | Faltantes | Inválidos |
 | --- | --- | --- |
@@ -557,7 +568,7 @@ El subconjunto `G11.tsv` contiene 10 casos anonimizados. Distribución por perí
 | P3 | ninguno | ninguno |
 | P4 | ninguno | ninguno |
 
-### Resultados y decisiones de análisis
+### Resultados descriptivos
 
 | Ítem | Media | Mínimo | Máximo | Frec. 1 | Frec. 2 | Frec. 3 | Frec. 4 | Frec. 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -566,11 +577,28 @@ El subconjunto `G11.tsv` contiene 10 casos anonimizados. Distribución por perí
 | P3 | 4.70 | 4 | 5 | 0 | 0 | 0 | 3 | 7 |
 | P4 | 4.50 | 4 | 5 | 0 | 0 | 0 | 5 | 5 |
 
-La claridad percibida es alta en el subconjunto analizado. Las medias observadas van de 4.50 a 4.70. P4, claridad del flujo completo, presenta la media más baja relativa (4.50), aunque su mínimo observado es 4.
+La claridad percibida es alta en el subconjunto analizado. P1, claridad de etapas, y P3, claridad de plazos y fechas clave, tienen las medias más altas (4.70 y 4.70). P4, claridad del flujo completo, presenta la media más baja relativa (4.50), aunque su mínimo observado es 4. P2, claridad de roles, queda en 4.60; no hay valores menores a 4.
 
-Comentarios preservados: "En mi caso en particular, yo no pude asistir a la reunión inicial, pero ya tuve varias experiencias en participaciones previas por lo que asumí que mucho del proceso no iba a cambiar. De igual forma, al tener alguna duda sobre algo en particular, tenía la libertad de poder acercarme directamente a secretaría para poder aclarar las mismas o directamente contactar con mi tutor asignado vía correo. En donde si tuvo inconvenientes fue en encontrar las documentaciones actualizadas sobre los modelos a tener en cuenta para el desarrollo del anteproyecto. Los mismos no se encontraban disponibles en el sitio https://das.uc.edu.py/estudiantes/tesis." / "Todo fue muy claro y voy avanzando bien con las reuniones con el tutor!" / "Se entendió bien todo." / "Sería oportuno mejorar la comunicación entre alumnos y tutores."
+### Lectura cualitativa mínima
 
-Advertencia metodológica: este microestudio tiene carácter formativo, descriptivo y exploratorio. Los datos analizados corresponden únicamente al subconjunto G11 asignado por la cátedra y no necesariamente representan a toda la población de estudiantes de TFG.
+Se registraron 4 comentarios abiertos. Los temas principales son:
+
+- Predomina una percepción de claridad general: "Todo fue muy claro y voy avanzando bien con las reuniones con el tutor!" y "Se entendió bien todo."
+- Las dudas se concentran en comunicación y disponibilidad de información de apoyo: un comentario menciona dificultad para encontrar documentaciones actualizadas sobre modelos de anteproyecto, y otro señala que "Sería oportuno mejorar la comunicación entre alumnos y tutores."
+
+### Respuesta a la pregunta de investigación
+
+A partir de los datos del subconjunto G11, los estudiantes perciben un nivel alto de claridad sobre etapas, roles y plazos de la fase inicial del TFG. La evidencia cuantitativa muestra medias entre 4.50 y 4.70, con mínimos entre 3 y 4. La dimensión menos sólida es la comprensión del flujo completo, no por valores bajos, sino porque concentra más respuestas 4 que 5. La evidencia cualitativa no contradice esa lectura: aparecen comentarios de claridad general, junto con necesidades puntuales de mejor comunicación con tutores y mejor acceso a documentación actualizada.
+
+### Advertencia metodológica obligatoria
+
+Este microestudio tiene carácter formativo, descriptivo y exploratorio. Los datos analizados corresponden únicamente al subconjunto G11 asignado por la cátedra y no necesariamente representan a toda la población de estudiantes de TFG. Los resultados se presentan con fines pedagógicos y de apoyo al análisis del sistema. Cualquier generalización robusta requeriría un diseño muestral más riguroso, mayor tamaño de muestra y procedimientos analíticos adicionales.
+
+### Decisiones de análisis justificadas por los hallazgos
+
+1. Se conserva como central el CU-09 Consultar estado del grupo, con estado, tutor, fechas clave y observaciones en una sola vista. La decisión se apoya en que P4 es la dimensión con media más baja relativa y en comentarios que piden mejorar la comunicación entre alumnos y tutores.
+2. Se explicita la publicación clara de cronograma en CU-01 y la consulta de fechas clave en CU-09. Aunque P3 es alta, el comentario sobre documentación no disponible muestra que la claridad depende de que los insumos estén centralizados y actualizados.
+
 
 # Modelo de Diseño
 
@@ -589,6 +617,10 @@ Advertencia metodológica: este microestudio tiene carácter formativo, descript
 ## Diagrama de Entidad Relación
 
 ![](diagramas/24-entidad-relacion.svg)
+
+## Consistencia entre modelos
+
+Los diagramas mantienen la cadena de trazabilidad Minuta -> RF/RNF -> CU -> clases BCE -> secuencia -> estados/diseño. Las secuencias referencian operaciones canónicas mediante comentarios `op:` validados por `tpf/diagramas/overarch/validate_sequence_refs.py`. El estado del grupo usado en análisis y diseño respeta los cinco estados de RF-10 y no agrega estados de etapas posteriores.
 
 # Referencias
 

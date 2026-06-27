@@ -8,6 +8,7 @@ import importlib.util
 import shutil
 import subprocess
 import zipfile
+from xml.sax.saxutils import escape
 from xml.etree import ElementTree as ET
 from pathlib import Path
 
@@ -219,25 +220,39 @@ def build_markdown() -> str:
     logo = copy_logo()
     micro_prep, micro_results = read_microstudy()
     actor_table = md_table(["Actor", "Descripción"], [list(actor) for actor in ACTORS])
-    toc = "\n".join(
-        [
-            "**Contenido**",
-            "",
-            "- Modelo de Análisis",
-            "  - Requerimientos",
-            "  - Identificación de Actores",
-            "  - Diagrama de Casos de Uso",
-            "  - Casos de Uso",
-            "  - Matriz de Requerimientos vs Casos de Uso",
-            "  - Microestudio formativo",
-            "- Modelo de Diseño",
-            "  - Diagrama de Estados",
-            "  - Diagrama de Actividades",
-            "  - Diagrama de Clases Persistentes",
-            "  - Diagrama de Entidad Relación",
-            "- Referencias",
-        ]
-    )
+    toc_entries = [
+        ("Modelo de Análisis", "3"),
+        ("Requerimientos", "3"),
+        ("Requerimientos Funcionales", "3"),
+        ("Requerimientos No Funcionales", "4"),
+        ("Identificación de Actores", "4"),
+        ("Diagrama de Casos de Uso", "6"),
+        ("Sistema …", "6"),
+        ("Caso de Uso <nombre>", "7"),
+        ("Especificación Caso de Uso", "7"),
+        ("Diagrama de Clases del Caso de Uso", "8"),
+        ("Diagrama de Interacción del Caso de Uso", "8"),
+        ("Caso de Uso <nombre>", "9"),
+        ("Especificación Caso de Uso", "9"),
+        ("Diagrama de Clases del Caso de Uso", "10"),
+        ("Diagrama de Interacción del Caso de Uso", "11"),
+        ("Caso de Uso <nombre>", "12"),
+        ("Especificación Caso de Uso", "12"),
+        ("Diagrama de Clases del Caso de Uso", "12"),
+        ("Diagrama de Interacción del Caso de Uso", "12"),
+        ("Matriz de Requerimientos vs Casos de Uso", "13"),
+        ("Modelo de Diseño", "15"),
+        ("Diagrama de Clases Persistentes", "15"),
+        ("Diagrama de Entidad Relación", "15"),
+        ("Referencias", ""),
+    ]
+    toc_lines = []
+    for title, page in toc_entries:
+        if page:
+            toc_lines.append(f"<w:p><w:r><w:t>{escape(title)}</w:t><w:tab/><w:t>{page}</w:t></w:r></w:p>")
+        else:
+            toc_lines.append(f"<w:p><w:r><w:t>{escape(title)}</w:t></w:r></w:p>")
+    toc = "```{=openxml}\n" + "\n".join(toc_lines) + "\n```"
     use_case_sections = "\n\n".join(diagram_section(cu) for cu in cus)
     return f"""---
 lang: es-PY
