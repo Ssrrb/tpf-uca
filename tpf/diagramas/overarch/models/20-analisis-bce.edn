@@ -1,0 +1,304 @@
+;;;; Modelo BCE consolidado de los diez casos de uso.
+;;;; Fuente canonica para operaciones referenciadas por diagramas de secuencia.
+
+#{
+  {:el :package :id :g11.cu01/frontera :name "Frontera CU-01"
+   :ct #{{:el :class :id :g11.cu01/iUSemestreTFG :name "IUSemestreTFG" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu01.iu/mostrar-confirmacion :name "mostrarConfirmacion" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu01/control :name "Control CU-01"
+   :ct #{{:el :class :id :g11.cu01/controlConfiguracionSemestre :name "ControlConfiguracionSemestre" :stereotype "control"
+          :ct [{:el :method :id :g11.cu01.control/configurar-semestre :name "configurarSemestre" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu01/entidades :name "Entidades CU-01" :ct #{
+         {:el :class :id :g11.cu01/semestreTFG :name "SemestreTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu01.semestretfg/fechareunioninicial :name "fechaReunionInicial" :visibility :private :type "String"}
+               {:el :field :id :g11.cu01.semestretfg/fechacierreinscripcion :name "fechaCierreInscripcion" :visibility :private :type "String"}
+               {:el :method :id :g11.cu01.semestre/validar-fechas-clave :name "validarFechasClave" :visibility :public :type "void"}
+               {:el :method :id :g11.cu01.semestre/registrar-semestre :name "registrarSemestre" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu01/cronogramaTFG :name "CronogramaTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu01.cronogramatfg/fechareunioninicial :name "fechaReunionInicial" :visibility :private :type "String"}
+               {:el :field :id :g11.cu01.cronogramatfg/fechacierreinscripcion :name "fechaCierreInscripcion" :visibility :private :type "String"}
+               {:el :method :id :g11.cu01.cronograma/publicar-cronograma :name "publicarCronograma" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu01/iu-depende-control :from :g11.cu01/iUSemestreTFG :to :g11.cu01/controlConfiguracionSemestre}
+  {:el :implements :id :g11.cu01/control-implementa-cu-01 :from :g11.cu01/controlConfiguracionSemestre :to :g11.cu/cu-01-configurar-semestre}
+
+  {:el :package :id :g11.cu02/frontera :name "Frontera CU-02"
+   :ct #{{:el :class :id :g11.cu02/iUInscripcionGrupo :name "IUInscripcionGrupo" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu02.iu/mostrar-confirmacion-inscripcion :name "mostrarConfirmacionInscripcion" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu02/control :name "Control CU-02"
+   :ct #{{:el :class :id :g11.cu02/controlInscripcionGrupo :name "ControlInscripcionGrupo" :stereotype "control"
+          :ct [{:el :method :id :g11.cu02.control/inscribir-grupo :name "inscribirGrupo" :visibility :public :type "void"}
+               {:el :method :id :g11.cu02.control/validar-datos-obligatorios :name "validarDatosObligatorios" :visibility :public :type "void"}
+               {:el :method :id :g11.cu02.control/validar-cantidad-integrantes :name "validarCantidadIntegrantes" :visibility :public :type "void"}
+               {:el :method :id :g11.cu02.control/validar-pertenencia-unica :name "validarPertenenciaUnica" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu02/entidades :name "Entidades CU-02" :ct #{
+         {:el :class :id :g11.cu02/semestreTFG :name "SemestreTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu02.semestretfg/tematentativo :name "temaTentativo" :visibility :private :type "String"}
+               {:el :field :id :g11.cu02.semestretfg/integrantes :name "integrantes" :visibility :private :type "String"}
+               {:el :method :id :g11.cu02.semestre/obtener-semestre-vigente :name "obtenerSemestreVigente" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu02/estudiante :name "Estudiante" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu02.estudiante/tematentativo :name "temaTentativo" :visibility :private :type "String"}
+               {:el :field :id :g11.cu02.estudiante/integrantes :name "integrantes" :visibility :private :type "String"}
+               {:el :method :id :g11.cu02.estudiante/pertenece-a-otro-grupo :name "perteneceAOtroGrupo" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu02/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu02.grupotfg/tematentativo :name "temaTentativo" :visibility :private :type "String"}
+               {:el :field :id :g11.cu02.grupotfg/integrantes :name "integrantes" :visibility :private :type "String"}
+               {:el :method :id :g11.cu02.grupo/registrar-inscripcion :name "registrarInscripcion" :visibility :public :type "void"}
+               {:el :method :id :g11.cu02.grupo/cambiar-estado :name "cambiarEstado" :visibility :public :type "void"}
+              ]}
+         {:el :enum :id :g11.domain/estado-grupo :name "EstadoGrupo"
+          :ct [{:el :enum-value :id :g11.domain.estado/pendiente-inscripcion :name "PENDIENTE_INSCRIPCION"}
+               {:el :enum-value :id :g11.domain.estado/inscripto :name "INSCRIPTO"}
+               {:el :enum-value :id :g11.domain.estado/tutor-asignado :name "TUTOR_ASIGNADO"}
+               {:el :enum-value :id :g11.domain.estado/en-elaboracion :name "EN_ELABORACION_ANTEPROYECTO"}
+               {:el :enum-value :id :g11.domain.estado/anteproyecto-entregado :name "ANTEPROYECTO_ENTREGADO"}]}
+        }}
+
+  {:el :dependency :id :g11.cu02/iu-depende-control :from :g11.cu02/iUInscripcionGrupo :to :g11.cu02/controlInscripcionGrupo}
+  {:el :implements :id :g11.cu02/control-implementa-cu-02 :from :g11.cu02/controlInscripcionGrupo :to :g11.cu/cu-02-inscribir-grupo}
+
+  {:el :package :id :g11.cu03/frontera :name "Frontera CU-03"
+   :ct #{{:el :class :id :g11.cu03/iUConsultaGrupos :name "IUConsultaGrupos" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu03.iu/mostrar-listado-grupos :name "mostrarListadoGrupos" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu03/control :name "Control CU-03"
+   :ct #{{:el :class :id :g11.cu03/controlConsultaGrupos :name "ControlConsultaGrupos" :stereotype "control"
+          :ct [{:el :method :id :g11.cu03.control/consultar-grupos-inscriptos :name "consultarGruposInscriptos" :visibility :public :type "void"}
+               {:el :method :id :g11.cu03.control/verificar-acceso-comision :name "verificarAccesoComision" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu03/entidades :name "Entidades CU-03" :ct #{
+         {:el :class :id :g11.cu03/semestreTFG :name "SemestreTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu03.semestretfg/tematentativo :name "temaTentativo" :visibility :private :type "String"}
+               {:el :field :id :g11.cu03.semestretfg/cantidadintegrantes :name "cantidadIntegrantes" :visibility :private :type "String"}
+               {:el :method :id :g11.cu03.semestre/obtener-semestre-vigente :name "obtenerSemestreVigente" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu03/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu03.grupotfg/tematentativo :name "temaTentativo" :visibility :private :type "String"}
+               {:el :field :id :g11.cu03.grupotfg/cantidadintegrantes :name "cantidadIntegrantes" :visibility :private :type "String"}
+               {:el :method :id :g11.cu03.grupo/listar-grupos-inscriptos :name "listarGruposInscriptos" :visibility :public :type "void"}
+               {:el :method :id :g11.cu03.grupo/calcular-completitud :name "calcularCompletitud" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu03/iu-depende-control :from :g11.cu03/iUConsultaGrupos :to :g11.cu03/controlConsultaGrupos}
+  {:el :implements :id :g11.cu03/control-implementa-cu-03 :from :g11.cu03/controlConsultaGrupos :to :g11.cu/cu-03-consultar-grupos-inscriptos}
+
+  {:el :package :id :g11.cu04/frontera :name "Frontera CU-04"
+   :ct #{{:el :class :id :g11.cu04/iUAsignacionTutor :name "IUAsignacionTutor" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu04.iu/mostrar-asignacion-registrada :name "mostrarAsignacionRegistrada" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu04/control :name "Control CU-04"
+   :ct #{{:el :class :id :g11.cu04/controlAsignacionTutor :name "ControlAsignacionTutor" :stereotype "control"
+          :ct [{:el :method :id :g11.cu04.control/asignar-tutor :name "asignarTutor" :visibility :public :type "void"}
+               {:el :method :id :g11.cu04.control/verificar-autorizacion-comision :name "verificarAutorizacionComision" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu04/entidades :name "Entidades CU-04" :ct #{
+         {:el :class :id :g11.cu04/semestreTFG :name "SemestreTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu04.semestretfg/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :field :id :g11.cu04.semestretfg/fechaasignacion :name "fechaAsignacion" :visibility :private :type "String"}
+               {:el :method :id :g11.cu04.semestre/validar-antes-publicacion-tutores :name "validarAntesDePublicacionTutores" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu04/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu04.grupotfg/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :field :id :g11.cu04.grupotfg/fechaasignacion :name "fechaAsignacion" :visibility :private :type "String"}
+               {:el :method :id :g11.cu04.grupo/registrar-asignacion-tutor :name "registrarAsignacionTutor" :visibility :public :type "void"}
+               {:el :method :id :g11.cu04.grupo/cambiar-estado :name "cambiarEstado" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu04/tutor :name "Tutor" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu04.tutor/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :field :id :g11.cu04.tutor/fechaasignacion :name "fechaAsignacion" :visibility :private :type "String"}
+               {:el :method :id :g11.cu04.tutor/verificar-tutor-disponible :name "verificarTutorDisponible" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu04/iu-depende-control :from :g11.cu04/iUAsignacionTutor :to :g11.cu04/controlAsignacionTutor}
+  {:el :implements :id :g11.cu04/control-implementa-cu-04 :from :g11.cu04/controlAsignacionTutor :to :g11.cu/cu-04-asignar-tutor}
+
+  {:el :package :id :g11.cu05/frontera :name "Frontera CU-05"
+   :ct #{{:el :class :id :g11.cu05/iUPublicacionTutores :name "IUPublicacionTutores" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu05.iu/mostrar-publicacion-realizada :name "mostrarPublicacionRealizada" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu05/control :name "Control CU-05"
+   :ct #{{:el :class :id :g11.cu05/controlPublicacionTutores :name "ControlPublicacionTutores" :stereotype "control"
+          :ct [{:el :method :id :g11.cu05.control/publicar-asignaciones :name "publicarAsignaciones" :visibility :public :type "void"}
+               {:el :method :id :g11.cu05.control/verificar-autorizacion-comision :name "verificarAutorizacionComision" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu05/entidades :name "Entidades CU-05" :ct #{
+         {:el :class :id :g11.cu05/semestreTFG :name "SemestreTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu05.semestretfg/fechapublicacion :name "fechaPublicacion" :visibility :private :type "String"}
+               {:el :field :id :g11.cu05.semestretfg/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :method :id :g11.cu05.semestre/obtener-fecha-publicacion-tutores :name "obtenerFechaPublicacionTutores" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu05/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu05.grupotfg/fechapublicacion :name "fechaPublicacion" :visibility :private :type "String"}
+               {:el :field :id :g11.cu05.grupotfg/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :method :id :g11.cu05.grupo/listar-grupos-con-tutor-asignado :name "listarGruposConTutorAsignado" :visibility :public :type "void"}
+               {:el :method :id :g11.cu05.grupo/marcar-asignacion-publicada :name "marcarAsignacionPublicada" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu05/notificacion :name "Notificacion" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu05.notificacion/fechapublicacion :name "fechaPublicacion" :visibility :private :type "String"}
+               {:el :field :id :g11.cu05.notificacion/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :method :id :g11.cu05.notificacion/notificar-grupo :name "notificarGrupo" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu05/iu-depende-control :from :g11.cu05/iUPublicacionTutores :to :g11.cu05/controlPublicacionTutores}
+  {:el :implements :id :g11.cu05/control-implementa-cu-05 :from :g11.cu05/controlPublicacionTutores :to :g11.cu/cu-05-publicar-asignacion-tutor}
+
+  {:el :package :id :g11.cu06/frontera :name "Frontera CU-06"
+   :ct #{{:el :class :id :g11.cu06/iUAnteproyectoPreliminar :name "IUAnteproyectoPreliminar" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu06.iu/mostrar-version-registrada :name "mostrarVersionRegistrada" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu06/control :name "Control CU-06"
+   :ct #{{:el :class :id :g11.cu06/controlAnteproyectoPreliminar :name "ControlAnteproyectoPreliminar" :stereotype "control"
+          :ct [{:el :method :id :g11.cu06.control/cargar-version-preliminar :name "cargarVersionPreliminar" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu06/entidades :name "Entidades CU-06" :ct #{
+         {:el :class :id :g11.cu06/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu06.grupotfg/titulo :name "titulo" :visibility :private :type "String"}
+               {:el :field :id :g11.cu06.grupotfg/problema :name "problema" :visibility :private :type "String"}
+               {:el :method :id :g11.cu06.grupo/obtener-grupo-del-estudiante :name "obtenerGrupoDelEstudiante" :visibility :public :type "void"}
+               {:el :method :id :g11.cu06.grupo/cambiar-estado :name "cambiarEstado" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu06/anteproyecto :name "Anteproyecto" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu06.anteproyecto/titulo :name "titulo" :visibility :private :type "String"}
+               {:el :field :id :g11.cu06.anteproyecto/problema :name "problema" :visibility :private :type "String"}
+               {:el :method :id :g11.cu06.anteproyecto/validar-datos-minimos :name "validarDatosMinimos" :visibility :public :type "void"}
+               {:el :method :id :g11.cu06.anteproyecto/registrar-version-preliminar :name "registrarVersionPreliminar" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu06/iu-depende-control :from :g11.cu06/iUAnteproyectoPreliminar :to :g11.cu06/controlAnteproyectoPreliminar}
+  {:el :implements :id :g11.cu06/control-implementa-cu-06 :from :g11.cu06/controlAnteproyectoPreliminar :to :g11.cu/cu-06-cargar-version-preliminar}
+
+  {:el :package :id :g11.cu07/frontera :name "Frontera CU-07"
+   :ct #{{:el :class :id :g11.cu07/iUObservacionesTutor :name "IUObservacionesTutor" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu07.iu/mostrar-observacion-registrada :name "mostrarObservacionRegistrada" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu07/control :name "Control CU-07"
+   :ct #{{:el :class :id :g11.cu07/controlObservacionesTutor :name "ControlObservacionesTutor" :stereotype "control"
+          :ct [{:el :method :id :g11.cu07.control/registrar-observacion :name "registrarObservacion" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu07/entidades :name "Entidades CU-07" :ct #{
+         {:el :class :id :g11.cu07/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu07.grupotfg/texto :name "texto" :visibility :private :type "String"}
+               {:el :field :id :g11.cu07.grupotfg/fecharegistro :name "fechaRegistro" :visibility :private :type "String"}
+               {:el :method :id :g11.cu07.grupo/obtener-anteproyecto-preliminar :name "obtenerAnteproyectoPreliminar" :visibility :public :type "void"}
+               {:el :method :id :g11.cu07.grupo/agregar-observacion :name "agregarObservacion" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu07/tutor :name "Tutor" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu07.tutor/texto :name "texto" :visibility :private :type "String"}
+               {:el :field :id :g11.cu07.tutor/fecharegistro :name "fechaRegistro" :visibility :private :type "String"}
+               {:el :method :id :g11.cu07.tutor/verificar-tutor-asignado :name "verificarTutorAsignado" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu07/observacion :name "Observacion" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu07.observacion/texto :name "texto" :visibility :private :type "String"}
+               {:el :field :id :g11.cu07.observacion/fecharegistro :name "fechaRegistro" :visibility :private :type "String"}
+               {:el :method :id :g11.cu07.observacion/registrar-observacion :name "registrarObservacion" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu07/iu-depende-control :from :g11.cu07/iUObservacionesTutor :to :g11.cu07/controlObservacionesTutor}
+  {:el :implements :id :g11.cu07/control-implementa-cu-07 :from :g11.cu07/controlObservacionesTutor :to :g11.cu/cu-07-registrar-observaciones}
+
+  {:el :package :id :g11.cu08/frontera :name "Frontera CU-08"
+   :ct #{{:el :class :id :g11.cu08/iUEntregaAnteproyecto :name "IUEntregaAnteproyecto" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu08.iu/mostrar-entrega-registrada :name "mostrarEntregaRegistrada" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu08/control :name "Control CU-08"
+   :ct #{{:el :class :id :g11.cu08/controlEntregaAnteproyecto :name "ControlEntregaAnteproyecto" :stereotype "control"
+          :ct [{:el :method :id :g11.cu08.control/entregar-anteproyecto :name "entregarAnteproyecto" :visibility :public :type "void"}
+               {:el :method :id :g11.cu08.control/validar-entrega-habilitada :name "validarEntregaHabilitada" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu08/entidades :name "Entidades CU-08" :ct #{
+         {:el :class :id :g11.cu08/semestreTFG :name "SemestreTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu08.semestretfg/fechaentrega :name "fechaEntrega" :visibility :private :type "String"}
+               {:el :field :id :g11.cu08.semestretfg/usuarioresponsable :name "usuarioResponsable" :visibility :private :type "String"}
+               {:el :method :id :g11.cu08.semestre/obtener-fecha-limite-anteproyecto :name "obtenerFechaLimiteAnteproyecto" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu08/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu08.grupotfg/fechaentrega :name "fechaEntrega" :visibility :private :type "String"}
+               {:el :field :id :g11.cu08.grupotfg/usuarioresponsable :name "usuarioResponsable" :visibility :private :type "String"}
+               {:el :method :id :g11.cu08.grupo/obtener-grupo-del-estudiante :name "obtenerGrupoDelEstudiante" :visibility :public :type "void"}
+               {:el :method :id :g11.cu08.grupo/cambiar-estado :name "cambiarEstado" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu08/anteproyecto :name "Anteproyecto" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu08.anteproyecto/fechaentrega :name "fechaEntrega" :visibility :private :type "String"}
+               {:el :field :id :g11.cu08.anteproyecto/usuarioresponsable :name "usuarioResponsable" :visibility :private :type "String"}
+               {:el :method :id :g11.cu08.anteproyecto/registrar-entrega-formal :name "registrarEntregaFormal" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu08/autorizacionExcepcional :name "AutorizacionExcepcional" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu08.autorizacionexcepcional/fechaentrega :name "fechaEntrega" :visibility :private :type "String"}
+               {:el :field :id :g11.cu08.autorizacionexcepcional/usuarioresponsable :name "usuarioResponsable" :visibility :private :type "String"}
+               {:el :method :id :g11.cu08.autorizacion/verificar-autorizacion-excepcional :name "verificarAutorizacionExcepcional" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu08/iu-depende-control :from :g11.cu08/iUEntregaAnteproyecto :to :g11.cu08/controlEntregaAnteproyecto}
+  {:el :implements :id :g11.cu08/control-implementa-cu-08 :from :g11.cu08/controlEntregaAnteproyecto :to :g11.cu/cu-08-entregar-anteproyecto}
+
+  {:el :package :id :g11.cu09/frontera :name "Frontera CU-09"
+   :ct #{{:el :class :id :g11.cu09/iUEstadoGrupo :name "IUEstadoGrupo" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu09.iu/mostrar-estado-grupo :name "mostrarEstadoGrupo" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu09/control :name "Control CU-09"
+   :ct #{{:el :class :id :g11.cu09/controlEstadoGrupo :name "ControlEstadoGrupo" :stereotype "control"
+          :ct [{:el :method :id :g11.cu09.control/consultar-estado-grupo :name "consultarEstadoGrupo" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu09/entidades :name "Entidades CU-09" :ct #{
+         {:el :class :id :g11.cu09/semestreTFG :name "SemestreTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu09.semestretfg/estado :name "estado" :visibility :private :type "String"}
+               {:el :field :id :g11.cu09.semestretfg/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :method :id :g11.cu09.semestre/obtener-fechas-clave :name "obtenerFechasClave" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu09/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu09.grupotfg/estado :name "estado" :visibility :private :type "String"}
+               {:el :field :id :g11.cu09.grupotfg/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :method :id :g11.cu09.grupo/obtener-grupo-del-estudiante :name "obtenerGrupoDelEstudiante" :visibility :public :type "void"}
+               {:el :method :id :g11.cu09.grupo/obtener-estado-y-tutor :name "obtenerEstadoYTutor" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu09/observacion :name "Observacion" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu09.observacion/estado :name "estado" :visibility :private :type "String"}
+               {:el :field :id :g11.cu09.observacion/tutorasignado :name "tutorAsignado" :visibility :private :type "String"}
+               {:el :method :id :g11.cu09.observacion/listar-observaciones-del-grupo :name "listarObservacionesDelGrupo" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu09/iu-depende-control :from :g11.cu09/iUEstadoGrupo :to :g11.cu09/controlEstadoGrupo}
+  {:el :implements :id :g11.cu09/control-implementa-cu-09 :from :g11.cu09/controlEstadoGrupo :to :g11.cu/cu-09-consultar-estado-grupo}
+
+  {:el :package :id :g11.cu10/frontera :name "Frontera CU-10"
+   :ct #{{:el :class :id :g11.cu10/iUListadoSinEntrega :name "IUListadoSinEntrega" :stereotype "boundary"
+          :ct [{:el :method :id :g11.cu10.iu/mostrar-listado-sin-entrega :name "mostrarListadoSinEntrega" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu10/control :name "Control CU-10"
+   :ct #{{:el :class :id :g11.cu10/controlListadoSinEntrega :name "ControlListadoSinEntrega" :stereotype "control"
+          :ct [{:el :method :id :g11.cu10.control/generar-listado-sin-entrega :name "generarListadoSinEntrega" :visibility :public :type "void"}
+               {:el :method :id :g11.cu10.control/verificar-acceso-comision :name "verificarAccesoComision" :visibility :public :type "void"}]}}}}
+
+  {:el :package :id :g11.cu10/entidades :name "Entidades CU-10" :ct #{
+         {:el :class :id :g11.cu10/semestreTFG :name "SemestreTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu10.semestretfg/fechalimite :name "fechaLimite" :visibility :private :type "String"}
+               {:el :field :id :g11.cu10.semestretfg/estadoentrega :name "estadoEntrega" :visibility :private :type "String"}
+               {:el :method :id :g11.cu10.semestre/verificar-proximidad-fecha-limite :name "verificarProximidadFechaLimite" :visibility :public :type "void"}
+              ]}
+         {:el :class :id :g11.cu10/grupoTFG :name "GrupoTFG" :stereotype "entity"
+          :ct [{:el :field :id :g11.cu10.grupotfg/fechalimite :name "fechaLimite" :visibility :private :type "String"}
+               {:el :field :id :g11.cu10.grupotfg/estadoentrega :name "estadoEntrega" :visibility :private :type "String"}
+               {:el :method :id :g11.cu10.grupo/listar-grupos-sin-entrega :name "listarGruposSinEntrega" :visibility :public :type "void"}
+              ]}
+        }}
+
+  {:el :dependency :id :g11.cu10/iu-depende-control :from :g11.cu10/iUListadoSinEntrega :to :g11.cu10/controlListadoSinEntrega}
+  {:el :implements :id :g11.cu10/control-implementa-cu-10 :from :g11.cu10/controlListadoSinEntrega :to :g11.cu/cu-10-generar-listado-sin-entrega}
+
+}

@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 07 — CU-03 Consultar grupos inscriptos\nDiagrama de secuencia — RF-04
+actor "Comisión de TFG" as Comision
+boundary ":IUConsultaGrupos" as IU
+control ":ControlConsultaGrupos" as Control
+entity ":SemestreTFG" as Semestre
+entity ":GrupoTFG" as Grupo
+
+Comision -> IU : solicitar()
+activate IU
+IU -> Comision : mostrarFormulario()
+Comision -> IU : ingresarDatos()
+IU -> Control : consultarGruposInscriptos(usuarioActual)
+' op: :g11.cu03.control/consultar-grupos-inscriptos
+activate Control
+Control -> Control : verificarAccesoComision(usuarioActual)
+' op: :g11.cu03.control/verificar-acceso-comision
+Control -> Semestre : obtenerSemestreVigente()
+' op: :g11.cu03.semestre/obtener-semestre-vigente
+Control -> Grupo : listarGruposInscriptos(semestre)
+' op: :g11.cu03.grupo/listar-grupos-inscriptos
+Grupo -> Grupo : calcularCompletitud()
+' op: :g11.cu03.grupo/calcular-completitud
+IU -> Comision : mostrarListadoGrupos(listado)
+' op: :g11.cu03.iu/mostrar-listado-grupos
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Comision : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Comision : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-04; RNF-06; Minuta 03.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

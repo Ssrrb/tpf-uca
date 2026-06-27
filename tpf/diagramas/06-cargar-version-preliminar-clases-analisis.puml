@@ -1,0 +1,35 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam style strictuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title 12 — CU-06 Cargar versión preliminar\nDiagrama de clases de análisis BCE — RF-07
+
+class "IUAnteproyectoPreliminar" as IU <<boundary>> {
+  + solicitar(): void
+  + mostrarResultado(): void
+}
+
+class "ControlAnteproyectoPreliminar" as Control <<control>> {
+  + cargarVersionPreliminar(): void
+}
+
+class "GrupoTFG" as GrupoTFG <<entity>> {
+  - titulo: String
+  + consultar(): void
+}
+class "Anteproyecto" as Anteproyecto <<entity>> {
+  - titulo: String
+  + consultar(): void
+}
+
+IU --> Control
+Control --> GrupoTFG
+Control --> Anteproyecto
+
+legend bottom
+Trazabilidad: RF-07; RNF-04; Minuta 04.
+Modelo de análisis BCE sin detalles de implementación.
+endlegend
+@enduml

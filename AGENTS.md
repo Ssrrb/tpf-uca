@@ -40,3 +40,15 @@ For the microstudy, analyze only `G11.tsv`, report missing or invalid P1–P4 va
 ## Change Review
 
 Keep commits focused and use imperative subjects, for example `model: add CU-03 BCE classes`. A pull request should identify affected RF/RNF and CU IDs, summarize model and document changes, report validation commands, and include updated SVGs when publication views change. Before delivery, verify all 18 requirements, 10 use cases, 24 diagrams, template order, index, author data, and APA references.
+
+## Fuentes (documentación oficial)
+
+| Documento | Ruta |
+|-----------|------|
+| Mapa de Contenido (índice) | `obsidian-export/Zk !MOC Ingeniería del Software 1 – TPF 2026.md` |
+| Especificación del TPF | `obsidian-export/Zk Ingeniería del Software 1 – TPF 2026 – Especificaciones.md` |
+| Caso de Estudio (RF, RNF, Minutas) | `obsidian-export/Zk IS1 TPF 2026 - Especificaciones del Caso de Estudio.md` |
+| Anexo II — Microestudio | `obsidian-export/Zk IS1 TPF 2026 – Anexo II.md` |
+| Anexo III — Rúbrica | `obsidian-export/Zk IS1 TPF 2026 – Anexo III.md` |
+| Plantilla de formato | `tpf/Sebas Rojas - Is1 TPF Documentación.docx` |
+| Dataset asignado | `G11.tsv` |

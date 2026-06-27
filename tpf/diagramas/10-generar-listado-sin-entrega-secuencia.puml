@@ -1,0 +1,40 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 21 — CU-10 Generar listado de grupos sin entrega\nDiagrama de secuencia — RF-12
+actor "Comisión de TFG" as Comision
+boundary ":IUListadoSinEntrega" as IU
+control ":ControlListadoSinEntrega" as Control
+entity ":SemestreTFG" as Semestre
+entity ":GrupoTFG" as Grupo
+
+Comision -> IU : solicitar()
+activate IU
+IU -> Comision : mostrarFormulario()
+Comision -> IU : ingresarDatos()
+IU -> Control : generarListadoSinEntrega(usuarioActual)
+' op: :g11.cu10.control/generar-listado-sin-entrega
+activate Control
+Control -> Control : verificarAccesoComision(usuarioActual)
+' op: :g11.cu10.control/verificar-acceso-comision
+Control -> Semestre : verificarProximidadFechaLimite(fechaActual)
+' op: :g11.cu10.semestre/verificar-proximidad-fecha-limite
+Control -> Grupo : listarGruposSinEntrega()
+' op: :g11.cu10.grupo/listar-grupos-sin-entrega
+IU -> Comision : mostrarListadoSinEntrega(listado)
+' op: :g11.cu10.iu/mostrar-listado-sin-entrega
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Comision : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Comision : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-12; RNF-06; Minuta 06.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

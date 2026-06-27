@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam style strictuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title 18 — CU-09 Consultar estado del grupo\nDiagrama de clases de análisis BCE — RF-11
+
+class "IUEstadoGrupo" as IU <<boundary>> {
+  + solicitar(): void
+  + mostrarResultado(): void
+}
+
+class "ControlEstadoGrupo" as Control <<control>> {
+  + consultarEstadoGrupo(): void
+}
+
+class "SemestreTFG" as SemestreTFG <<entity>> {
+  - estado: String
+  + consultar(): void
+}
+class "GrupoTFG" as GrupoTFG <<entity>> {
+  - estado: String
+  + consultar(): void
+}
+class "Observacion" as Observacion <<entity>> {
+  - estado: String
+  + consultar(): void
+}
+
+IU --> Control
+Control --> SemestreTFG
+Control --> GrupoTFG
+Control --> Observacion
+SemestreTFG "1" -- "0..*" GrupoTFG : grupos
+GrupoTFG "1" -- "0..*" Observacion : observaciones
+
+legend bottom
+Trazabilidad: RF-11; RNF-01, RNF-06; Minuta 05.
+Modelo de análisis BCE sin detalles de implementación.
+endlegend
+@enduml

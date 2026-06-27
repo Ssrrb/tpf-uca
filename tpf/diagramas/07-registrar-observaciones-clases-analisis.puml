@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam style strictuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title 14 — CU-07 Registrar observaciones\nDiagrama de clases de análisis BCE — RF-08
+
+class "IUObservacionesTutor" as IU <<boundary>> {
+  + solicitar(): void
+  + mostrarResultado(): void
+}
+
+class "ControlObservacionesTutor" as Control <<control>> {
+  + registrarObservacion(): void
+}
+
+class "GrupoTFG" as GrupoTFG <<entity>> {
+  - texto: String
+  + consultar(): void
+}
+class "Tutor" as Tutor <<entity>> {
+  - texto: String
+  + consultar(): void
+}
+class "Observacion" as Observacion <<entity>> {
+  - texto: String
+  + consultar(): void
+}
+
+IU --> Control
+Control --> GrupoTFG
+Control --> Tutor
+Control --> Observacion
+GrupoTFG "0..*" -- "0..1" Tutor : tutor asignado
+GrupoTFG "1" -- "0..*" Observacion : observaciones
+
+legend bottom
+Trazabilidad: RF-08; RNF-04; Minuta 05.
+Modelo de análisis BCE sin detalles de implementación.
+endlegend
+@enduml

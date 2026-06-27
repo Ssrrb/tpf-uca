@@ -1,0 +1,83 @@
+@startuml
+!pragma layout smetana
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+title 24 — Diagrama entidad-relación\nPrimera etapa del TFG
+
+entity semestre_tfg {
+  * id : uuid <<PK>>
+  --
+  periodo : varchar
+  fecha_reunion_inicial : date
+  fecha_cierre_inscripcion : date
+  fecha_publicacion_tutores : date
+  fecha_limite_anteproyecto : date
+}
+entity estudiante {
+  * id : uuid <<PK>>
+  --
+  nombre : varchar
+  correo : varchar
+}
+entity tutor {
+  * id : uuid <<PK>>
+  --
+  nombre : varchar
+  correo : varchar
+}
+entity grupo_tfg {
+  * id : uuid <<PK>>
+  --
+  semestre_id : uuid <<FK>>
+  tutor_id : uuid <<FK nullable>>
+  tema_tentativo : varchar
+  medio_contacto : varchar
+  estado : varchar
+  fecha_inscripcion : timestamp
+}
+entity grupo_integrante {
+  * grupo_id : uuid <<PK,FK>>
+  * estudiante_id : uuid <<PK,FK>>
+}
+entity anteproyecto {
+  * id : uuid <<PK>>
+  --
+  grupo_id : uuid <<FK unique>>
+  titulo : varchar
+  problema : text
+  objetivo_general : text
+  alcance : text
+  fecha_entrega : timestamp
+}
+entity observacion {
+  * id : uuid <<PK>>
+  --
+  grupo_id : uuid <<FK>>
+  tutor_id : uuid <<FK>>
+  texto : text
+  fecha_registro : timestamp
+  responsable : varchar
+}
+entity autorizacion_excepcional {
+  * id : uuid <<PK>>
+  --
+  grupo_id : uuid <<FK unique>>
+  motivo : text
+  fecha_autorizacion : timestamp
+  responsable_comision : varchar
+}
+
+semestre_tfg ||--o{ grupo_tfg
+tutor ||--o{ grupo_tfg
+grupo_tfg ||--|{ grupo_integrante
+estudiante ||--o{ grupo_integrante
+grupo_tfg ||--o| anteproyecto
+grupo_tfg ||--o{ observacion
+tutor ||--o{ observacion
+grupo_tfg ||--o| autorizacion_excepcional
+
+note bottom
+Integridad: unique(semestre_id, estudiante_id) se implementa mediante validación sobre grupo_integrante unido a grupo_tfg.
+end note
+@enduml

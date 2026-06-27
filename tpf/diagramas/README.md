@@ -11,7 +11,7 @@ estados como copias independientes en varios archivos PlantUML.
 |---|---|
 | `00-requerimientos.edn` | IDs de RF-01..RF-12 y RNF-01..RNF-06 |
 | `10-casos-de-uso.edn` | cuatro actores, diez CU, asociaciones y trazabilidad RF/RNF |
-| `20-cu-02-analisis.edn` | clases BCE, atributos, operaciones y relaciones de CU-02 |
+| `20-analisis-bce.edn` | clases BCE, atributos, operaciones y relaciones de CU-01..CU-10 |
 | `30-estados-grupo.edn` | cinco estados, choice y transiciones de `GrupoTFG` |
 | `90-views.edn` | vistas de casos de uso, clases, estados y diagnóstico integral |
 
@@ -56,16 +56,13 @@ actualizar el modelo y todos esos usos; no se permite renombrar solo el mensaje.
 
 ## Archivos
 
-- `template-diagrama-estados-grupo-tfg.puml`: fuente PlantUML editable y trazable.
-- `template-diagrama-estados-grupo-tfg.svg`: vista renderizada para insertar en el documento final.
-- `template-diagrama-secuencia-cu-02-inscribir-grupo.puml`: fuente PlantUML de
-  referencia para los diagramas de interacción de los diez CU.
-- `template-diagrama-secuencia-cu-02-inscribir-grupo.svg`: vista renderizada de
-  la plantilla de secuencia.
-- `template-diagrama-clases-analisis-cu-02-inscribir-grupo.puml`: fuente
-  PlantUML de referencia para los diagramas de clases de análisis BCE.
-- `template-diagrama-clases-analisis-cu-02-inscribir-grupo.svg`: vista
-  renderizada de la plantilla de clases.
+- `generate_artifacts.py`: reconstruye el modelo BCE consolidado, las vistas
+  Overarch y los 24 diagramas de publicación en PlantUML.
+- `01-casos-de-uso-general.puml` y `.svg`: diagrama general de casos de uso.
+- `01-*` a `10-*`: diagramas de clases de análisis y secuencia por CU.
+- `22-estados-grupo-tfg.puml` y `.svg`: máquina de estados del grupo TFG.
+- `23-clases-persistentes.puml` y `.svg`: clases persistentes.
+- `24-entidad-relacion.puml` y `.svg`: modelo entidad-relación.
 
 ## Template de diagrama de clases de análisis
 

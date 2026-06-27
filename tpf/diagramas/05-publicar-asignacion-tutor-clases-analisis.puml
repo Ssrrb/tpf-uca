@@ -1,0 +1,41 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam style strictuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title 10 — CU-05 Publicar asignación de tutor\nDiagrama de clases de análisis BCE — RF-06
+
+class "IUPublicacionTutores" as IU <<boundary>> {
+  + solicitar(): void
+  + mostrarResultado(): void
+}
+
+class "ControlPublicacionTutores" as Control <<control>> {
+  + publicarAsignacionTutor(): void
+}
+
+class "SemestreTFG" as SemestreTFG <<entity>> {
+  - fechaPublicacion: String
+  + consultar(): void
+}
+class "GrupoTFG" as GrupoTFG <<entity>> {
+  - fechaPublicacion: String
+  + consultar(): void
+}
+class "Notificacion" as Notificacion <<entity>> {
+  - fechaPublicacion: String
+  + consultar(): void
+}
+
+IU --> Control
+Control --> SemestreTFG
+Control --> GrupoTFG
+Control --> Notificacion
+SemestreTFG "1" -- "0..*" GrupoTFG : grupos
+
+legend bottom
+Trazabilidad: RF-06; RNF-03; Minuta 03.
+Modelo de análisis BCE sin detalles de implementación.
+endlegend
+@enduml

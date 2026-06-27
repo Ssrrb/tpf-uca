@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 13 — CU-06 Cargar versión preliminar\nDiagrama de secuencia — RF-07
+actor "Estudiante" as Estudiante
+boundary ":IUAnteproyectoPreliminar" as IU
+control ":ControlAnteproyectoPreliminar" as Control
+entity ":GrupoTFG" as Grupo
+entity ":Anteproyecto" as Anteproyecto
+
+Estudiante -> IU : solicitar()
+activate IU
+IU -> Estudiante : mostrarFormulario()
+Estudiante -> IU : ingresarDatos()
+IU -> Control : cargarVersionPreliminar(datosAnteproyecto, usuarioActual)
+' op: :g11.cu06.control/cargar-version-preliminar
+activate Control
+Control -> Grupo : obtenerGrupoDelEstudiante(usuarioActual)
+' op: :g11.cu06.grupo/obtener-grupo-del-estudiante
+Control -> Anteproyecto : validarDatosMinimos(titulo, problema, objetivoGeneral, alcance)
+' op: :g11.cu06.anteproyecto/validar-datos-minimos
+Control -> Anteproyecto : registrarVersionPreliminar(datosAnteproyecto, fechaActual, usuarioActual)
+' op: :g11.cu06.anteproyecto/registrar-version-preliminar
+Control -> Grupo : cambiarEstado("En elaboración de anteproyecto")
+' op: :g11.cu06.grupo/cambiar-estado
+IU -> Estudiante : mostrarVersionRegistrada()
+' op: :g11.cu06.iu/mostrar-version-registrada
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Estudiante : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Estudiante : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-07; RNF-04; Minuta 04.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

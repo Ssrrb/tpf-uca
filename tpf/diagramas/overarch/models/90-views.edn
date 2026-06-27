@@ -1,14 +1,20 @@
-;;;; Vistas derivadas del mismo modelo. Overarch genera PlantUML desde aquí.
+;;;; Vistas derivadas del mismo modelo. Overarch genera PlantUML desde aqui.
 
 #{
   {:el :use-case-view
    :id :g11.view/casos-de-uso
    :title "Sistema de gestión de la primera etapa del TFG — Casos de uso"
    :layout :left-right
-   :plantuml {:skinparams {"BackgroundColor" "White"
-                           "shadowing" "false"}}
-   :selection [{:namespace-prefix "g11.actor"}
-               {:namespace-prefix "g11.cu"}]
+   :selection [{:namespace-prefix "g11.actor"} {:namespace-prefix "g11.cu"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-01-clases-analisis
+   :title "CU-01 — Configurar semestre — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu01"}]
    :include :relations
    :ct []}
 
@@ -17,11 +23,79 @@
    :title "CU-02 — Inscribir grupo — Clases de análisis BCE"
    :layout :left-right
    :linetype :orthogonal
-   :plantuml {:skinparams {"BackgroundColor" "White"
-                           "shadowing" "false"
-                           "classAttributeIconSize" "0"}}
-   :selection [{:namespace-prefix "g11.cu02"}
-               {:namespace-prefix "g11.domain"}]
+   :selection [{:namespace-prefix "g11.cu02"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-03-clases-analisis
+   :title "CU-03 — Consultar grupos inscriptos — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu03"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-04-clases-analisis
+   :title "CU-04 — Asignar tutor — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu04"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-05-clases-analisis
+   :title "CU-05 — Publicar asignación de tutor — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu05"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-06-clases-analisis
+   :title "CU-06 — Cargar versión preliminar — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu06"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-07-clases-analisis
+   :title "CU-07 — Registrar observaciones — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu07"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-08-clases-analisis
+   :title "CU-08 — Entregar anteproyecto — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu08"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-09-clases-analisis
+   :title "CU-09 — Consultar estado del grupo — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu09"}]
+   :include :relations
+   :ct []}
+
+  {:el :code-view
+   :id :g11.view/cu-10-clases-analisis
+   :title "CU-10 — Generar listado de grupos sin entrega — Clases de análisis BCE"
+   :layout :left-right
+   :linetype :orthogonal
+   :selection [{:namespace-prefix "g11.cu10"}]
    :include :relations
    :ct []}
 
@@ -29,12 +103,9 @@
    :id :g11.view/estados-grupo-tfg
    :title "Máquina de estados del Grupo de TFG — Primera etapa — RF-10"
    :layout :left-right
-   :plantuml {:skinparams {"BackgroundColor" "White"
-                           "shadowing" "false"}}
    :include :relations
    :ct [{:ref :g11.state/grupo-tfg}]}
 
-  ;; Vista diagnóstica: permite detectar elementos huérfanos o enlaces rotos.
   {:el :model-view
    :id :g11.view/modelo-completo
    :title "Modelo integral G11 — diagnóstico de consistencia"

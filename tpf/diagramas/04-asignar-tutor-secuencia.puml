@@ -1,0 +1,45 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 09 — CU-04 Asignar tutor\nDiagrama de secuencia — RF-05
+actor "Comisión de TFG" as Comision
+boundary ":IUAsignacionTutor" as IU
+control ":ControlAsignacionTutor" as Control
+entity ":SemestreTFG" as Semestre
+entity ":GrupoTFG" as Grupo
+entity ":Tutor" as TutorEntidad
+
+Comision -> IU : solicitar()
+activate IU
+IU -> Comision : mostrarFormulario()
+Comision -> IU : ingresarDatos()
+IU -> Control : asignarTutor(grupo, tutor, usuarioActual)
+' op: :g11.cu04.control/asignar-tutor
+activate Control
+Control -> Control : verificarAutorizacionComision(usuarioActual)
+' op: :g11.cu04.control/verificar-autorizacion-comision
+Control -> Semestre : validarAntesDePublicacionTutores(fechaActual)
+' op: :g11.cu04.semestre/validar-antes-publicacion-tutores
+Control -> TutorEntidad : verificarTutorDisponible(tutor)
+' op: :g11.cu04.tutor/verificar-tutor-disponible
+Control -> Grupo : registrarAsignacionTutor(tutor, fechaActual, usuarioActual)
+' op: :g11.cu04.grupo/registrar-asignacion-tutor
+Grupo -> Grupo : cambiarEstado("Tutor asignado")
+' op: :g11.cu04.grupo/cambiar-estado
+IU -> Comision : mostrarAsignacionRegistrada(grupo)
+' op: :g11.cu04.iu/mostrar-asignacion-registrada
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Comision : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Comision : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-05; RNF-03, RNF-04; Minuta 03.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

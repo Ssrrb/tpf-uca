@@ -1,0 +1,35 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam style strictuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title 02 — CU-01 Configurar semestre\nDiagrama de clases de análisis BCE — RF-01
+
+class "IUSemestreTFG" as IU <<boundary>> {
+  + solicitar(): void
+  + mostrarResultado(): void
+}
+
+class "ControlConfiguracionSemestre" as Control <<control>> {
+  + configurarSemestre(): void
+}
+
+class "SemestreTFG" as SemestreTFG <<entity>> {
+  - fechaReunionInicial: String
+  + consultar(): void
+}
+class "CronogramaTFG" as CronogramaTFG <<entity>> {
+  - fechaReunionInicial: String
+  + consultar(): void
+}
+
+IU --> Control
+Control --> SemestreTFG
+Control --> CronogramaTFG
+
+legend bottom
+Trazabilidad: RF-01; RNF-01, RNF-03; Minuta 01.
+Modelo de análisis BCE sin detalles de implementación.
+endlegend
+@enduml

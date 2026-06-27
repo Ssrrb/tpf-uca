@@ -1,0 +1,49 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 05 — CU-02 Inscribir grupo\nDiagrama de secuencia — RF-02, RF-03
+actor "Estudiante" as Estudiante
+boundary ":IUInscripcionGrupo" as IU
+control ":ControlInscripcionGrupo" as Control
+entity ":SemestreTFG" as Semestre
+entity ":Estudiante" as EstudianteEntidad
+entity ":GrupoTFG" as Grupo
+
+Estudiante -> IU : solicitar()
+activate IU
+IU -> Estudiante : mostrarFormulario()
+Estudiante -> IU : ingresarDatos()
+IU -> Control : inscribirGrupo(temaTentativo, integrantes, medioContacto, usuarioActual)
+' op: :g11.cu02.control/inscribir-grupo
+activate Control
+Control -> Semestre : obtenerSemestreVigente()
+' op: :g11.cu02.semestre/obtener-semestre-vigente
+Control -> Control : validarDatosObligatorios(temaTentativo, integrantes, medioContacto)
+' op: :g11.cu02.control/validar-datos-obligatorios
+Control -> Control : validarCantidadIntegrantes(integrantes)
+' op: :g11.cu02.control/validar-cantidad-integrantes
+Control -> Control : validarPertenenciaUnica(integrantes, semestre)
+' op: :g11.cu02.control/validar-pertenencia-unica
+Control -> EstudianteEntidad : perteneceAOtroGrupo(semestre)
+' op: :g11.cu02.estudiante/pertenece-a-otro-grupo
+Control -> Grupo : registrarInscripcion(temaTentativo, integrantes, medioContacto, semestre, fechaActual, usuarioActual)
+' op: :g11.cu02.grupo/registrar-inscripcion
+Grupo -> Grupo : cambiarEstado("Inscripto")
+' op: :g11.cu02.grupo/cambiar-estado
+IU -> Estudiante : mostrarConfirmacionInscripcion(grupoInscripto)
+' op: :g11.cu02.iu/mostrar-confirmacion-inscripcion
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Estudiante : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Estudiante : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-02, RF-03; RNF-02, RNF-04; Minuta 02.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

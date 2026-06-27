@@ -1,0 +1,40 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 03 — CU-01 Configurar semestre\nDiagrama de secuencia — RF-01
+actor "Comisión de TFG" as Comision
+boundary ":IUSemestreTFG" as IU
+control ":ControlConfiguracionSemestre" as Control
+entity ":SemestreTFG" as Semestre
+entity ":CronogramaTFG" as Cronograma
+
+Comision -> IU : solicitar()
+activate IU
+IU -> Comision : mostrarFormulario()
+Comision -> IU : ingresarDatos()
+IU -> Control : configurarSemestre(fechasClave, usuarioActual)
+' op: :g11.cu01.control/configurar-semestre
+activate Control
+Control -> Semestre : validarFechasClave(fechasClave)
+' op: :g11.cu01.semestre/validar-fechas-clave
+Control -> Semestre : registrarSemestre(fechasClave, usuarioActual)
+' op: :g11.cu01.semestre/registrar-semestre
+Control -> Cronograma : publicarCronograma(fechasClave)
+' op: :g11.cu01.cronograma/publicar-cronograma
+IU -> Comision : mostrarConfirmacion()
+' op: :g11.cu01.iu/mostrar-confirmacion
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Comision : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Comision : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-01; RNF-01, RNF-03; Minuta 01.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

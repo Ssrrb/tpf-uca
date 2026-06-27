@@ -1,0 +1,45 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 11 — CU-05 Publicar asignación de tutor\nDiagrama de secuencia — RF-06
+actor "Comisión de TFG" as Comision
+boundary ":IUPublicacionTutores" as IU
+control ":ControlPublicacionTutores" as Control
+entity ":SemestreTFG" as Semestre
+entity ":GrupoTFG" as Grupo
+entity ":Notificacion" as Notificacion
+
+Comision -> IU : solicitar()
+activate IU
+IU -> Comision : mostrarFormulario()
+Comision -> IU : ingresarDatos()
+IU -> Control : publicarAsignaciones(usuarioActual)
+' op: :g11.cu05.control/publicar-asignaciones
+activate Control
+Control -> Control : verificarAutorizacionComision(usuarioActual)
+' op: :g11.cu05.control/verificar-autorizacion-comision
+Control -> Semestre : obtenerFechaPublicacionTutores()
+' op: :g11.cu05.semestre/obtener-fecha-publicacion-tutores
+Control -> Grupo : listarGruposConTutorAsignado()
+' op: :g11.cu05.grupo/listar-grupos-con-tutor-asignado
+Control -> Grupo : marcarAsignacionPublicada(fechaActual)
+' op: :g11.cu05.grupo/marcar-asignacion-publicada
+Control -> Notificacion : notificarGrupo(grupo)
+' op: :g11.cu05.notificacion/notificar-grupo
+IU -> Comision : mostrarPublicacionRealizada()
+' op: :g11.cu05.iu/mostrar-publicacion-realizada
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Comision : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Comision : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-06; RNF-03; Minuta 03.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

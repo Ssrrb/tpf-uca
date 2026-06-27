@@ -1,0 +1,43 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 15 — CU-07 Registrar observaciones\nDiagrama de secuencia — RF-08
+actor "Tutor" as Tutor
+boundary ":IUObservacionesTutor" as IU
+control ":ControlObservacionesTutor" as Control
+entity ":GrupoTFG" as Grupo
+entity ":Tutor" as TutorEntidad
+entity ":Observacion" as Observacion
+
+Tutor -> IU : solicitar()
+activate IU
+IU -> Tutor : mostrarFormulario()
+Tutor -> IU : ingresarDatos()
+IU -> Control : registrarObservacion(grupo, texto, usuarioActual)
+' op: :g11.cu07.control/registrar-observacion
+activate Control
+Control -> TutorEntidad : verificarTutorAsignado(grupo, usuarioActual)
+' op: :g11.cu07.tutor/verificar-tutor-asignado
+Control -> Grupo : obtenerAnteproyectoPreliminar()
+' op: :g11.cu07.grupo/obtener-anteproyecto-preliminar
+Control -> Observacion : registrarObservacion(texto, fechaActual, usuarioActual)
+' op: :g11.cu07.observacion/registrar-observacion
+Control -> Grupo : agregarObservacion(observacion)
+' op: :g11.cu07.grupo/agregar-observacion
+IU -> Tutor : mostrarObservacionRegistrada()
+' op: :g11.cu07.iu/mostrar-observacion-registrada
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Tutor : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Tutor : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-08; RNF-04; Minuta 05.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

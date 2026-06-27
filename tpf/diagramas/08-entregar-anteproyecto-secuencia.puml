@@ -1,0 +1,48 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 17 — CU-08 Entregar anteproyecto\nDiagrama de secuencia — RF-09, RF-10
+actor "Estudiante" as Estudiante
+boundary ":IUEntregaAnteproyecto" as IU
+control ":ControlEntregaAnteproyecto" as Control
+entity ":SemestreTFG" as Semestre
+entity ":GrupoTFG" as Grupo
+entity ":Anteproyecto" as Anteproyecto
+entity ":AutorizacionExcepcional" as Autorizacion
+
+Estudiante -> IU : solicitar()
+activate IU
+IU -> Estudiante : mostrarFormulario()
+Estudiante -> IU : ingresarDatos()
+IU -> Control : entregarAnteproyecto(archivo, usuarioActual)
+' op: :g11.cu08.control/entregar-anteproyecto
+activate Control
+Control -> Grupo : obtenerGrupoDelEstudiante(usuarioActual)
+' op: :g11.cu08.grupo/obtener-grupo-del-estudiante
+Control -> Semestre : obtenerFechaLimiteAnteproyecto()
+' op: :g11.cu08.semestre/obtener-fecha-limite-anteproyecto
+Control -> Autorizacion : verificarAutorizacionExcepcional(grupo)
+' op: :g11.cu08.autorizacion/verificar-autorizacion-excepcional
+Control -> Control : validarEntregaHabilitada(fechaActual, fechaLimite, autorizacion)
+' op: :g11.cu08.control/validar-entrega-habilitada
+Control -> Anteproyecto : registrarEntregaFormal(archivo, fechaActual, usuarioActual)
+' op: :g11.cu08.anteproyecto/registrar-entrega-formal
+Control -> Grupo : cambiarEstado("Anteproyecto entregado")
+' op: :g11.cu08.grupo/cambiar-estado
+IU -> Estudiante : mostrarEntregaRegistrada()
+' op: :g11.cu08.iu/mostrar-entrega-registrada
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Estudiante : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Estudiante : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-09, RF-10; RNF-04, RNF-05; Minuta 06.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

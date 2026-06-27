@@ -1,0 +1,36 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam style strictuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title 20 — CU-10 Generar listado de grupos sin entrega\nDiagrama de clases de análisis BCE — RF-12
+
+class "IUListadoSinEntrega" as IU <<boundary>> {
+  + solicitar(): void
+  + mostrarResultado(): void
+}
+
+class "ControlListadoSinEntrega" as Control <<control>> {
+  + generarListadoSinEntrega(): void
+}
+
+class "SemestreTFG" as SemestreTFG <<entity>> {
+  - fechaLimite: String
+  + consultar(): void
+}
+class "GrupoTFG" as GrupoTFG <<entity>> {
+  - fechaLimite: String
+  + consultar(): void
+}
+
+IU --> Control
+Control --> SemestreTFG
+Control --> GrupoTFG
+SemestreTFG "1" -- "0..*" GrupoTFG : grupos
+
+legend bottom
+Trazabilidad: RF-12; RNF-06; Minuta 06.
+Modelo de análisis BCE sin detalles de implementación.
+endlegend
+@enduml

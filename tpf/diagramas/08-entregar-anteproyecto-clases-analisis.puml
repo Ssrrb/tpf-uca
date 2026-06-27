@@ -1,0 +1,46 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam style strictuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title 16 — CU-08 Entregar anteproyecto\nDiagrama de clases de análisis BCE — RF-09, RF-10
+
+class "IUEntregaAnteproyecto" as IU <<boundary>> {
+  + solicitar(): void
+  + mostrarResultado(): void
+}
+
+class "ControlEntregaAnteproyecto" as Control <<control>> {
+  + entregarAnteproyecto(): void
+}
+
+class "SemestreTFG" as SemestreTFG <<entity>> {
+  - fechaEntrega: String
+  + consultar(): void
+}
+class "GrupoTFG" as GrupoTFG <<entity>> {
+  - fechaEntrega: String
+  + consultar(): void
+}
+class "Anteproyecto" as Anteproyecto <<entity>> {
+  - fechaEntrega: String
+  + consultar(): void
+}
+class "AutorizacionExcepcional" as AutorizacionExcepcional <<entity>> {
+  - fechaEntrega: String
+  + consultar(): void
+}
+
+IU --> Control
+Control --> SemestreTFG
+Control --> GrupoTFG
+Control --> Anteproyecto
+Control --> AutorizacionExcepcional
+SemestreTFG "1" -- "0..*" GrupoTFG : grupos
+
+legend bottom
+Trazabilidad: RF-09, RF-10; RNF-04, RNF-05; Minuta 06.
+Modelo de análisis BCE sin detalles de implementación.
+endlegend
+@enduml

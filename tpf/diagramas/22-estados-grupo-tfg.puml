@@ -1,0 +1,32 @@
+@startuml
+!pragma layout smetana
+top to bottom direction
+skinparam style strictuml
+skinparam shadowing false
+skinparam state {
+  MaximumWidth 220
+}
+title 22 — Diagrama de estados del Grupo TFG\nRF-10 — primera etapa hasta entrega formal
+
+state "Pendiente de inscripción" as Pendiente
+state "Inscripto" as Inscripto
+state "Tutor asignado" as TutorAsignado
+state "En elaboración\nde anteproyecto" as Elaboracion
+state "¿Entrega habilitada?" as ValidarEntrega <<choice>>
+state "Anteproyecto\nentregado" as Entregado
+
+[*] --> Pendiente : iniciarInscripcion
+Pendiente --> Inscripto : inscribirGrupo\n[datosCompletos and integrantesEntre1y3\nand sinPertenenciaDuplicadaEnSemestre]\n/ registrarInscripcion(fecha, usuario)
+Pendiente --> Pendiente : inscribirGrupo\n[datosInvalidos or pertenenciaDuplicadaEnSemestre]\n/ informarErroresDeInscripcion
+Inscripto --> TutorAsignado : asignarTutor\n[actorEsComision and antesDeFechaPublicacion]\n/ registrarAsignacion(fecha, usuario)
+TutorAsignado --> TutorAsignado : publicarAsignacion\n/ notificarGrupo
+TutorAsignado --> Elaboracion : cargarVersionPreliminar\n[tituloProblemaObjetivoYAlcanceCompletos]\n/ registrarVersionPreliminar(fecha, usuario)
+Elaboracion --> ValidarEntrega : entregarAnteproyecto
+ValidarEntrega --> Entregado : [antesOEnFechaLimite\nor autorizacionExpresaComision]\n/ registrarEntrega(fecha, usuario)
+ValidarEntrega --> Elaboracion : [fechaLimiteVencida\nand not autorizacionExpresaComision]\n/ rechazarEntregaFueraDePlazo
+Entregado --> [*]
+
+legend bottom
+Estados sustantivos definidos por RF-10. No incluye dictamen, defensa ni cierre.
+endlegend
+@enduml

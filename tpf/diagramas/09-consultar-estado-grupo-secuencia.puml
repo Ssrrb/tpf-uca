@@ -1,0 +1,43 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+title 19 — CU-09 Consultar estado del grupo\nDiagrama de secuencia — RF-11
+actor "Estudiante" as Estudiante
+boundary ":IUEstadoGrupo" as IU
+control ":ControlEstadoGrupo" as Control
+entity ":SemestreTFG" as Semestre
+entity ":GrupoTFG" as Grupo
+entity ":Observacion" as Observacion
+
+Estudiante -> IU : solicitar()
+activate IU
+IU -> Estudiante : mostrarFormulario()
+Estudiante -> IU : ingresarDatos()
+IU -> Control : consultarEstadoGrupo(usuarioActual)
+' op: :g11.cu09.control/consultar-estado-grupo
+activate Control
+Control -> Grupo : obtenerGrupoDelEstudiante(usuarioActual)
+' op: :g11.cu09.grupo/obtener-grupo-del-estudiante
+Control -> Semestre : obtenerFechasClave()
+' op: :g11.cu09.semestre/obtener-fechas-clave
+Control -> Grupo : obtenerEstadoYTutor()
+' op: :g11.cu09.grupo/obtener-estado-y-tutor
+Control -> Observacion : listarObservacionesDelGrupo(grupo)
+' op: :g11.cu09.observacion/listar-observaciones-del-grupo
+IU -> Estudiante : mostrarEstadoGrupo(resumen)
+' op: :g11.cu09.iu/mostrar-estado-grupo
+alt flujo alternativo o validación incumplida
+  Control --> IU : resultadoConErrores
+  IU --> Estudiante : informarSituacion()
+else flujo normal
+  Control --> IU : resultadoValido
+  IU --> Estudiante : mostrarResultado()
+end
+deactivate Control
+deactivate IU
+legend bottom
+Trazabilidad: RF-11; RNF-01, RNF-06; Minuta 05.
+Cada comentario ' op: referencia una operación del modelo BCE canónico.
+endlegend
+@enduml

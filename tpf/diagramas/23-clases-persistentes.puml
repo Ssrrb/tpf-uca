@@ -1,0 +1,72 @@
+@startuml
+!pragma layout smetana
+skinparam style strictuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title 23 — Diagrama de clases persistentes\nPrimera etapa del TFG
+
+class SemestreTFG <<entity>> {
+  +id: UUID
+  +periodo: String
+  +fechaReunionInicial: Date
+  +fechaCierreInscripcion: Date
+  +fechaPublicacionTutores: Date
+  +fechaLimiteAnteproyecto: Date
+}
+class Estudiante <<entity>> {
+  +id: UUID
+  +nombre: String
+  +correo: String
+}
+class Tutor <<entity>> {
+  +id: UUID
+  +nombre: String
+  +correo: String
+}
+class GrupoTFG <<entity>> {
+  +id: UUID
+  +temaTentativo: String
+  +medioContacto: String
+  +estado: EstadoGrupo
+  +fechaInscripcion: DateTime
+}
+class Anteproyecto <<entity>> {
+  +id: UUID
+  +titulo: String
+  +problema: Text
+  +objetivoGeneral: Text
+  +alcance: Text
+  +fechaEntrega: DateTime
+}
+class Observacion <<entity>> {
+  +id: UUID
+  +texto: Text
+  +fechaRegistro: DateTime
+  +responsable: String
+}
+class AutorizacionExcepcional <<entity>> {
+  +id: UUID
+  +motivo: Text
+  +fechaAutorizacion: DateTime
+  +responsableComision: String
+}
+enum EstadoGrupo {
+  PENDIENTE_INSCRIPCION
+  INSCRIPTO
+  TUTOR_ASIGNADO
+  EN_ELABORACION_ANTEPROYECTO
+  ANTEPROYECTO_ENTREGADO
+}
+
+SemestreTFG "1" -- "0..*" GrupoTFG
+GrupoTFG "1" -- "1..3" Estudiante : integrantes
+GrupoTFG "0..*" -- "0..1" Tutor : tutor
+GrupoTFG "1" -- "0..1" Anteproyecto
+GrupoTFG "1" -- "0..*" Observacion
+GrupoTFG "1" -- "0..1" AutorizacionExcepcional
+GrupoTFG --> EstadoGrupo
+
+note bottom
+Restricción: un Estudiante no puede integrar más de un GrupoTFG en el mismo SemestreTFG.
+end note
+@enduml
