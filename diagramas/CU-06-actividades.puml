@@ -1,0 +1,94 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+title CU-06 · Actividades · Generar certificación y costo del rubro
+
+|Ingeniero de obra|
+start
+:Seleccionar la obra;
+if (¿Generar desde la última versión?) then ([sí])
+  |Motor de ingeniería|
+  :Crear una versión nueva del certificado de la obra
+  a partir de la última, con sus líneas;
+else ([no])
+  |Motor de ingeniería|
+  :Crear una versión nueva del certificado
+  de la obra desde cero;
+endif
+:Buscar mediciones registradas hasta la fecha
+que no figuran en el certificado de la obra;
+if (¿Hay mediciones sin certificar?) then ([no])
+  :Informar que no hay mediciones para certificar;
+  stop
+else ([sí])
+endif
+:Tomar las cantidades certificables, propias y subcontratadas
+(excluir las propuestas de exceso pendientes);
+
+fork
+  :Valorizar cada ítem con cantidad certificable
+  por precio de venta vigente
+  (presupuesto de costos y adendas aprobadas);
+  if (¿Ítem sin precio de venta o sin movimiento vigente?) then ([sí])
+    :Señalar el ítem con su dato de origen
+    e impedir continuar;
+    stop
+  else ([no])
+  endif
+  :Aplicar impuestos y fondos de retención
+  según la configuración de la obra;
+fork again
+  :Calcular el costo del avance por rubro e ítem
+  (materiales, mano de obra y equipos);
+  if (¿Insumo sin precio vigente en el catálogo?) then ([sí])
+    :Informar el insumo y no calcular
+    el costo de ese rubro;
+  else ([no])
+    :Comparar el costo del avance con la versión
+    vigente del presupuesto de costos;
+  endif
+end fork
+
+:Señalar excesos, mediciones faltantes,
+precios sin movimiento vigente y diferencias de totales;
+
+|Ingeniero de obra|
+:Revisar el certificado, el costo por rubro
+y los señalamientos;
+
+|Motor de ingeniería|
+:Guardar la versión con sus respaldos
+(no modifica el presupuesto del cliente);
+
+note right
+  Queda como última versión, modificable
+  con una versión nueva. El certificado no tiene estados.
+end note
+
+|Ingeniero de obra|
+if (¿Enviar a facturar?) then ([sí])
+  :Enviar a facturar la versión (CU-07);
+  :El ERP genera la factura al cliente (CU-08);
+  note right
+    El pago al subcontratista lo registra el ERP.
+  end note
+else ([no])
+endif
+stop
+@enduml

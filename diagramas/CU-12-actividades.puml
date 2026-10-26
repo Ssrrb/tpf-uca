@@ -1,0 +1,77 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-12 · Actividades · Incorporar adenda al presupuesto de costos y liberar saldos
+|Ingeniero de obra|
+start
+:Seleccionar la obra y la adenda registrada;
+|Motor de ingeniería|
+:Mostrar rubros e ítems afectados con efecto,
+límite, importe utilizado y saldo (RF-20);
+|Ingeniero de obra|
+if (¿La adenda tiene un error?) then ([sí])
+  :Volver al CU-11 para corregirla;
+  stop
+else ([no])
+  :Incorporar;
+endif
+|Motor de ingeniería|
+if (¿Datos completos y sin exceso fuera de excepción?) then ([no])
+  :Informar e impedir la incorporación;
+  stop
+else ([sí])
+endif
+:Crear versión nueva del presupuesto de costos
+vinculada a la anterior;
+|Sistema ERP|
+:Calcular el costo de la adenda;
+|Motor de ingeniería|
+if (¿El ERP devolvió el costo?) then ([no])
+  :Descartar la versión nueva,
+  mantener la vigente y permitir reintentar;
+  stop
+else ([sí])
+endif
+if (¿La adenda amplía ítems con cantidades retenidas?) then ([sí])
+  :Recalcular el saldo de cada ítem;
+  :Liberar las cantidades retenidas que el saldo cubre;
+  note right
+    Lo no cubierto sigue pendiente (RF-09)
+    y no entra en el certificado (RF-22).
+  end note
+else ([no])
+endif
+:Activar la versión nueva con actor, fecha y respaldo;
+:Informar las cantidades liberadas;
+stop
+@enduml

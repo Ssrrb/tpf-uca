@@ -1,0 +1,60 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+title CU-15 · Registrar cobros y ejecutar pagos en tesorería
+
+class "Tesorería" as Tesoreria <<control>> {
+  --
+  + obtenerPendientes(obra: texto): lista de DocumentoFinanciero
+  + registrarMovimiento(documento: DocumentoFinanciero, importe: decimal, fecha: fecha, medio: texto, comprobante: archivo): MovimientoTesoreria
+  + rechazarPago(documento: DocumentoFinanciero, motivo: texto): vacío
+}
+
+class "Documento financiero" as DocumentoFinanciero {
+  + numero: texto
+  + tipo: factura_cliente | liquidacion_subcontrato
+  + obra: texto
+  + versionCertificado: entero
+  + importeTotal: decimal
+  + /saldo: decimal
+  + motivoRechazo: texto [0..1]
+  --
+  + obtenerSaldo(): decimal
+  + aplicarMovimiento(movimiento: MovimientoTesoreria): vacío
+  + registrarRechazo(motivo: texto): vacío
+}
+
+class "Movimiento de tesorería" as MovimientoTesoreria {
+  + tipo: cobro | pago
+  + importe: decimal
+  + fecha: fecha
+  + medio: texto
+  + comprobante: archivo
+  + usuarioId: identificador
+  + aprobado: lógico
+  --
+  + aprobarYEjecutar(usuarioId: identificador): vacío
+}
+
+Tesoreria ..> DocumentoFinanciero : consulta
+Tesoreria ..> MovimientoTesoreria : <<create>>
+DocumentoFinanciero "1" *-- "0..*" MovimientoTesoreria : se cancela con
+
+note bottom of DocumentoFinanciero
+  Factura al cliente (CU-08) o liquidación a subcontratista
+  (CU-13), derivadas de una versión del certificado enviada
+  a facturar. El ERP es dueño de estos documentos (PR-06).
+end note
+@enduml

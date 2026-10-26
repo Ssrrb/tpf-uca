@@ -1,0 +1,44 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-05 · Estados del Precio de recurso
+[*] --> programado : registrarPrecio()\n[vigenteDesde es futura]
+[*] --> vigente : registrarPrecio()\n[vigenteDesde es hoy o anterior]
+programado --> vigente : llega la fecha vigenteDesde
+vigente --> historico : cerrarVigencia(hasta)\n[se registra un precio nuevo]
+historico --> [*]
+note right of historico
+  No se borra: sigue consultable
+  y los cálculos ya hechos no cambian (NF-06).
+end note
+@enduml

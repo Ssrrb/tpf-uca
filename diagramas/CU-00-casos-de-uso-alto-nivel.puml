@@ -1,0 +1,112 @@
+@startuml
+!theme plain
+title Diagrama de Casos de Uso (Alto Nivel) · Ctrl+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 30
+skinparam ranksep 90
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+
+actor "Ingeniero de obra" as ING
+actor "Administrador" as ADM
+actor "Subcontratista" as SUB
+
+actor "Motor de ingeniería" as MOT <<sistema>>
+actor "Sistema ERP" as ERP <<sistema>>
+actor "Finanzas y tesorería" as FIN
+actor "Cliente" as CLI
+
+rectangle "Ctrl+" {
+  package "Obra y presupuesto" {
+    usecase "CU-01 Crear obra y\nasignar responsables" as CU01
+    usecase "CU-02 Cargar y validar\nel presupuesto" as CU02
+    usecase "CU-03 Activar y versionar\nel presupuesto" as CU03
+    usecase "CU-05 Mantener catálogos\ny banco de insumos" as CU05
+    usecase "CU-11 Registrar adenda\n(movimiento presupuestario)" as CU11
+    usecase "CU-12 Incorporar adenda al presupuesto\nde costos y liberar saldos" as CU12
+  }
+  package "Medición y certificación" {
+    usecase "CU-04 Registrar la medición\nde avance e insumos" as CU04
+    usecase "CU-06 Generar certificación\ny costo del rubro" as CU06
+    usecase "CU-07 Enviar a facturar la versión\ndel certificado y derivar al ERP" as CU07
+    usecase "CU-09 Registrar contrato y habilitar\nportal de subcontratista" as CU09
+    usecase "CU-13 Liquidar y derivar\npago a subcontratista" as CU13
+  }
+  package "Finanzas y control" {
+    usecase "CU-08 Generar factura\nal cliente en ERP" as CU08
+    usecase "CU-10 Controlar costos y\nCurva S de la obra" as CU10
+    usecase "CU-14 Consultar\ntablero financiero" as CU14
+    usecase "CU-15 Registrar cobros y\nejecutar pagos en tesorería" as CU15
+  }
+}
+
+' Actores principales (inician el caso de uso)
+ADM -- CU01
+ING -- CU02
+ADM -- CU03
+ING -- CU04
+ADM -- CU05
+ING -- CU06
+ADM -- CU07
+ADM -- CU09
+SUB -- CU09
+ING -- CU10
+ING -- CU11
+ING -- CU12
+ING -- CU13
+ADM -- CU14
+FIN -- CU15
+
+' Actores que participan sin iniciar
+ADM -- CU10
+ADM -- CU13
+ING -- CU07
+
+' Actores secundarios
+CU02 -- MOT
+CU03 -- MOT
+CU04 -- MOT
+CU05 -- MOT
+CU06 -- MOT
+CU07 -- MOT
+CU07 -- ERP
+CU08 -- ERP
+CU08 -- FIN
+CU08 -- CLI
+CU09 -- ERP
+CU10 -- MOT
+CU11 -- MOT
+CU12 -- MOT
+CU12 -- ERP
+CU13 -- MOT
+CU13 -- ERP
+CU14 -- MOT
+CU14 -- ERP
+CU14 -- FIN
+CU15 -- ERP
+
+legend bottom
+  Línea continua sin flecha = asociación actor - caso de uso (UML 2).
+  Izquierda: actores que inician los casos de uso. Derecha: actores secundarios.
+  «sistema» = actor no humano (sistema externo).
+  CU-08 lo inicia el Sistema ERP al recibir la versión enviada a facturar.
+endlegend
+@enduml

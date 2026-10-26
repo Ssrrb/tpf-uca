@@ -1,0 +1,109 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-11 · Registrar adenda (movimiento presupuestario)
+
+class "Motor de ingeniería" as MotorIngenieria <<control>> {
+  --
+  + iniciarAdenda(obra: Obra): Adenda
+  + agregarMovimiento(adenda: Adenda, item: ItemPresupuesto, tipo: texto, cantidad: decimal [0..1], precio: decimal [0..1]): vacío
+  + adjuntarRespaldo(adenda: Adenda, motivo: texto, respaldo: archivo): vacío
+  + guardar(adenda: Adenda): vacío
+}
+
+class Obra {
+  + identificador: identificador
+  + codigo: texto
+  --
+  + puedeRegistrarAdenda(usuarioId: identificador): lógico
+  + obtenerPresupuestoCostosVigente(): VersionPresupuestoCostos
+  + obtenerMedicionesConExceso(): lista de MedicionAvance
+}
+
+class "Versión de presupuesto de costos" as VersionPresupuestoCostos {
+  + numero: entero
+  + vigente: lógico
+  --
+  + obtenerItem(codigo: texto): ItemPresupuesto
+}
+
+class "Ítem de presupuesto" as ItemPresupuesto {
+  + rubro: texto
+  + descripcion: texto
+  + cantidadPresupuestada: decimal
+  + precioVenta: decimal
+  --
+  + limiteDisponible(): decimal
+  + importeUtilizado(): decimal
+}
+
+class Adenda {
+  + numero: entero
+  + motivo: texto
+  + respaldo: archivo
+  + excepcionRegistrada: lógico
+  + estado: en_registro | registrada | incorporada
+  + /efectoMonetario: decimal
+  + /limiteAcumulado: decimal
+  + /importeUtilizado: decimal
+  + /saldoProyectado: decimal
+  + usuarioId: identificador
+  + fechaRegistro: fecha y hora
+  --
+  + agregarMovimiento(item: ItemPresupuesto, tipo: texto, cantidad: decimal [0..1], precio: decimal [0..1]): MovimientoAdenda
+  + adjuntarRespaldo(motivo: texto, respaldo: archivo): vacío
+  + calcularEfecto(): decimal
+  + excedeLimite(): lógico
+  + validarCompleta(): lista de texto
+  + guardar(usuarioId: identificador): vacío
+}
+
+class "Movimiento de adenda" as MovimientoAdenda {
+  + tipo: ampliacion | deduccion | variacion_de_precio
+  + cantidadNueva: decimal [0..1]
+  + precioNuevo: decimal [0..1]
+  + /efectoMonetario: decimal
+  --
+  + calcularEfecto(): decimal
+}
+
+class "Medición de avance" as MedicionAvance {
+  + cantidad: decimal
+  + cantidadExcedidaPendiente: decimal
+  --
+  + vincularAAdenda(adenda: Adenda): vacío
+}
+
+MotorIngenieria ..> Obra : consulta
+MotorIngenieria ..> Adenda : registra
+Obra "1" *-- "1..*" VersionPresupuestoCostos : versiones de costos
+VersionPresupuestoCostos "1" *-- "1..*" ItemPresupuesto : contiene
+Obra "1" *-- "0..*" Adenda : registra
+Adenda "1" *-- "1..*" MovimientoAdenda : contiene
+MovimientoAdenda "0..*" --> "1" ItemPresupuesto : modifica
+Obra "1" *-- "0..*" MedicionAvance : registra
+MedicionAvance "0..*" --> "0..1" Adenda : exceso cubierto por
+
+note bottom of Adenda
+  Documento interno: el Ingeniero de obra registra los cambios
+  que le indicaron. Las aprobaciones contractuales quedan fuera
+  del sistema (RF-21). El presupuesto de costos vigente no cambia
+  hasta que la adenda se incorpora (CU-12).
+end note
+@enduml

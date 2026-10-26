@@ -1,0 +1,65 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-01 · Crear obra y asignar responsables
+actor "Administrador" as Admin
+participant "organizacion:\nOrganizacion" as Org
+participant "usuario:\nUsuario" as Usr
+participant "membresia:\nMembresia" as Memb
+participant "obra:\nObra" as Obra
+participant "asignacion:\nAsignacion" as Asig
+
+Admin -> Org: crearObra(datos, creador)
+Org -> Usr: obtenerMembresía(organizacion)
+Usr --> Org: membresia [opcional]
+Org -> Memb: obtenerRol()
+Memb --> Org: rol: texto
+break Sin membresía o rol distinto de admin
+  Org --> Admin: operación denegada (NF-01)
+end
+Org -> Org: códigoDisponible(codigo)
+break Código ya en uso
+  Org --> Admin: pide registrar otro código
+end
+create Obra
+Org -> Obra: «create»(datos, creador)
+Org -> Obra: validarDatos()
+Obra --> Org: válidos: lógico
+break Datos inválidos
+  Org --> Admin: muestra los errores; no se crea la obra
+end
+Org --> Admin: obra: Obra
+
+loop Por cada responsable seleccionado
+  Admin -> Obra: asignarResponsable(usuario, registradoPor)
+  Obra -> Usr: obtenerMembresía(organizacion)
+  Usr --> Obra: membresia [opcional]
+  alt Responsable ajeno a la organización
+    Obra --> Admin: rechaza la asignación
+  else Miembro de la organización
+    create Asig
+    Obra -> Asig: «create»(usuario, fechaAsignacion)
+    Obra --> Admin: asignacion: Asignacion
+  end
+end
+note over Admin, Asig
+  La creación es atómica: si se cancela o falla,
+  no se crea la obra ni se asigna ningún responsable.
+  Quedan registrados el creador y la fecha (NF-04).
+end note
+@enduml

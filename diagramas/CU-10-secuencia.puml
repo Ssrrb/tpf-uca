@@ -1,0 +1,92 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-10 · Controlar costos y Curva S de la obra
+actor "Ingeniero de obra" as Ing
+control "motor:\nMotorIngenieria" as Motor
+participant "obra:\nObra" as Obra
+participant "vigente:\nVersionPresupuestoCostos" as Version
+participant "item:\nItemPresupuesto" as Item
+participant "medicion:\nMedicionAvance" as Med
+participant "certificado:\nVersionCertificado" as Cert
+participant "consulta:\nConsultaCostos" as Consulta
+participant "linea:\nLineaCosto" as Linea
+participant "curva:\nCurvaS" as Curva
+
+Ing -> Motor: consultarCostos(obra, fechaCorte)
+Motor -> Obra: perteneceUsuario(usuarioId)
+Obra --> Motor: pertenece: lógico
+break Usuario sin pertenencia a la obra (NF-01)
+  Motor --> Ing: impide la consulta
+end
+Motor -> Obra: obtenerPresupuestoCostosVigente()
+Obra --> Motor: vigente
+Motor -> Version: obtenerItems()
+Version --> Motor: ítems
+Motor -> Obra: obtenerMedicionesAprobadas(fechaCorte)
+Obra --> Motor: mediciones
+Motor -> Obra: obtenerVersionesCertificado(fechaCorte)
+Obra --> Motor: versiones
+create Consulta
+Motor -> Consulta: «create»(obra, fechaCorte)
+
+loop Por cada ítem del presupuesto
+  Motor -> Item: costoPresupuestado()
+  Item --> Motor: costo presupuestado
+  loop Por cada medición del ítem
+    Motor -> Med: costoReal()
+    Med --> Motor: costo propio o subcontratado
+  end
+  create Linea
+  Motor -> Linea: «create»(item, costoPresupuestado, costoReal, origenes)
+  Motor -> Consulta: agregarLinea(linea)
+end
+Motor -> Cert: importeCertificadoHasta(fechaCorte)
+Cert --> Motor: importe certificado
+
+Motor -> Consulta: estaVacia()
+Consulta --> Motor: vacia: lógico
+alt Sin datos a la fecha de corte
+  Motor --> Ing: lo informa y no dibuja la Curva S
+else Hay datos
+  create Curva
+  Consulta -> Curva: «create»(fechaCorte)
+  Motor -> Curva: calcular(mediciones, versiones)
+  note right of Curva
+    Separa avance físico, financiero
+    y físico pendiente de adenda (RF-27).
+  end note
+  Motor --> Ing: costos por rubro e ítem, diferencia, saldo y Curva S
+
+  opt Filtra por rubro o ejecutor (flujo 1a)
+    Ing -> Motor: filtrar(consulta, rubro, ejecutor)
+    Motor -> Consulta: aplicarFiltro(rubro, ejecutor)
+    Motor --> Ing: vista recalculada
+  end
+  Ing -> Motor: verOrigen(linea)
+  Motor -> Linea: obtenerOrigen()
+  Linea --> Motor: respaldos
+  Motor --> Ing: mediciones, versiones del certificado o documentos (NF-12)
+  opt Exporta (flujo 6a)
+    Ing -> Motor: exportar(consulta, formato)
+    Motor -> Consulta: exportar(formato)
+    Consulta --> Motor: archivo nuevo
+    Motor --> Ing: archivo XLSX o PDF
+  end
+end
+@enduml

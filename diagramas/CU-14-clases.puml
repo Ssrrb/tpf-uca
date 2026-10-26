@@ -1,0 +1,68 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+title CU-14 · Consultar tablero financiero
+
+class "Motor de ingeniería" as MotorIngenieria <<control>> {
+  --
+  + abrirTablero(usuarioId: identificador, obras: lista de Obra, fecha: fecha): TableroFinanciero
+  + verDetalle(indicador: IndicadorTablero): texto
+}
+
+class Obra {
+  + identificador: identificador
+  + codigo: texto
+  + nombre: texto
+  --
+  + verificarAcceso(usuarioId: identificador): lógico
+  + obtenerTotalesDeObra(fecha: fecha): lista de IndicadorTablero
+}
+
+class "Tablero financiero" as TableroFinanciero {
+  + fecha: fecha
+  + moneda: texto = "PYG"
+  + filtroRubro: texto [0..1]
+  --
+  + agregarIndicadores(indicadores: lista de IndicadorTablero): vacío
+  + calcularDiferencias(): vacío
+}
+
+class "Indicador del tablero" as IndicadorTablero {
+  + concepto: presupuesto_vigente | costo_propio | costo_subcontratado | certificado | facturado | cobrado | pagado | saldo
+  + rubro: texto [0..1]
+  + importe: decimal
+  + /diferencia: decimal [0..1]
+  + fecha: fecha
+  + unidad: texto
+  + moneda: texto
+  + procedencia: ECMS | ERP
+  + referenciaRespaldo: texto
+  --
+  + obtenerRespaldo(): texto
+}
+
+MotorIngenieria ..> Obra : consulta
+MotorIngenieria ..> TableroFinanciero : <<create>>
+TableroFinanciero "1" *-- "0..*" IndicadorTablero : muestra
+TableroFinanciero "0..*" --> "1..*" Obra : resume
+IndicadorTablero "0..*" --> "1" Obra : de
+
+note bottom of IndicadorTablero
+  Cada total indica fecha, unidad, moneda y
+  procedencia (NF-11) y permite recuperar su
+  respaldo: versión del presupuesto, mediciones,
+  versión del certificado o documento del ERP (NF-12).
+end note
+@enduml

@@ -1,0 +1,80 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-11 · Actividades · Registrar adenda (movimiento presupuestario)
+|Ingeniero de obra|
+start
+:Seleccionar la obra;
+|Motor de ingeniería|
+if (¿El usuario puede registrar adendas en la obra?) then ([no])
+  :Denegar la operación;
+  stop
+else ([sí])
+endif
+:Obtener el presupuesto de costos vigente;
+if (¿Hay cantidades retenidas por exceso?) then ([sí])
+  :Ofrecer incluirlas en la adenda;
+else ([no])
+endif
+|Ingeniero de obra|
+repeat
+  :Elegir ítem, tipo de movimiento
+  y nueva cantidad o precio;
+  |Motor de ingeniería|
+  :Calcular el efecto del movimiento;
+  |Ingeniero de obra|
+repeat while (¿Agrega otro ítem?) is ([sí]) not ([no])
+|Motor de ingeniería|
+:Mostrar efecto monetario, límite acumulado,
+importe utilizado y saldo proyectado;
+|Ingeniero de obra|
+:Ingresar el motivo y adjuntar el respaldo;
+:Presionar Guardar;
+|Motor de ingeniería|
+if (¿Datos completos?) then ([no])
+  :Marcar los campos faltantes;
+  stop
+else ([sí])
+endif
+if (¿Excede el límite sin excepción registrada?) then ([sí])
+  :Informar el exceso e impedir guardar;
+  stop
+else ([no])
+endif
+:Guardar la adenda registrada con actor y fecha;
+note right
+  El presupuesto de costos vigente no cambia
+  hasta incorporarla (CU-12).
+end note
+stop
+@enduml

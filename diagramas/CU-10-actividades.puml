@@ -1,0 +1,73 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-10 · Actividades · Controlar costos y Curva S de la obra
+|Ingeniero de obra o Administrador|
+start
+:Seleccionar la obra y la fecha de corte;
+|Motor de ingeniería|
+if (¿El usuario pertenece a la obra?) then ([no])
+  :Impedir la consulta;
+  stop
+else ([sí])
+endif
+:Consolidar presupuesto de costos vigente,
+mediciones aprobadas y versiones del certificado;
+if (¿Hay datos a la fecha de corte?) then ([no])
+  :Informar que no hay datos
+  y no dibujar la Curva S;
+  stop
+else ([sí])
+endif
+fork
+  :Calcular costo presupuestado, costo real,
+  diferencia y saldo por rubro e ítem;
+fork again
+  :Calcular la Curva S: avance físico, financiero
+  y físico pendiente de adenda;
+end fork
+:Mostrar costos y Curva S;
+|Ingeniero de obra o Administrador|
+repeat
+  :Filtrar o elegir un total;
+  |Motor de ingeniería|
+  :Mostrar la vista filtrada o el respaldo del total;
+  |Ingeniero de obra o Administrador|
+repeat while (¿Consulta otro total?) is ([sí]) not ([no])
+if (¿Exporta la consulta?) then ([sí])
+  |Motor de ingeniería|
+  :Generar archivo nuevo XLSX o PDF;
+else ([no])
+endif
+stop
+@enduml

@@ -1,0 +1,54 @@
+@startuml
+!theme plain
+title Diagrama de Generalización de Actores · Ctrl+
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 50
+skinparam ranksep 70
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+
+actor "<i>Usuario</i>\n{abstract}" as USR
+actor "<i>Usuario interno</i>\n{abstract}" as UI
+actor "Ingeniero de obra" as ING
+actor "Administrador" as ADM
+actor "Finanzas y tesorería" as FIN
+actor "Subcontratista" as SUB
+actor "Cliente" as CLI
+
+actor "<i>Sistema de Obra Studio</i>\n{abstract}" as SOS <<sistema>>
+actor "Motor de ingeniería" as MOT <<sistema>>
+actor "Sistema ERP" as ERP <<sistema>>
+
+USR <|-- UI
+USR <|-- SUB
+UI <|-- ING
+UI <|-- ADM
+UI <|-- FIN
+
+SOS <|-- MOT
+SOS <|-- ERP
+
+note bottom of SUB
+  Accede solo al portal de
+  sus contratos; no registra
+  mediciones.
+end note
+
+note bottom of CLI
+  Comitente: no ingresa al sistema;
+  acepta adendas y recibe la
+  factura que deriva el ERP.
+end note
+
+legend bottom
+  Flecha con punta triangular hueca = generalización (UML 2):
+  el actor hijo hereda los casos de uso del actor padre.
+  Nombre en cursiva {abstract} = actor abstracto, no se instancia.
+  «sistema» = actor no humano.
+endlegend
+@enduml

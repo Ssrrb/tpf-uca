@@ -1,0 +1,70 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-01 · Actividades · Crear obra y asignar responsables
+|Administrador|
+start
+:Ingresar código, nombre, dirección,
+fechas y comitente de la obra;
+|Motor de ingeniería|
+if (¿Tiene rol admin vigente en la organización?) then ([no])
+  :Denegar la operación;
+  stop
+else ([sí])
+endif
+if (¿Código disponible?) then ([no])
+  :Pedir otro código;
+  stop
+else ([sí])
+endif
+if (¿Datos válidos?) then ([no])
+  :Mostrar los errores de validación;
+  stop
+else ([sí])
+endif
+:Crear la obra con su configuración inicial
+y registrar creador y fecha;
+|Administrador|
+repeat
+  :Seleccionar un responsable;
+  |Motor de ingeniería|
+  if (¿Es miembro de la organización?) then ([sí])
+    :Crear la asignación de responsable;
+  else ([no])
+    :Rechazar la asignación;
+  endif
+  |Administrador|
+repeat while (¿Hay más responsables?) is ([sí]) not ([no])
+:Confirmar la creación de la obra;
+stop
+@enduml

@@ -1,0 +1,65 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ArrowColor #17324D
+hide footbox
+title CU-02 · 1/3 · Carga del archivo
+actor "Ingeniero de obra" as Usuario
+participant "obra:\nObra" as Obra
+participant "presupuesto:\nPresupuesto" as Presupuesto
+participant "archivo:\nArchivoOriginal" as Archivo
+participant "version:\nVersionPresupuesto" as Version
+note over Usuario, Version
+  Inicio: obra seleccionada y usuario autorizado.
+end note
+
+Usuario -> Obra: obtenerPresupuestos()
+Obra --> Usuario: lista de Presupuesto
+note over Usuario, Archivo
+  El usuario selecciona presupuesto y archivo.
+  archivo conserva nombre, tipoContenido, tamanoBytes,
+  huellaDigital y claveAlmacenamiento inmutables.
+end note
+Usuario -> Presupuesto: cargarArchivo(archivo)
+Presupuesto -> Archivo: validarFormato()
+Archivo --> Presupuesto: formatoValido: lógico
+Presupuesto -> Archivo: validarTamano(maximoBytes)
+Archivo --> Presupuesto: tamanoValido: lógico
+Presupuesto -> Archivo: verificarIntegridad()
+Archivo --> Presupuesto: integridadValida: lógico
+
+break Formato, tamaño o integridad inválidos
+  Presupuesto --> Usuario: carga rechazada; sin nueva versión
+end
+
+Presupuesto -> Presupuesto: esArchivoRepetido(huellaDigital)
+break Mismo XLSX sin cambios (NF-07)
+  Presupuesto --> Usuario: archivo ya importado; no se crea otra versión
+end
+
+Presupuesto -> Presupuesto: crearVersion(archivo)
+note right of Presupuesto
+  version: identificador, numero, fechaCreacion
+  y usuarioCreadorId. numero no es revision.
+end note
+Presupuesto -> Archivo: guardarOriginal()
+break Falla de almacenamiento o interrupción de la carga
+  Presupuesto -> Version: descartarCargaIncompleta()
+  Presupuesto --> Usuario: carga descartada; permite reintentar
+end
+
+Presupuesto --> Usuario: version: VersionPresupuesto
+ref over Usuario, Version
+  Continúa en 2/3: Interpretación y validación.
+  Archivo guardado; versión pendiente de revisión.
+end ref
+
+@enduml

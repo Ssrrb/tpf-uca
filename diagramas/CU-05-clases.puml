@@ -1,0 +1,80 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-05 · Mantener catálogos y banco de insumos
+
+class "Motor de ingeniería" as MotorIngenieria <<control>> {
+  --
+  + listarRecursos(tipo: texto, filtros: texto): lista de Recurso
+  + crearRecurso(datos: texto, precio: decimal, vigenteDesde: fecha): Recurso
+  + modificarRecurso(recurso: Recurso, datos: texto): vacío
+  + actualizarPrecio(recurso: Recurso, valor: decimal, vigenteDesde: fecha): vacío
+  + darDeBaja(recurso: Recurso): vacío
+}
+
+class "Catálogo" as Catalogo {
+  + identificador: identificador
+  + organizacionId: identificador
+  + tipo: insumo | material | equipo | mano_de_obra | proveedor
+  --
+  + puedeAdministrar(usuarioId: identificador): lógico
+  + listarRecursos(filtros: texto, pagina: entero): lista de Recurso
+  + existeCodigo(codigo: texto): lógico
+  + agregarRecurso(codigo: texto, descripcion: texto, unidad: texto, categoria: texto, usuarioId: identificador): Recurso
+}
+
+class Recurso {
+  + identificador: identificador
+  + codigo: texto
+  + descripcion: texto
+  + unidad: texto
+  + categoria: texto
+  + estado: activo | inactivo
+  + usuarioActualizacionId: identificador
+  + fechaActualizacion: fecha y hora
+  --
+  + actualizarDatos(descripcion: texto, unidad: texto, categoria: texto, usuarioId: identificador): vacío
+  + registrarPrecio(valor: decimal, vigenteDesde: fecha, usuarioId: identificador): PrecioRecurso
+  + obtenerPrecioVigente(fecha: fecha): decimal
+  + darDeBaja(usuarioId: identificador): vacío
+}
+
+class "Precio de recurso" as PrecioRecurso {
+  + valor: decimal
+  + moneda: texto = "PYG"
+  + vigenteDesde: fecha
+  + vigenteHasta: fecha [0..1]
+  + usuarioRegistroId: identificador
+  + fechaRegistro: fecha y hora
+  --
+  + esValorValido(): lógico
+  + seSuperponeCon(desde: fecha): lógico
+  + cerrarVigencia(hasta: fecha): vacío
+}
+
+MotorIngenieria ..> Catalogo : administra
+Catalogo "1" *-- "0..*" Recurso : contiene
+Recurso "1" *-- "0..*" PrecioRecurso : historial de precios
+
+note bottom of PrecioRecurso
+  Un precio nuevo cierra la vigencia anterior sin borrarla:
+  los cálculos ya hechos no cambian (NF-06).
+  Los proveedores no llevan precio.
+end note
+@enduml

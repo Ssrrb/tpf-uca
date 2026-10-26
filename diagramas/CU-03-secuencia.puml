@@ -1,0 +1,67 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-03 · Activar y versionar el presupuesto
+actor "Administrador" as Admin
+control "motor:\nMotorIngenieria" as Motor
+participant "obra:\nObra" as Obra
+participant "presupuesto:\nPresupuesto" as Pres
+participant "nueva:\nVersionPresupuesto" as Nueva
+participant "anterior:\nVersionPresupuesto" as Anterior
+
+Admin -> Motor: prepararActivacion(obra, nueva)
+Motor -> Obra: usuarioPuedeActivar(usuarioId)
+Obra --> Motor: permitido: lógico
+break Usuario sin permisos sobre la obra (NF-01)
+  Motor --> Admin: deniega la operación
+end
+Motor -> Nueva: verificarActivable()
+Nueva --> Motor: errores: lista de texto
+break Versión no validada, con datos inválidos o estructura sin confirmar (RF-05)
+  Motor --> Admin: impide activar e informa qué corregir
+end
+Motor --> Admin: resumen de la versión a activar
+
+alt Cancela
+  Admin -> Motor: cancelar()
+  Motor --> Admin: sin cambios en la versión vigente
+else Confirma
+  Admin -> Motor: activarVersion(obra, nueva)
+  Motor -> Obra: obtenerPresupuestoCostos()
+  Obra --> Motor: presupuesto: Presupuesto
+  Motor -> Pres: activarVersion(nueva, usuarioId)
+  group Operación atómica
+    Pres -> Pres: obtenerVigente()
+    opt Existe una versión vigente
+      Pres -> Anterior: pasarAHistorica()
+    end
+    Pres -> Nueva: activar(usuarioId)
+    note right of Nueva
+      Registra usuario y fecha (NF-04)
+      y queda vinculada a la anterior.
+    end note
+  end
+  alt Error o interrupción
+    Pres --> Motor: error
+    Motor --> Admin: no se pudo activar; la vigente anterior sigue igual
+  else Activación completa
+    Pres --> Motor: activada
+    Motor --> Admin: versión vigente nueva
+  end
+end
+@enduml

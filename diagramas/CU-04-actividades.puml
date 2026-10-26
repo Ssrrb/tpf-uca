@@ -1,0 +1,75 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-04 · Actividades · Registrar la medición de avance e insumos
+|Ingeniero de obra|
+start
+:Seleccionar la obra;
+|Motor de ingeniería|
+:Mostrar ítems del presupuesto de costos vigente
+con presupuestado, medido y saldo;
+|Ingeniero de obra|
+:Ingresar cantidad, unidad y ejecutor;
+if (¿Ejecutor subcontratado?) then ([sí])
+  :Elegir el contrato;
+else ([no])
+endif
+:Cargar insumos consumidos;
+:Adjuntar evidencia (web o teléfono);
+|Motor de ingeniería|
+if (¿Cantidad ya contabilizada?) then ([sí])
+  :Rechazar e indicar la medición previa;
+  stop
+else ([no])
+endif
+if (¿Supera el saldo vigente?) then ([sí])
+  :Separar el exceso como pendiente
+  e informar el importe;
+else ([no])
+endif
+|Ingeniero de obra|
+if (¿Confirma?) then ([sí])
+  |Motor de ingeniería|
+  :Guardar la medición registrada
+  con actor, fecha y obra;
+  |Ingeniero de obra|
+  :Aprobar o rechazar la medición;
+  |Motor de ingeniería|
+  :Registrar decisión, actor y fecha;
+  stop
+else ([no])
+  |Motor de ingeniería|
+  :No guardar cambios;
+  stop
+endif
+@enduml

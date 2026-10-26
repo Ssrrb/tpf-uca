@@ -1,0 +1,88 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ArrowColor #17324D
+hide footbox
+title CU-12 · Incorporar adenda al presupuesto de costos y liberar saldos
+actor "Ingeniero de obra" as Ingeniero
+control "motor:\nMotorIngenieria" as Motor
+participant "obra:\nObra" as Obra
+participant "adenda:\nAdenda" as Adenda
+participant "movimiento:\nMovimientoAdenda" as Movimiento
+participant "vigente:\nVersionPresupuestoCostos" as Vigente
+participant "nueva:\nVersionPresupuestoCostos" as Nueva
+participant "item:\nItemPresupuesto" as Item
+participant "medicion:\nMedicionAvance" as Medicion
+actor "Sistema ERP" as ERP <<sistema>>
+
+Ingeniero -> Motor: obtenerAdendasRegistradas(obra)
+Motor -> Obra: obtenerAdendasRegistradas()
+Obra --> Motor: adendas: lista de Adenda
+Motor --> Ingeniero: adendas registradas sin incorporar
+
+Ingeniero -> Motor: verResumen(adenda)
+Motor -> Adenda: obtenerMovimientos()
+Adenda --> Motor: movimientos: lista de MovimientoAdenda
+loop Por cada movimiento
+  Motor -> Movimiento: calcularEfecto()
+  Movimiento --> Motor: efecto, límite, utilizado y saldo
+end
+Motor --> Ingeniero: rubros e ítems afectados con su efecto (RF-20)
+
+Ingeniero -> Motor: incorporarAdenda(obra, adenda)
+Motor -> Adenda: validar()
+Adenda --> Motor: válida: lógico
+alt Datos incompletos o exceso sin excepción registrada
+  Motor --> Ingeniero: informa los datos faltantes e impide incorporar (RF-20)
+else Adenda válida
+  Motor -> Obra: obtenerPresupuestoCostosVigente()
+  Obra --> Motor: vigente: VersionPresupuestoCostos
+  Motor -> Vigente: crearVersionNueva(adenda)
+  create Nueva
+  Vigente -> Nueva: «create» (copia de ítems, versión anterior)
+  loop Por cada movimiento de la adenda
+    Nueva -> Item: aplicarMovimiento(movimiento)
+  end
+  Vigente --> Motor: nueva: VersionPresupuestoCostos
+
+  Motor -> ERP: calcularCostoAdenda(adenda, nueva)
+  alt El ERP no devuelve el costo
+    ERP --> Motor: error
+    Motor --> Ingeniero: no se crea la versión, sigue la vigente; puede reintentar
+  else Costo calculado
+    ERP --> Motor: costo: decimal
+    Motor -> Adenda: registrarCosto(costo)
+
+    loop Por cada ítem ampliado
+      Motor -> Item: calcularSaldoDisponible()
+      Item --> Motor: saldo: decimal
+      Motor -> Obra: obtenerMedicionesConExceso(item)
+      Obra --> Motor: mediciones: lista de MedicionAvance
+      loop Por cada medición con exceso, mientras haya saldo
+        Motor -> Medicion: liberarExceso(saldo)
+        Medicion --> Motor: cantidadLiberada: decimal
+        note right of Motor
+          saldo = saldo - cantidadLiberada
+        end note
+      end
+    end
+    note right of Medicion
+      Lo liberado entra en la próxima versión
+      del certificado (CU-06, RF-22). Lo que la
+      adenda no cubre sigue pendiente (RF-09).
+    end note
+
+    Motor -> Nueva: activar(usuarioId)
+    Nueva --> Motor: activada
+    Motor --> Ingeniero: versión vigente nueva y cantidades liberadas
+  end
+end
+@enduml

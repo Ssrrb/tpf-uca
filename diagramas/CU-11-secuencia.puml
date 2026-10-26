@@ -1,0 +1,83 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-11 · Registrar adenda (movimiento presupuestario)
+actor "Ingeniero de obra" as Ing
+control "motor:\nMotorIngenieria" as Motor
+participant "obra:\nObra" as Obra
+participant "vigente:\nVersionPresupuestoCostos" as Version
+participant "item:\nItemPresupuesto" as Item
+participant "adenda:\nAdenda" as Adenda
+participant "movimiento:\nMovimientoAdenda" as Mov
+participant "medicion:\nMedicionAvance" as Med
+
+Ing -> Motor: iniciarAdenda(obra)
+Motor -> Obra: puedeRegistrarAdenda(usuarioId)
+Obra --> Motor: permitido: lógico
+break Usuario sin rol en la obra (NF-01)
+  Motor --> Ing: deniega la operación
+end
+Motor -> Obra: obtenerPresupuestoCostosVigente()
+Obra --> Motor: vigente
+create Adenda
+Motor -> Adenda: «create»(obra, usuarioId)
+Motor -> Obra: obtenerMedicionesConExceso()
+Obra --> Motor: mediciones con cantidad retenida
+opt Hay cantidades retenidas por exceso (flujo 1a)
+  Motor --> Ing: ofrece incluirlas en la adenda
+end
+
+loop Por cada rubro o ítem a modificar
+  Ing -> Motor: agregarMovimiento(adenda, item, tipo, cantidad, precio)
+  Motor -> Version: obtenerItem(codigo)
+  Version --> Motor: item
+  Motor -> Adenda: agregarMovimiento(item, tipo, cantidad, precio)
+  create Mov
+  Adenda -> Mov: «create»
+  Adenda -> Mov: calcularEfecto()
+  Mov --> Adenda: efecto: decimal
+  Adenda -> Item: limiteDisponible()
+  Item --> Adenda: límite: decimal
+  Adenda -> Item: importeUtilizado()
+  Item --> Adenda: utilizado: decimal
+end
+Motor -> Adenda: calcularEfecto()
+Adenda --> Motor: efecto, límite acumulado, utilizado y saldo proyectado
+Motor --> Ing: muestra los importes (RF-20)
+
+Ing -> Motor: adjuntarRespaldo(adenda, motivo, respaldo)
+Motor -> Adenda: adjuntarRespaldo(motivo, respaldo)
+Ing -> Motor: guardar(adenda)
+Motor -> Adenda: validarCompleta()
+Adenda --> Motor: faltantes: lista de texto
+break Faltan motivo, respaldo o importes
+  Motor --> Ing: impide guardar y marca los campos
+end
+Motor -> Adenda: excedeLimite()
+Adenda --> Motor: excede: lógico
+break Exceso sin excepción registrada
+  Motor --> Ing: informa el exceso e impide guardar
+end
+Motor -> Adenda: guardar(usuarioId)
+opt Incluyó cantidades retenidas
+  loop Por cada medición incluida
+    Motor -> Med: vincularAAdenda(adenda)
+  end
+end
+Motor --> Ing: adenda registrada con motivo, respaldo, actor y fecha (sigue en CU-12)
+@enduml

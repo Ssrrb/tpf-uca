@@ -1,0 +1,31 @@
+name: Instalar PlantUML
+description: Java, Graphviz y el .jar de PlantUML fijado por versión y checksum.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: "21"
+    - name: Graphviz
+      shell: bash
+      run: sudo apt-get update -qq && sudo apt-get install -y -qq graphviz
+    - uses: actions/cache@v4
+      id: cache
+      with:
+        path: ~/.plantuml
+        key: plantuml-${{ env.PLANTUML_VERSION }}
+    - name: Descargar plantuml.jar
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p ~/.plantuml
+        curl -fsSL -o ~/.plantuml/plantuml.jar \
+          "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
+    - name: Verificar checksum y crear el comando plantuml
+      shell: bash
+      run: |
+        echo "${PLANTUML_SHA256}  $HOME/.plantuml/plantuml.jar" | sha256sum -c -
+        printf '#!/bin/sh\nexec java -Djava.awt.headless=true -jar "$HOME/.plantuml/plantuml.jar" "$@"\n' | sudo tee /usr/local/bin/plantuml >/dev/null
+        sudo chmod +x /usr/local/bin/plantuml
+        plantuml -version | head -1
