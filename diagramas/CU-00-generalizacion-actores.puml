@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 title Diagrama de Generalización de Actores · Ctrl+
 skinparam shadowing false
 skinparam defaultFontName Arial

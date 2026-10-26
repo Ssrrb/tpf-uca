@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14

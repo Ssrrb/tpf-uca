@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 title CU-06 · Generar certificación y costo del rubro
 hide circle
 hide empty members

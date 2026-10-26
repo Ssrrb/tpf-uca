@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 16
@@ -45,7 +46,7 @@ else Confirma
   Motor -> Obra: obtenerPresupuestoCostos()
   Obra --> Motor: presupuesto: Presupuesto
   Motor -> Pres: activarVersion(nueva, usuarioId)
-  group Operación atómica
+  critical Operación atómica
     Pres -> Pres: obtenerVigente()
     opt Existe una versión vigente
       Pres -> Anterior: pasarAHistorica()

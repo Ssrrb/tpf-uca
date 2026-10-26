@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 title CU-02 · Cargar y validar el presupuesto
 hide circle
 hide empty members

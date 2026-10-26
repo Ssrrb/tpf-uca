@@ -1,5 +1,6 @@
 # CI de la herramienta CASE: PlantUML por línea de comandos.
 # Jobs obligatorios para hacer merge en main: sintaxis, consistencia, calidad, render.
+# calidad incluye la notación UML de la cátedra (tools/check_uml.py).
 # El job xmi es opcional: corre en main o a mano y nunca bloquea.
 name: CASE PlantUML
 
@@ -47,8 +48,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Solo .puml, nombres, estilo y completitud
         run: bash tools/check_calidad.sh diagramas
+      - name: Pruebas del verificador de notación UML
+        run: python3 tools/test_check_uml.py
+      - name: Notación UML de la cátedra (casos de uso, clases, secuencia, actividades, estados, paquetes)
+        run: python3 tools/check_uml.py --gh diagramas
 
   render:
     name: render
