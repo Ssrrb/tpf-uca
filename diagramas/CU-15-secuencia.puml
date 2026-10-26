@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ArrowColor #17324D
+hide footbox
+title CU-15 · Registrar cobros y ejecutar pagos en tesorería
+actor "Finanzas y tesorería" as Finanzas
+control "tesoreria:\nTesoreria" as Tesoreria
+participant "documento:\nDocumentoFinanciero" as Documento
+participant "movimiento:\nMovimientoTesoreria" as Movimiento
+actor "Motor de ingeniería" as Motor <<sistema>>
+
+note over Finanzas, Movimiento
+  Todo ocurre dentro del Sistema ERP.
+end note
+
+Finanzas -> Tesoreria: obtenerPendientes(obra)
+Tesoreria --> Finanzas: facturas pendientes de cobro y liquidaciones pendientes de pago
+
+Finanzas -> Tesoreria: registrarMovimiento(documento, importe, fecha, medio, comprobante)
+Tesoreria -> Documento: obtenerSaldo()
+Documento --> Tesoreria: saldo: decimal
+alt Falta el comprobante o el importe supera el saldo
+  Tesoreria --> Finanzas: marca el campo e impide registrar
+else Datos válidos
+  alt Factura al cliente: cobro
+    create Movimiento
+    Tesoreria -> Movimiento: «create» (cobro, importe, fecha, medio, comprobante)
+    Tesoreria -> Documento: aplicarMovimiento(movimiento)
+  else Liquidación a subcontratista: Finanzas aprueba el pago
+    create Movimiento
+    Tesoreria -> Movimiento: «create» (pago, importe, fecha, medio, comprobante)
+    Finanzas -> Movimiento: aprobarYEjecutar(usuarioId)
+    Tesoreria -> Documento: aplicarMovimiento(movimiento)
+  else Liquidación a subcontratista: Finanzas rechaza el pago
+    Finanzas -> Tesoreria: rechazarPago(documento, motivo)
+    Tesoreria -> Documento: registrarRechazo(motivo)
+  end
+  note right of Documento
+    Aritmética decimal (NF-06). Si el importe es
+    parcial, el documento queda con saldo pendiente.
+    Si se rechaza el pago, la liquidación sigue
+    pendiente con el motivo registrado.
+  end note
+  Documento --> Tesoreria: saldo y estado actualizados
+  Tesoreria -> Motor: publicarEstado(documento, saldo)
+  note right of Motor
+    El ECMS lo refleja en el avance físico-financiero,
+    el tablero (CU-14) y el portal del subcontratista.
+  end note
+  Tesoreria --> Finanzas: cobro, pago o rechazo registrado
+end
+@enduml

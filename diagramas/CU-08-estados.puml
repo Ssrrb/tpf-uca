@@ -1,0 +1,45 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-08 · Estados de la Factura
+[*] --> generada : recibir VersionCertificadoEnviada\n/ calcularImportes()
+generada --> sin_confirmar : marcarSinConfirmar(dato)\n[faltan datos fiscales del cliente]
+sin_confirmar --> generada : completar datos fiscales
+generada --> confirmada : confirmar(usuarioId)\n[usuario con acceso a Finanzas]\n/ CuentaACobrar.registrar(factura)
+confirmada --> [*] : el cobro sigue en CU-15
+note right of generada
+  Una versión nueva de un certificado
+  ya facturado genera una nota de ajuste
+  vinculada, no otra factura.
+end note
+@enduml

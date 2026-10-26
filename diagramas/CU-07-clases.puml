@@ -1,0 +1,96 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-07 · Enviar a facturar la versión del certificado y derivar al ERP
+
+class "Motor de ingeniería" as MotorIngenieria <<control>> {
+  --
+  + abrirUltimaVersion(obra: Obra): VersionCertificado
+  + enviarAFacturar(version: VersionCertificado, numero: texto, fecha: fecha, destinatario: texto): vacío
+  + exportar(version: VersionCertificado, formato: XLSX | PDF): ArchivoExportado
+}
+
+class Obra {
+  + identificador: identificador
+  + codigo: texto
+  + nombre: texto
+  --
+  + usuarioPuedeFacturar(usuarioId: identificador): lógico
+  + existeNumeroCertificado(numero: texto): lógico
+  + obtenerCertificado(): CertificadoObra
+}
+
+class "Certificado de obra" as CertificadoObra {
+  + identificador: identificador
+  --
+  + obtenerUltimaVersion(): VersionCertificado
+}
+
+class "Versión de certificado" as VersionCertificado {
+  + numeroVersion: entero
+  + numeroCertificado: texto [0..1]
+  + fecha: fecha [0..1]
+  + destinatario: texto [0..1]
+  + enviadaAFacturar: lógico
+  + usuarioEnvioId: identificador [0..1]
+  + fechaEnvio: fecha y hora [0..1]
+  + versionPresupuestoCostosId: identificador
+  --
+  + registrarEnvio(numero: texto, fecha: fecha, destinatario: texto, usuarioId: identificador): vacío
+  + exportar(formato: XLSX | PDF): ArchivoExportado
+}
+
+class "Archivo exportado" as ArchivoExportado {
+  + nombre: texto
+  + formato: XLSX | PDF
+  + huellaDigital: texto {inmutable}
+  + fechaGeneracion: fecha y hora
+  --
+  + generar(): vacío
+}
+
+class "Evento de versión enviada" as EventoVersionEnviada {
+  + claveUnica: texto
+  + estado: pendiente | confirmado
+  + intentos: entero
+  + fechaPublicacion: fecha y hora
+  --
+  + publicar(): vacío
+  + confirmarAcuse(): vacío
+  + reintentar(): vacío
+}
+
+MotorIngenieria ..> Obra : consulta
+MotorIngenieria ..> VersionCertificado : envía a facturar
+Obra "1" *-- "1" CertificadoObra : único certificado
+CertificadoObra "1" *-- "1..*" VersionCertificado : versiones
+VersionCertificado "1" *-- "0..*" ArchivoExportado : exportado como
+VersionCertificado "1" *-- "0..1" EventoVersionEnviada : publica
+
+note bottom of VersionCertificado
+  El certificado no tiene estados: enviar a facturar
+  marca una versión, que sigue consultable (NF-05).
+  Una corrección es una versión nueva (CU-06).
+end note
+
+note bottom of EventoVersionEnviada
+  claveUnica evita duplicar el evento
+  en los reintentos hacia el ERP (PR-05).
+end note
+@enduml

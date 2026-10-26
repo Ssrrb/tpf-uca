@@ -1,0 +1,59 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ArrowColor #17324D
+hide footbox
+title CU-14 · Consultar tablero financiero
+actor "Administrador" as Admin
+control "motor:\nMotorIngenieria" as Motor
+participant "obra:\nObra" as Obra
+participant "tablero:\nTableroFinanciero" as Tablero
+participant "indicador:\nIndicadorTablero" as Indicador
+actor "Sistema ERP" as ERP <<sistema>>
+
+Admin -> Motor: abrirTablero(usuarioId, obras, fecha)
+create Tablero
+Motor -> Tablero: «create» (fecha, moneda PYG)
+loop Por cada obra seleccionada
+  Motor -> Obra: verificarAcceso(usuarioId)
+  Obra --> Motor: permitido: lógico
+  alt Sin acceso a la obra (NF-01)
+    Motor -> Motor: omite la obra
+  else Con acceso
+    Motor -> Obra: obtenerTotalesDeObra(fecha)
+    Obra --> Motor: indicadores de presupuesto, costos y certificado
+    Motor -> Tablero: agregarIndicadores(indicadores)
+    Motor -> ERP: obtenerTotalesFinancieros(obra, fecha)
+    alt El ERP responde
+      ERP --> Motor: facturado, cobrado, pagado y saldos
+      Motor -> Tablero: agregarIndicadores(indicadoresERP)
+    else El ERP no responde
+      ERP --> Motor: error
+      note right of Tablero
+        Los financieros se marcan como no disponibles,
+        con la fecha del último dato recibido.
+      end note
+    end
+  end
+end
+Motor -> Tablero: calcularDiferencias()
+Motor --> Admin: totales por obra y rubro con fecha, unidad,\nmoneda y procedencia (NF-11)
+
+opt Filtra por rubro o fecha
+  Admin -> Motor: abrirTablero(usuarioId, obras, fechaNueva)
+  note right of Motor: recalcula los totales a esa fecha
+end
+
+Admin -> Motor: verDetalle(indicador)
+Motor -> Indicador: obtenerRespaldo()
+Indicador --> Motor: respaldo usado para calcular el total
+Motor --> Admin: respaldo (NF-12)
+@enduml

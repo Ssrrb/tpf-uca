@@ -1,0 +1,86 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+title CU-13 · Liquidar y derivar pago a subcontratista
+
+class "Motor de ingeniería" as MotorIngenieria <<control>> {
+  --
+  + obtenerContratosALiquidar(version: VersionCertificado): lista de ContratoSubcontrato
+  + prepararLiquidacion(version: VersionCertificado, contrato: ContratoSubcontrato): LiquidacionSubcontrato
+  + confirmarDerivacion(liquidacion: LiquidacionSubcontrato): vacío
+}
+
+class "Versión de certificado" as VersionCertificado {
+  + numero: entero
+  + fechaHasta: fecha
+  + enviadaAFacturar: lógico
+  --
+  + obtenerLineasSubcontratadas(contrato: ContratoSubcontrato [0..1]): lista de LineaCertificado
+}
+
+class "Línea de certificado" as LineaCertificado {
+  + cantidadCertificable: decimal
+  + precioVenta: decimal
+  + /importe: decimal
+  + ejecutor: propio | subcontratado
+  --
+  + obtenerContrato(): ContratoSubcontrato [0..1]
+  + estaLiquidada(): lógico
+  + marcarLiquidada(liquidacion: LiquidacionSubcontrato): vacío
+}
+
+class "Contrato de subcontrato" as ContratoSubcontrato {
+  + numeroERP: texto
+  + subcontratista: texto
+  + limite: decimal
+  + importeLiquidado: decimal
+  + /saldo: decimal
+  --
+  + verificarLimite(importe: decimal): lógico
+  + actualizarSaldo(monto: decimal): vacío
+}
+
+class "Liquidación de subcontrato" as LiquidacionSubcontrato {
+  + fecha: fecha y hora
+  + usuarioId: identificador
+  + /importeCertificado: decimal
+  + numeroERP: texto [0..1]
+  + montoAPagar: decimal [0..1]
+  --
+  + agregarLinea(linea: LineaCertificado): vacío
+  + calcularImporte(): decimal
+  + registrarReferenciaERP(numero: texto, monto: decimal): vacío
+}
+
+MotorIngenieria ..> VersionCertificado : consulta
+MotorIngenieria ..> LiquidacionSubcontrato : <<create>>
+
+VersionCertificado "1" *-- "1..*" LineaCertificado : contiene
+LineaCertificado "0..*" --> "0..1" ContratoSubcontrato : ejecutada bajo
+LiquidacionSubcontrato "0..*" --> "1" ContratoSubcontrato : liquida
+LiquidacionSubcontrato "0..*" --> "1" VersionCertificado : deriva de
+LiquidacionSubcontrato "0..1" --> "1..*" LineaCertificado : incluye
+
+note bottom of VersionCertificado
+  Un solo certificado por obra, con ítems propios
+  y subcontratados. No hay certificado por contrato.
+end note
+
+note bottom of LiquidacionSubcontrato
+  Retenciones, deducciones e impuestos los aplica
+  el ERP según el contrato (RF-25). Cada línea se
+  liquida una sola vez (RF-10).
+end note
+@enduml

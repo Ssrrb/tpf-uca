@@ -1,0 +1,149 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-04 · Registrar la medición de avance e insumos
+
+class "Motor de ingeniería" as MotorIngenieria <<control>> {
+  --
+  + iniciarMedicion(obra: Obra): lista de ItemPresupuesto
+  + registrarMedicion(item: ItemPresupuesto, cantidad: decimal, unidad: texto, ejecutor: texto, contrato: ContratoSubcontrato [0..1]): MedicionAvance
+  + cargarConsumos(medicion: MedicionAvance, consumos: lista de ConsumoInsumo): vacío
+  + adjuntarEvidencia(medicion: MedicionAvance, archivo: archivo): vacío
+  + confirmar(medicion: MedicionAvance): vacío
+  + cancelar(medicion: MedicionAvance): vacío
+  + resolver(medicion: MedicionAvance, decision: aprobar | rechazar, motivo: texto [0..1]): vacío
+}
+
+class Obra {
+  + identificador: identificador
+  + codigo: texto
+  + nombre: texto
+  --
+  + obtenerPresupuestoCostosVigente(): VersionPresupuestoCostos
+  + registrarMedicion(item: ItemPresupuesto, cantidad: decimal, unidad: texto): MedicionAvance
+}
+
+class "Versión de presupuesto de costos" as VersionPresupuestoCostos {
+  + identificador: identificador
+  + numero: entero
+  + vigente: lógico
+  --
+  + obtenerItems(): lista de ItemPresupuesto
+}
+
+class "Ítem de presupuesto" as ItemPresupuesto {
+  + identificador: identificador
+  + rubro: texto
+  + descripcion: texto
+  + unidad: texto
+  + cantidadPresupuestada: decimal
+  + /cantidadMedida: decimal
+  + /saldo: decimal
+  --
+  + calcularSaldo(): decimal
+  + obtenerACU(): AnalisisCostoUnitario
+}
+
+class "Medición de avance" as MedicionAvance {
+  + identificador: identificador
+  + cantidad: decimal
+  + unidad: texto
+  + ejecutor: propio | subcontratado
+  + cantidadExcedidaPendiente: decimal
+  + /importeExcedido: decimal
+  + estado: en_registro | registrada | aprobada | rechazada | cancelada
+  + usuarioRegistroId: identificador
+  + fechaRegistro: fecha y hora
+  + usuarioDecisionId: identificador [0..1]
+  + fechaDecision: fecha y hora [0..1]
+  + motivoRechazo: texto [0..1]
+  --
+  + agregarConsumo(insumo: Insumo, cantidad: decimal): ConsumoInsumo
+  + adjuntarEvidencia(archivo: archivo): Evidencia
+  + verificarDobleConteo(): MedicionAvance [0..1]
+  + compararConSaldo(saldo: decimal): decimal
+  + separarExceso(cantidadExcedida: decimal): vacío
+  + validarDatos(): lista de texto
+  + confirmar(usuarioId: identificador): vacío
+  + aprobar(usuarioId: identificador): vacío
+  + rechazar(usuarioId: identificador, motivo: texto): vacío
+  + cancelar(): vacío
+}
+
+class "Contrato de subcontrato" as ContratoSubcontrato {
+  + identificador: identificador
+  + numero: texto
+  + subcontratista: texto
+  --
+  + incluyeItem(item: ItemPresupuesto): lógico
+}
+
+class "Análisis de costo unitario" as AnalisisCostoUnitario {
+  + identificador: identificador
+  + rendimientos: lista de insumo y rendimiento
+  --
+  + proponerConsumos(cantidad: decimal): lista de insumo y cantidad
+}
+
+class "Consumo de insumo" as ConsumoInsumo {
+  + cantidad: decimal
+  + precioUnitario: decimal
+  + /importe: decimal
+}
+
+class Insumo {
+  + identificador: identificador
+  + codigo: texto
+  + tipo: material | mano_de_obra | equipo
+  + unidad: texto
+  --
+  + obtenerPrecioVigente(fecha: fecha): decimal
+}
+
+class Evidencia {
+  + identificador: identificador {inmutable}
+  + tipo: foto | planilla | acta
+  + huellaDigital: texto {inmutable}
+  + origen: web | telefono
+  + fechaCarga: fecha y hora
+  --
+  + guardarOriginal(): vacío
+}
+
+MotorIngenieria ..> Obra : consulta
+MotorIngenieria ..> MedicionAvance : registra
+Obra "1" *-- "1..*" VersionPresupuestoCostos : versiones de costos
+VersionPresupuestoCostos "1" *-- "1..*" ItemPresupuesto : contiene
+Obra "1" *-- "0..*" MedicionAvance : registra
+MedicionAvance "0..*" --> "1" ItemPresupuesto : mide
+MedicionAvance "0..*" --> "0..1" ContratoSubcontrato : ejecutada bajo
+ContratoSubcontrato "0..*" --> "1..*" ItemPresupuesto : alcance
+ItemPresupuesto "0..*" --> "0..1" AnalisisCostoUnitario : se calcula con
+AnalisisCostoUnitario "0..*" --> "1..*" Insumo : usa
+MedicionAvance "1" *-- "0..*" ConsumoInsumo : insumos consumidos
+ConsumoInsumo "0..*" --> "1" Insumo : consume
+MedicionAvance "1" *-- "1..*" Evidencia : respaldo
+
+note bottom of MedicionAvance
+  cantidadExcedidaPendiente: lo que supera el saldo queda
+  separado y no forma parte de la medición oficial ni del
+  certificado hasta que una adenda lo cubra (RF-09, CU-12).
+  aprobar() y rechazar() conservan decisión, actor y fecha (RF-08).
+end note
+@enduml

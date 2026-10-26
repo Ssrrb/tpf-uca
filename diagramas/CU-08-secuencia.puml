@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-08 · Generar factura al cliente en ERP
+actor "Motor de ingeniería" as Motor <<sistema>>
+control "facturacion:\nFacturacion" as Fac
+participant "evento:\nEventoVersionEnviada" as Evento
+participant "anterior:\nFactura" as Anterior
+participant "nota:\nNotaAjuste" as Nota
+participant "ficha:\nFichaCliente" as Ficha
+participant "factura:\nFactura" as Factura
+participant "cuenta:\nCuentaACobrar" as Cuenta
+actor "Finanzas y tesorería" as Fin
+actor "Cliente" as Cliente
+
+Motor -> Fac: recibirVersionEnviada(evento)
+Fac -> Evento: obtenerDatos()
+Evento --> Fac: obra, versión, importe, impuestos y retenciones
+Fac -> Fac: buscarFactura(obraId, claveUnica)
+alt Misma versión ya facturada (excepción)
+  Fac --> Motor: acuse de recepción; no se genera otra factura
+else Versión nueva de un certificado ya facturado (flujo 1a)
+  create Nota
+  Fac -> Nota: «create»
+  Fac -> Nota: calcularDiferencia(anterior, evento)
+  Nota --> Fac: diferencia: decimal
+  Fac -> Anterior: vincularNota(nota)
+  Fac --> Motor: acuse de recepción
+else Versión sin facturar
+  Fac -> Ficha: tieneDatosFiscales()
+  Ficha --> Fac: completos: lógico
+  create Factura
+  Fac -> Factura: «create»(evento, ficha)
+  Fac -> Factura: calcularImportes()
+  Factura --> Fac: importeTotal en PYG
+  opt Faltan datos fiscales del cliente
+    Fac -> Ficha: datoFaltante()
+    Ficha --> Fac: dato: texto
+    Fac -> Factura: marcarSinConfirmar(dato)
+  end
+  Fac --> Motor: acuse de recepción
+
+  Fin -> Fac: confirmarFactura(factura)
+  Fac -> Fac: usuarioTieneAccesoFinanzas(usuarioId)
+  break Usuario sin acceso a Finanzas en la obra
+    Fac --> Fin: impide confirmar
+  end
+  Fac -> Factura: confirmar(usuarioId)
+  create Cuenta
+  Fac -> Cuenta: «create»
+  Fac -> Cuenta: registrar(factura)
+  Fac -> Ficha: recibirFactura(factura)
+  Ficha -> Cliente: envía la factura
+  Fac --> Fin: factura confirmada y registrada como cuenta a cobrar
+end
+@enduml

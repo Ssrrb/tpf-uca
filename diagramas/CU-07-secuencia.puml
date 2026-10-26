@@ -1,0 +1,79 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-07 · Enviar a facturar la versión del certificado y derivar al ERP
+actor "Administrador" as Admin
+control "motor:\nMotorIngenieria" as Motor
+participant "obra:\nObra" as Obra
+participant "certificado:\nCertificadoObra" as Cert
+participant "version:\nVersionCertificado" as Version
+participant "archivo:\nArchivoExportado" as Archivo
+participant "evento:\nEventoVersionEnviada" as Evento
+actor "Sistema ERP" as ERP <<sistema>>
+
+Admin -> Motor: abrirUltimaVersion(obra)
+Motor -> Obra: obtenerCertificado()
+Obra --> Motor: certificado
+Motor -> Cert: obtenerUltimaVersion()
+Cert --> Motor: version
+Motor --> Admin: versión del certificado con su valorización
+
+alt Solo exportar (flujo 5a)
+  Admin -> Motor: exportar(version, formato)
+  Motor -> Version: exportar(formato)
+  create Archivo
+  Version -> Archivo: «create»
+  Version -> Archivo: generar()
+  Motor --> Admin: archivo nuevo XLSX o PDF; no se publica el evento
+else Enviar a facturar
+  Admin -> Motor: enviarAFacturar(version, numero, fecha, destinatario)
+  Motor -> Obra: usuarioPuedeFacturar(usuarioId)
+  Obra --> Motor: permitido: lógico
+  break Usuario sin rol admin ni acceso al ECMS (RF-17)
+    Motor --> Admin: impide el envío
+  end
+  Motor -> Obra: existeNumeroCertificado(numero)
+  Obra --> Motor: existe: lógico
+  break Número repetido en la obra
+    Motor --> Admin: pide otro número
+  end
+  Motor -> Version: registrarEnvio(numero, fecha, destinatario, usuarioId)
+  note right of Version
+    Registra quién la envió y cuándo
+    (RF-17, NF-04).
+  end note
+  Motor -> Version: exportar(formato)
+  create Archivo
+  Version -> Archivo: «create»
+  Version -> Archivo: generar()
+  create Evento
+  Motor -> Evento: «create»(version, claveUnica)
+  Motor -> Evento: publicar()
+  Evento -> ERP: versionCertificadoEnviada(version) por el puente ECMS–ERP
+  alt El ERP confirma
+    ERP --> Evento: acuse
+    Motor -> Evento: confirmarAcuse()
+  else El ERP no confirma
+    loop Hasta recibir el acuse
+      Motor -> Evento: reintentar()
+      Evento -> ERP: versionCertificadoEnviada(version) con la misma claveUnica
+    end
+  end
+  Motor --> Admin: versión enviada a facturar (sigue en CU-08 y CU-13)
+end
+@enduml

@@ -1,0 +1,91 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-09 · Registrar contrato y habilitar portal de subcontratista
+actor "Administrador" as Admin
+control "gestor:\nGestorContratos" as Gestor
+participant "obra:\nObra" as Obra
+participant "proveedor:\nProveedor" as Prov
+participant "contrato:\nContratoSubcontrato" as Contrato
+participant "itemContrato:\nItemContrato" as IC
+participant "item:\nItemPresupuesto" as Item
+participant "usuario:\nUsuarioPortal" as UP
+actor "Subcontratista" as Sub
+
+Admin -> Gestor: registrarSubcontrato(obra, proveedor, datos, archivo)
+Gestor -> Obra: usuarioEsAdmin(usuarioId)
+Obra --> Gestor: esAdmin: lógico
+break Usuario sin rol admin en la obra (NF-01)
+  Gestor --> Admin: deniega la operación
+end
+Gestor -> Obra: existeNumeroContrato(numero)
+Obra --> Gestor: existe: lógico
+break Número repetido o archivo faltante
+  Gestor --> Admin: pide corregir antes de confirmar
+end
+create Contrato
+Gestor -> Contrato: «create»(proveedor, datos, archivo)
+
+loop Por cada rubro o ítem del alcance
+  Admin -> Gestor: agregarItem(contrato, item, precio, limite)
+  Gestor -> Contrato: agregarItem(item, precio, limite)
+  create IC
+  Contrato -> IC: «create»
+  Contrato -> IC: validarLimite()
+  IC -> Item: limiteDisponible()
+  Item --> IC: disponible: decimal
+  alt Límite mayor a lo presupuestado o ítem ya asignado (RF-10)
+    IC --> Contrato: falso
+    Contrato --> Gestor: ítem rechazado
+    Gestor --> Admin: informa el exceso o el doble conteo
+  else Límite válido
+    IC --> Contrato: verdadero
+  end
+end
+
+Admin -> Gestor: confirmar(contrato)
+Gestor -> Contrato: confirmar(usuarioId)
+loop Por cada ítem del contrato
+  Contrato -> Item: asignarCantidad(limite)
+end
+Gestor --> Admin: contrato vigente con actor y fecha (NF-04)
+
+Admin -> Gestor: habilitarAcceso(contrato)
+Gestor -> Prov: obtenerUsuarioPortal()
+Prov --> Gestor: usuario [0..1]
+alt Ya tiene usuario por otro contrato (flujo 8a)
+  Gestor -> UP: agregarContrato(contrato)
+else No tiene usuario
+  create UP
+  Gestor -> UP: «create»(correo, rol subcontratista)
+  Gestor -> UP: agregarContrato(contrato)
+end
+Gestor --> Admin: acceso de solo consulta habilitado
+
+== Consulta del subcontratista (RF-24) ==
+Sub -> Gestor: consultar(usuario, contrato)
+Gestor -> UP: puedeVer(contrato)
+UP --> Gestor: permitido: lógico
+alt Es su contrato
+  Gestor -> IC: saldo()
+  IC --> Gestor: saldo: decimal
+  Gestor --> Sub: mediciones, versiones certificadas, valorizaciones y saldos
+else Otro contrato o datos internos (NF-02)
+  Gestor --> Sub: acceso denegado
+end
+@enduml

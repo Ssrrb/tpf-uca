@@ -1,0 +1,98 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ArrowColor #17324D
+hide footbox
+title CU-02 · 2/3 · Interpretación y validación
+actor "Ingeniero de obra" as Usuario
+participant "version:\nVersionPresupuesto" as Version
+participant "archivo:\nArchivoOriginal" as Archivo
+participant "hoja:\nHoja" as Hoja
+participant "columna:\nColumna" as Columna
+participant "rubro:\nRubro" as Rubro
+participant "item:\nItemPresupuesto" as Item
+note over Usuario, Item
+  Inicio: mismos objetos; archivo guardado y versión creada en 1/3.
+end note
+Usuario -> Version: identificarEstructura()
+Version -> Archivo: leer()
+Archivo --> Version: bytes
+note over Version, Item
+  Interpreta hojas, columnas, rubros e ítems; conserva filaOrigen y hoja asociada.
+  ItemPresupuesto: cantidad, precioUnitario, unidad y totalDeclarado. Original inmutable.
+end note
+
+opt Definición manual
+  loop Por cada hoja
+    Usuario -> Version: definirHoja(nombre)
+    Version --> Usuario: hoja: Hoja
+    loop Por cada columna
+      Usuario -> Hoja: definirColumna(indice, campo)
+      Hoja --> Usuario: columna: Columna
+
+    end
+  end
+end
+
+opt Ajustar agrupaciones de la versión
+  loop Por cada subrubro
+    Usuario -> Rubro: agregarSubrubro(rubro)
+  end
+  loop Por cada ítem
+    Usuario -> Rubro: agregarItem(item)
+  end
+end
+
+break El usuario cancela la revisión
+  Usuario -> Version: cancelar()
+end
+
+Usuario -> Version: confirmarEstructura()
+note over Version, Rubro
+  estructuraConfirmada = verdadero exige ítems con rubro, sin ciclos y misma versión.
+  Una estructura inválida impide continuar.
+end note
+
+Usuario -> Version: validarDatos()
+loop Por cada hoja
+  Version -> Hoja: validarDatos()
+  loop Por cada valor
+    Hoja -> Columna: validarValor(valor)
+    Columna --> Hoja: valorValido: lógico
+    opt Valor inválido
+      Hoja -> Columna: describirError(fila, valor)
+      Columna --> Hoja: error: fila y columna
+    end
+  end
+  note over Hoja, Columna: Hoja agrega su nombre a los errores.
+  Hoja --> Version: errores de hoja
+end
+loop Por cada rubro / subrubro
+  Version -> Rubro: validarDatos()
+  Rubro --> Version: errores de rubro
+  loop Por cada ítem
+    Version -> Item: validarDatos()
+    Item --> Version: errores de ítem
+  end
+end
+Version --> Usuario: errores: lista de texto
+
+break Hay datos obligatorios inválidos
+  note over Usuario, Version
+    Errores: hoja, fila y columna. Sin publicar; corregir exige otra carga.
+  end note
+end
+
+ref over Usuario, Item
+  Continúa en 3/3: estructuraConfirmada = verdadero y datos obligatorios válidos.
+end ref
+
+@enduml

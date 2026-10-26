@@ -1,0 +1,166 @@
+@startuml
+!theme plain
+title CU-02 · Cargar y validar el presupuesto
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+
+class Obra {
+  + identificador: identificador
+  + codigo: texto
+  + nombre: texto
+  --
+  + obtenerPresupuestos(): lista de Presupuesto
+}
+
+class Presupuesto {
+  + identificador: identificador
+  + organizacionId: identificador
+  + tipo: cliente | costos | adenda
+  + moneda: texto
+  + revision: entero
+  + total: decimal [0..1]
+  + huellasImportadas: lista de texto
+  --
+  + esArchivoRepetido(huella: texto): lógico
+  + cargarArchivo(archivo: ArchivoOriginal): VersionPresupuesto
+  + crearVersion(archivo: ArchivoOriginal): VersionPresupuesto
+  + publicarVersion(version: VersionPresupuesto): vacío
+  + obtenerVersiones(): lista de VersionPresupuesto
+}
+
+class "Versión de presupuesto" as VersionPresupuesto {
+  + identificador: identificador
+  + numero: entero
+  + fechaCreacion: fecha y hora
+  + usuarioCreadorId: identificador
+  + estado: EstadoVersionPresupuesto
+  + estructuraConfirmada: lógico
+  + revisionPublicada: entero [0..1]
+  + totalDeclarado: decimal [0..1]
+  + totalRecalculado: decimal [0..1]
+  + /diferenciaTotal: decimal [0..1]
+  + diferenciasAceptadas: lógico
+  --
+  + identificarEstructura(): vacío
+  + definirHoja(nombre: texto): Hoja
+  + confirmarEstructura(): vacío
+  + validarDatos(): lista de texto
+  + recalcularTotales(): decimal
+  + compararTotales(): texto
+  + aceptarResultado(aceptarDiferencias: lógico): vacío
+  + cancelar(): vacío
+  + descartarCargaIncompleta(): vacío
+}
+
+enum EstadoVersionPresupuesto {
+  en_carga
+  pendiente_estructura
+  pendiente_validacion
+  con_errores
+  pendiente_aceptacion
+  aceptada
+  disponible
+  cancelada
+  descartada
+}
+
+VersionPresupuesto ..> EstadoVersionPresupuesto : valores de estado
+
+class "Archivo original" as ArchivoOriginal {
+  + identificador: identificador {inmutable}
+  + nombre: texto {inmutable}
+  + tipoContenido: texto {inmutable}
+  + tamanoBytes: entero {inmutable}
+  + huellaDigital: texto {inmutable}
+  + claveAlmacenamiento: texto {inmutable}
+  --
+  + validarFormato(): lógico
+  + validarTamano(maximoBytes: entero): lógico
+  + guardarOriginal(): vacío
+  + verificarIntegridad(): lógico
+  + leer(): bytes
+}
+
+class Rubro {
+  + identificador: identificador
+  + codigo: texto [0..1]
+  + descripcion: texto
+  + orden: entero
+  + filaOrigen: entero [0..1]
+  + totalDeclarado: decimal [0..1]
+  + totalRecalculado: decimal [0..1]
+  + /diferenciaTotal: decimal [0..1]
+  --
+  + agregarSubrubro(rubro: Rubro): vacío
+  + agregarItem(item: ItemPresupuesto): vacío
+  + validarDatos(): lista de texto
+  + recalcularTotal(): decimal
+  + compararTotal(): texto
+}
+
+class "Ítem de presupuesto" as ItemPresupuesto {
+  + identificador: identificador
+  + codigo: texto [0..1]
+  + descripcion: texto
+  + orden: entero
+  + unidad: texto [0..1]
+  + cantidad: decimal [0..1]
+  + precioUnitario: decimal [0..1]
+  + filaOrigen: entero [0..1]
+  + totalDeclarado: decimal [0..1]
+  + totalRecalculado: decimal [0..1]
+  + /diferenciaTotal: decimal [0..1]
+  --
+  + validarDatos(): lista de texto
+  + recalcularTotal(): decimal
+  + compararTotal(): texto
+}
+
+class Hoja {
+  + identificador: identificador
+  + nombre: texto
+  + indice: entero
+  + origen: detectada | manual
+  --
+  + definirColumna(indice: entero, campo: texto): Columna
+  + obtenerColumna(campo: texto): Columna
+  + validarDatos(): lista de texto
+}
+
+class Columna {
+  + indice: entero
+  + encabezado: texto
+  + campoDestino: texto
+  + tipoEsperado: texto
+  + obligatoria: lógico
+  --
+  + validarValor(valor: texto): lógico
+  + describirError(fila: entero, valor: texto): texto
+}
+
+Obra "0..1" -- "0..*" Presupuesto : pertenece a
+Presupuesto "1" *-- "0..*" VersionPresupuesto : conserva versiones
+VersionPresupuesto "1" *-- "1" ArchivoOriginal : conserva original
+VersionPresupuesto "1" *-- "0..*" Rubro : contiene
+VersionPresupuesto "1" *-- "0..*" Hoja : estructura importada
+Rubro "0..1" -- "0..*" Rubro : padre / subrubros
+Rubro "1" *-- "0..*" ItemPresupuesto : agrupa
+Hoja "1" *-- "0..*" Columna : define
+Rubro "0..*" --> "0..1" Hoja : hoja de origen
+ItemPresupuesto "0..*" --> "0..1" Hoja : hoja de origen
+note bottom of Presupuesto
+  esArchivoRepetido(): volver a cargar el mismo XLSX
+  sin cambios no crea otra versión (NF-07).
+end note
+@enduml

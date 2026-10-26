@@ -1,0 +1,50 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-15 · Estados del Documento financiero
+[*] --> pendiente : factura confirmada (CU-08)\no liquidación registrada (CU-13)
+pendiente --> parcial : aplicarMovimiento(movimiento)\n[importe < saldo]
+parcial --> parcial : aplicarMovimiento(movimiento)\n[importe < saldo]
+pendiente --> saldado : aplicarMovimiento(movimiento)\n[importe = saldo]
+parcial --> saldado : aplicarMovimiento(movimiento)\n[importe = saldo]
+pendiente --> pendiente : registrarRechazo(motivo)\n[pago a subcontratista rechazado]
+saldado --> [*]
+note right of pendiente
+  Un importe mayor al saldo no se registra.
+  Sin comprobante no se puede guardar.
+end note
+note right of saldado
+  El ERP publica el saldo nuevo para el tablero
+  (CU-14) y el portal del subcontratista.
+end note
+@enduml

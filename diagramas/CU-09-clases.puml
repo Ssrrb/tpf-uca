@@ -1,0 +1,103 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-09 · Registrar contrato y habilitar portal de subcontratista
+
+class "Gestor de contratos" as GestorContratos <<control>> {
+  --
+  + registrarSubcontrato(obra: Obra, proveedor: Proveedor, datos: texto, archivo: archivo): ContratoSubcontrato
+  + agregarItem(contrato: ContratoSubcontrato, item: ItemPresupuesto, precio: decimal, limite: decimal): vacío
+  + confirmar(contrato: ContratoSubcontrato): vacío
+  + habilitarAcceso(contrato: ContratoSubcontrato): UsuarioPortal
+  + consultar(usuario: UsuarioPortal, contrato: ContratoSubcontrato): datos del contrato
+}
+
+class Obra {
+  + identificador: identificador
+  + codigo: texto
+  --
+  + usuarioEsAdmin(usuarioId: identificador): lógico
+  + existeNumeroContrato(numero: texto): lógico
+}
+
+class Proveedor {
+  + razonSocial: texto
+  + ruc: texto
+  --
+  + obtenerUsuarioPortal(): UsuarioPortal [0..1]
+}
+
+class "Contrato de subcontrato" as ContratoSubcontrato {
+  + numero: texto
+  + fechaInicio: fecha
+  + fechaFin: fecha
+  + impuestos: decimal
+  + retenciones: decimal
+  + fondoReparo: decimal
+  + archivoContrato: archivo
+  + estado: borrador | vigente
+  + usuarioRegistroId: identificador
+  + fechaRegistro: fecha y hora
+  --
+  + agregarItem(item: ItemPresupuesto, precio: decimal, limite: decimal): ItemContrato
+  + confirmar(usuarioId: identificador): vacío
+}
+
+class "Ítem del contrato" as ItemContrato {
+  + precio: decimal
+  + limite: decimal
+  + cantidadCertificada: decimal
+  --
+  + validarLimite(): lógico
+  + saldo(): decimal
+}
+
+class "Ítem de presupuesto" as ItemPresupuesto {
+  + codigo: texto
+  + descripcion: texto
+  + cantidadPresupuestada: decimal
+  + cantidadAsignada: decimal
+  --
+  + limiteDisponible(): decimal
+  + asignarCantidad(cantidad: decimal): vacío
+}
+
+class "Usuario del portal" as UsuarioPortal {
+  + correo: texto
+  + rol: texto = "subcontratista"
+  --
+  + agregarContrato(contrato: ContratoSubcontrato): vacío
+  + puedeVer(contrato: ContratoSubcontrato): lógico
+}
+
+GestorContratos ..> Obra : consulta
+GestorContratos ..> ContratoSubcontrato : registra
+Obra "1" *-- "0..*" ContratoSubcontrato : subcontratos
+ContratoSubcontrato "0..*" --> "1" Proveedor : con
+ContratoSubcontrato "1" *-- "1..*" ItemContrato : alcance
+ItemContrato "0..*" --> "1" ItemPresupuesto : refiere a
+Proveedor "1" -- "0..1" UsuarioPortal : accede con
+UsuarioPortal "0..*" --> "1..*" ContratoSubcontrato : consulta solo estos
+
+note bottom of UsuarioPortal
+  Solo consulta: no ve presupuestos internos, márgenes,
+  salarios ni otros contratos (NF-02), y no registra
+  mediciones: las carga el Ingeniero de obra (CU-04).
+end note
+@enduml

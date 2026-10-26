@@ -1,0 +1,75 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 210
+skinparam ParticipantPadding 8
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-05 · Mantener catálogos y banco de insumos
+actor "Administrador" as Admin
+control "motor:\nMotorIngenieria" as Motor
+participant "catalogo:\nCatalogo" as Cat
+participant "recurso:\nRecurso" as Rec
+participant "nuevo:\nPrecioRecurso" as Precio
+participant "anterior:\nPrecioRecurso" as Anterior
+
+Admin -> Motor: listarRecursos(tipo, filtros)
+Motor -> Cat: puedeAdministrar(usuarioId)
+Cat --> Motor: permitido: lógico
+break Usuario sin rol admin (NF-01)
+  Motor --> Admin: impide la operación
+end
+Motor -> Cat: listarRecursos(filtros, pagina)
+Cat --> Motor: recursos
+Motor --> Admin: lista paginada con filtros por código, nombre y rubro
+
+alt Crear recurso (pasos 3 a 7)
+  Admin -> Motor: crearRecurso(datos, precio, vigenteDesde)
+  Motor -> Cat: existeCodigo(codigo)
+  Cat --> Motor: existe: lógico
+  break Código ya existente
+    Motor --> Admin: pide otro código
+  end
+  Motor -> Cat: agregarRecurso(codigo, descripcion, unidad, categoria, usuarioId)
+  create Rec
+  Cat -> Rec: «create»
+  Motor -> Rec: registrarPrecio(valor, vigenteDesde, usuarioId)
+  create Precio
+  Rec -> Precio: «create»
+  Rec -> Precio: esValorValido()
+  Precio --> Rec: válido: lógico
+  Motor --> Admin: recurso guardado con su precio vigente
+else Modificar datos (flujo 3a)
+  Admin -> Motor: modificarRecurso(recurso, datos)
+  Motor -> Rec: actualizarDatos(descripcion, unidad, categoria, usuarioId)
+  Motor --> Admin: recurso actualizado con actor y fecha
+else Actualizar precio (flujo 4a)
+  Admin -> Motor: actualizarPrecio(recurso, valor, vigenteDesde)
+  Motor -> Rec: registrarPrecio(valor, vigenteDesde, usuarioId)
+  Rec -> Anterior: seSuperponeCon(vigenteDesde)
+  Anterior --> Rec: superpuesto: lógico
+  break Vigencia superpuesta
+    Rec --> Motor: rechaza e indica la vigencia en conflicto
+    Motor --> Admin: precio rechazado
+  end
+  Rec -> Anterior: cerrarVigencia(vigenteDesde)
+  create Precio
+  Rec -> Precio: «create»
+  Motor --> Admin: precio nuevo vigente; el anterior queda como histórico
+else Dar de baja (flujo 3b)
+  Admin -> Motor: darDeBaja(recurso)
+  Motor -> Rec: darDeBaja(usuarioId)
+  Motor --> Admin: recurso inactivo; se conserva en lo ya registrado
+end
+@enduml

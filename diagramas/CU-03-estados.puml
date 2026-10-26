@@ -1,0 +1,44 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-03 · Estados de la Versión de presupuesto al activarse
+[*] --> disponible : publicada en CU-02
+disponible --> vigente : activar(usuarioId)\n[usuario con permiso y versión validada]
+disponible --> disponible : activar(usuarioId)\n[falla o cancelación] / sin cambios
+vigente --> historica : pasarAHistorica()\n[se activa una versión nueva]
+historica --> [*]
+note right of historica
+  Sigue consultable con su archivo
+  original y sus respaldos (NF-05).
+end note
+@enduml

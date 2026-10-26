@@ -1,0 +1,98 @@
+@startuml
+!theme plain
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-08 · Generar factura al cliente en ERP
+
+class "Facturación" as Facturacion <<control>> {
+  --
+  + recibirVersionEnviada(evento: EventoVersionEnviada): vacío
+  + confirmarFactura(factura: Factura): vacío
+  + buscarFactura(obraId: identificador, claveUnica: texto): Factura [0..1]
+  + usuarioTieneAccesoFinanzas(usuarioId: identificador): lógico
+}
+
+class "Evento de versión enviada" as EventoVersionEnviada {
+  + claveUnica: texto
+  + obraId: identificador
+  + numeroVersion: entero
+  + importeCertificado: decimal
+  + impuestos: decimal
+  + retenciones: decimal
+  --
+  + obtenerDatos(): datos de la versión
+}
+
+class "Ficha del cliente" as FichaCliente {
+  + razonSocial: texto
+  + ruc: texto [0..1]
+  + direccionFiscal: texto [0..1]
+  + correo: texto
+  --
+  + tieneDatosFiscales(): lógico
+  + datoFaltante(): texto
+  + recibirFactura(factura: Factura): vacío
+}
+
+class Factura {
+  + numero: texto
+  + fecha: fecha
+  + moneda: texto = "PYG"
+  + importeCertificado: decimal
+  + impuestos: decimal
+  + retenciones: decimal
+  + /importeTotal: decimal
+  + numeroVersionCertificado: entero
+  + estado: generada | sin_confirmar | confirmada
+  + usuarioConfirmacionId: identificador [0..1]
+  --
+  + calcularImportes(): decimal
+  + marcarSinConfirmar(datoFaltante: texto): vacío
+  + confirmar(usuarioId: identificador): vacío
+  + vincularNota(nota: NotaAjuste): vacío
+}
+
+class "Nota de ajuste" as NotaAjuste {
+  + tipo: credito | debito
+  + importe: decimal
+  + fecha: fecha
+  --
+  + calcularDiferencia(anterior: Factura, version: EventoVersionEnviada): decimal
+}
+
+class "Cuenta a cobrar" as CuentaACobrar {
+  + importe: decimal
+  + saldo: decimal
+  + fechaRegistro: fecha
+  --
+  + registrar(factura: Factura): vacío
+}
+
+Facturacion ..> EventoVersionEnviada : recibe
+Facturacion ..> Factura : genera
+EventoVersionEnviada "1" -- "0..1" Factura : origina
+Factura "0..*" --> "1" FichaCliente : se emite a
+Factura "1" *-- "0..*" NotaAjuste : ajustada por
+Factura "1" -- "1" CuentaACobrar : registra
+
+note bottom of NotaAjuste
+  Una versión nueva de un certificado ya facturado
+  no crea otra factura: genera una nota de crédito
+  o débito por la diferencia (flujo 1a).
+end note
+@enduml

@@ -1,0 +1,92 @@
+# CI de la herramienta CASE: PlantUML por línea de comandos.
+# Jobs obligatorios para hacer merge en main: sintaxis, consistencia, calidad, render.
+# El job xmi es opcional: corre en main o a mano y nunca bloquea.
+name: CASE PlantUML
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      exportar_xmi:
+        description: "Exportar los diagramas de clases a XMI"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  PLANTUML_VERSION: "1.2025.4"
+  PLANTUML_SHA256: "26518e14a3a04100cd76c0d96cab2d1171f36152215edd9790a28d20268200c1"
+
+jobs:
+  sintaxis:
+    name: sintaxis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/plantuml
+      - name: plantuml -checkonly (cada .puml)
+        run: bash tools/check_sintaxis.sh diagramas
+
+  consistencia:
+    name: consistencia
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Clases vs secuencia (E1, E2, W1, W2)
+        run: python3 tools/check_consistencia.py --gh diagramas
+
+  calidad:
+    name: calidad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Solo .puml, nombres, estilo y completitud
+        run: bash tools/check_calidad.sh diagramas
+
+  render:
+    name: render
+    needs: sintaxis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/plantuml
+      - name: Generar SVG y PNG
+        run: |
+          plantuml -tsvg -o "$PWD/salida/svg" diagramas/*.puml
+          plantuml -tpng -o "$PWD/salida/png" diagramas/*.puml
+          ls salida/svg | wc -l
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diagramas-svg-png
+          path: salida/
+          retention-days: 30
+
+  xmi:
+    name: xmi (opcional)
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.exportar_xmi)
+    needs: sintaxis
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/plantuml
+      - name: Exportar XMI (estándar, ArgoUML y StarUML)
+        # PlantUML exporta a XMI solo los diagramas de clases.
+        run: |
+          shopt -s nullglob
+          clases=(diagramas/*-clases*.puml diagramas/*-modelo-estructural*.puml)
+          plantuml -txmi      -o "$PWD/salida/xmi/estandar" "${clases[@]}"
+          plantuml -txmi:argo -o "$PWD/salida/xmi/argouml"  "${clases[@]}"
+          plantuml -txmi:star -o "$PWD/salida/xmi/staruml"  "${clases[@]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diagramas-xmi
+          path: salida/xmi/
+          retention-days: 30
