@@ -33,7 +33,7 @@ Motor -> Motor: calcularCostoAvance(obra, fecha)
 Motor -> Obra: obtenerPresupuestoCostosVigente()
 Obra --> Motor: presupuestoCostos: VersionPresupuestoCostos
 note right of PresCostos
-  Versión vigente con sus adendas aprobadas.
+  Versión vigente con sus adendas registradas.
 end note
 Motor -> PresCostos: obtenerRubros()
 PresCostos --> Motor: rubros: lista de Rubro

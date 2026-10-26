@@ -44,7 +44,7 @@ endif
 fork
   :Valorizar cada ítem con cantidad certificable
   por precio de venta vigente
-  (presupuesto de costos y adendas aprobadas);
+  (presupuesto de costos y adendas registradas);
   if (¿Ítem sin precio de venta o sin movimiento vigente?) then ([sí])
     :Señalar el ítem con su dato de origen
     e impedir continuar;
