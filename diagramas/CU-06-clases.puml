@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 title CU-06 · Generar certificación y costo del rubro
 hide circle
 hide empty members
@@ -39,7 +40,7 @@ class Obra {
 class "Versión de presupuesto de costos" as VersionPresupuestoCostos {
   + identificador: identificador
   + numero: entero
-  + adendasAprobadas: lista de identificador
+  + adendasRegistradas: lista de identificador
   --
   + obtenerRubros(): lista de Rubro
 }
@@ -199,7 +200,7 @@ note bottom of VersionCertificado
   la cantidad excedida pendiente de adenda (RF-09, RF-22).
   total = subtotal + impuestos - fondos de retención (RF-13).
   Se valoriza con el presupuesto de costos vigente y sus
-  adendas aprobadas; no modifica el presupuesto del cliente.
+  adendas registradas; no modifica el presupuesto del cliente.
 end note
 
 note bottom of CostoRubro

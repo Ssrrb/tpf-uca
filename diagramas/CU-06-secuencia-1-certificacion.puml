@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 16
@@ -44,7 +45,7 @@ Obra --> Motor: mediciones: lista de MedicionAvance
 note right of Obra
   Mediciones registradas hasta la fecha con cantidad
   aún no certificada, incluido el exceso que liberó
-  una adenda aprobada (CU-12).
+  una adenda registrada (CU-12).
 end note
 
 break No hay cantidades nuevas para certificar
@@ -58,7 +59,7 @@ loop Por cada medición con cantidad sin certificar
     Solo el remanente no certificado en versiones
     anteriores. Incluye mediciones propias y
     subcontratadas. Excluye cantidadExcedidaPendiente
-    (exceso sin adenda aprobada).
+    (exceso sin adenda registrada).
   end note
 end
 
@@ -67,7 +68,7 @@ loop Por cada ítem con cantidad certificable
   Item --> Motor: precio: decimal [0..1]
   note right of Item
     Precio de la versión vigente del presupuesto
-    de costos con sus adendas aprobadas
+    de costos con sus adendas registradas
     (tieneMovimientoVigente).
   end note
   Motor -> Item: tieneMovimientoVigente(fecha)

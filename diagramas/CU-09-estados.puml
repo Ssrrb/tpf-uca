@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14
@@ -32,11 +33,16 @@ skinparam note {
   BorderColor #17324D
 }
 title CU-09 · Estados del Contrato de subcontrato
-[*] --> borrador : registrarSubcontrato()\n[usuario admin y proveedor en catálogo]
+[*] --> borrador : registrarSubcontrato()
 borrador --> borrador : agregarItem(item, precio, limite)\n[validarLimite() = verdadero]
 borrador --> vigente : confirmar(usuarioId)\n/ ItemPresupuesto.asignarCantidad()
 borrador --> [*] : cancelar\n/ no se guarda el contrato
 vigente --> vigente : habilitarAcceso()\n/ crear UsuarioPortal o agregarContrato()
+note left of borrador
+  Se crea solo si el usuario es
+  administrador y el proveedor está
+  en el catálogo (precondición).
+end note
 note right of vigente
   El subcontratista consulta su contrato;
   no registra mediciones (CU-04).

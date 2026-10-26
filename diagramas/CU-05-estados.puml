@@ -1,5 +1,6 @@
 @startuml
 !theme plain
+skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14
@@ -32,8 +33,10 @@ skinparam note {
   BorderColor #17324D
 }
 title CU-05 · Estados del Precio de recurso
-[*] --> programado : registrarPrecio()\n[vigenteDesde es futura]
-[*] --> vigente : registrarPrecio()\n[vigenteDesde es hoy o anterior]
+state fecha <<choice>>
+[*] --> fecha : registrarPrecio()
+fecha --> programado : [vigenteDesde es futura]
+fecha --> vigente : [vigenteDesde es hoy o anterior]
 programado --> vigente : llega la fecha vigenteDesde
 vigente --> historico : cerrarVigencia(hasta)\n[se registra un precio nuevo]
 historico --> [*]

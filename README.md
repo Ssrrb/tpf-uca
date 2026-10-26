@@ -26,6 +26,7 @@ piezas simples:
 editar .puml → pull request → CI ─┬─ sintaxis     plantuml -checkonly
                                   ├─ consistencia clases vs secuencia
                                   ├─ calidad      nombres, estilo, completitud, solo .puml
+                                  │               + notación UML de la cátedra
                                   ├─ render       SVG y PNG como artefacto
                                   └─ xmi          exportación opcional (en main)
                                  ↓ todo en verde
@@ -37,6 +38,7 @@ editar .puml → pull request → CI ─┬─ sintaxis     plantuml -checkonly
 | Validar el modelo | Sintaxis de cada `.puml` | `tools/check_sintaxis.sh` |
 | Consistencia | Clases vs secuencia (E1, E2, W1, W2) | `tools/check_consistencia.py` |
 | Reglas de modelado y estándar visual | Nombres, `!theme plain` y paleta, completitud | `tools/check_calidad.sh` |
+| Notación UML de la cátedra | Casos de uso, clases, secuencia, actividades, estados y paquetes | `tools/check_uml.py` |
 | Documentación | SVG y PNG desde el texto | job `render` |
 | Intercambio de modelos | XMI para ArgoUML y StarUML | job `xmi (opcional)` |
 | Revisión | PR obligatorio con CI en verde | protección de `main` |
@@ -47,6 +49,17 @@ editar .puml → pull request → CI ─┬─ sintaxis     plantuml -checkonly
 - **Estilo:** `!theme plain`, fondo `#F5F8FA`, borde `#17324D`; las clases además usan `#EAF2F6`.
 - **Completitud:** cada CU (menos CU-00) tiene al menos un diagrama de clases y uno de secuencia.
 - **Solo `.puml`** en `diagramas/`: las imágenes se generan, no se suben.
+- **Notación UML** (clases 07 y 09 de la cátedra, detalle en
+  [docs/catedra/reglas-uml.md](docs/catedra/reglas-uml.md)):
+  - **Casos de uso:** un sujeto con los CU adentro y los actores afuera;
+    asociación actor–CU con línea continua sin flecha; entre CU solo
+    `<<include>>`, `<<extend>>` (`..>`) o generalización; entre actores solo generalización.
+  - **Clases:** solo relaciones UML 2, multiplicidad en las asociaciones y composición con 1 o 0..1 del lado del todo.
+  - **Secuencia:** fragmentos UML 2 (`group` no) y con guarda.
+  - **Actividades:** un inicio, al menos un fin y guardas en las decisiones.
+  - **Estados:** un inicial sin guarda, todo alcanzable y `evento [guarda] / acción`.
+  - **Paquetes:** dependencias `..>` y sin ciclos.
+  - Todos los diagramas usan `skinparam style strictuml`.
 - **Consistencia**, dentro de cada CU:
   - **E1** (error): un participante de la secuencia es de una clase que no existe.
   - **E2** (error): un mensaje llama a un método que la clase no declara.
@@ -61,6 +74,8 @@ Requisitos: Java 17+, Graphviz y `plantuml` en el `PATH`.
 bash tools/check_sintaxis.sh
 python3 tools/check_consistencia.py
 bash tools/check_calidad.sh
+python3 tools/check_uml.py
+python3 tools/test_check_uml.py
 plantuml -tsvg -o "$PWD/salida" diagramas/*.puml
 ```
 
