@@ -18,6 +18,9 @@ Reglas
   W2 (aviso)  Un método declarado en una clase que sí participa en las
               secuencias nunca se invoca en ellas.
 
+Un alias usado en un mensaje sin declararlo es un participante implícito
+cuyo tipo es el alias mismo, así que un nombre mal escrito cae en E1.
+
 Solo se analizan mensajes síncronos o asíncronos (->, ->>) con forma de
 llamada: nombre(...). Las respuestas (-->), los mensajes a actores y los
 textos libres sin paréntesis se ignoran. Un CU sin diagrama de clases o sin
@@ -115,6 +118,11 @@ def parse_secuencia(path):
         if not m or m.group(2).startswith("--"):
             continue
         src, _, dst, text = m.groups()
+        # PlantUML crea un participante implícito con un alias no declarado:
+        # su tipo es el propio nombre (así un alias mal escrito cae en E1).
+        for alias in (src, dst):
+            if alias not in parts and alias not in "[]":
+                parts[alias] = alias
         c = CALL.match(text)
         if c:
             msgs.append((n, src, dst, c.group(1)))

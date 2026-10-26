@@ -69,6 +69,9 @@ else Adenda válida
       loop Por cada medición con exceso, mientras haya saldo
         Motor -> Medicion: liberarExceso(saldo)
         Medicion --> Motor: cantidadLiberada: decimal
+        note right of Motor
+          saldo = saldo - cantidadLiberada
+        end note
       end
     end
     note right of Medicion

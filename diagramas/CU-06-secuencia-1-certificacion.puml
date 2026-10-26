@@ -42,20 +42,22 @@ end note
 Motor -> Obra: obtenerMedicionesSinCertificar(fecha)
 Obra --> Motor: mediciones: lista de MedicionAvance
 note right of Obra
-  Mediciones registradas hasta la fecha que no figuran
-  en el certificado de la obra.
+  Mediciones registradas hasta la fecha con cantidad
+  aún no certificada, incluido el exceso que liberó
+  una adenda aprobada (CU-12).
 end note
 
-break No hay mediciones nuevas para certificar
+break No hay cantidades nuevas para certificar
   Motor --> Ingeniero: aviso: no hay mediciones para certificar
 end
 
-loop Por cada medición nueva
+loop Por cada medición con cantidad sin certificar
   Motor -> Medicion: obtenerCantidadCertificable()
   Medicion --> Motor: cantidad: decimal
   note right of Medicion
-    Incluye mediciones propias y subcontratadas.
-    Excluye cantidadExcedidaPendiente
+    Solo el remanente no certificado en versiones
+    anteriores. Incluye mediciones propias y
+    subcontratadas. Excluye cantidadExcedidaPendiente
     (exceso sin adenda aprobada).
   end note
 end
