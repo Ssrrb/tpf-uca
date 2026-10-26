@@ -59,13 +59,10 @@ opt corrige descripción o precio de una adenda (paso 5)
   V -> Lin: corregir(descripción, precio, motivo)
   Lin -> Ad: estaCertificada()
   Ad --> Lin: certificada: lógico
-  opt la adenda ya se certificó (RN-10)
-    Lin -> Cert: registrarAjustePendiente(adenda, diferencia)
-    note right of Cert
-      La diferencia entra como ajuste en
-      la versión siguiente del certificado.
-    end note
-  end
+  note right of Lin
+    Si ya se certificó, el ajuste se registra
+    recién al guardar la versión (RN-10).
+  end note
 end
 
 alt confirma (paso 6)
@@ -76,6 +73,13 @@ alt confirma (paso 6)
   end
   V -> PA: activar(version)
   PA -> Ant: pasarAAnterior()
+  loop por cada corrección de una adenda ya certificada (RN-10)
+    Lin -> Cert: registrarAjustePendiente(adenda, diferencia)
+    note right of Cert
+      La diferencia entra como ajuste en
+      la versión siguiente del certificado.
+    end note
+  end
   V --> Ing: versión vinculada a la anterior, con actor y fecha (NF-05)
   opt exporta para enviarla al cliente (7a, PR-04)
     Ing -> V: exportar(formato)

@@ -38,9 +38,9 @@ Adm -> Tab: consultar(alcance, usuario)
 loop por cada obra del alcance
   Tab -> Usr: tieneAcceso(obra)
   Usr --> Tab: acceso: lógico
-  opt sin acceso a la obra (1b)
+  alt sin acceso a la obra (1b)
     Tab --> Adm: excluye sus datos y lo indica
-  end
+  else con acceso
   Tab -> Res: presupuestado(obra)
   Res --> Tab: a costo (con apartado Adendas) y a venta (cliente + adendas)
   break falla la lectura de los datos de obra (3a)
@@ -55,6 +55,7 @@ loop por cada obra del alcance
   Tab -> Lib: resultadoFinanciero(obra, fecha)
   create Tot
   Tab -> Tot: «create»(concepto, importe, fecha, unidad, PYG, procedencia)
+  end
 end
 Tab --> Adm: totales por obra y empresa, avance físico y plazo\ntranscurrido en porcentaje (RF-28, NF-11)
 opt filtra por rubro o fecha (1a)
