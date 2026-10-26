@@ -1,86 +1,67 @@
 # Ctrl+ · Modelo de Análisis (TPF 04, Grupo 7)
 
-Diagramas UML 2 del sistema Ctrl+ para gestión de obras, escritos como texto en
-PlantUML. La CLI de PlantUML más esta CI cumplen el papel de herramienta CASE
-(ver [docs/herramienta-case.md](docs/herramienta-case.md)).
+## Para qué existe este repo
 
-## Estructura
+El Modelo de Análisis de Ctrl+ es un conjunto de diagramas UML que describen el
+mismo sistema desde distintos ángulos. Los riesgos son:
 
-| Carpeta | Contenido |
-|---|---|
-| `diagramas/` | Un `.puml` por diagrama. **Solo `.puml`**: PNG, SVG, XMI o `.kuml.kts` hacen fallar la CI. |
-| `tools/` | Scripts de control que corre la CI y que se pueden correr a mano. |
-| `.github/` | Workflow `CASE PlantUML` y la acción que instala PlantUML (versión y checksum fijos). |
+1. que un diagrama esté mal escrito,
+2. que dos diagramas se contradigan (una secuencia llama a un método que la clase no tiene),
+3. que falte un diagrama o que no siga las convenciones del grupo,
+4. que la imagen del documento no corresponda a la última versión.
 
-## Funciones CASE cubiertas
+Una **herramienta CASE** existe para evitar eso: guarda el modelo, lo valida,
+mantiene la consistencia y genera la documentación. Acá la CASE se arma con tres
+piezas simples:
 
-| Función de una CASE | Control en la CI | Herramienta | Job |
-|---|---|---|---|
-| Validar el modelo | Sintaxis de cada `.puml` | `plantuml -checkonly` (`tools/check_sintaxis.sh`) | `sintaxis` |
-| Reglas de modelado | Nombres `CU-XX-<tipo>[-n-<detalle>].puml` | Regex en bash (`tools/check_calidad.sh`) | `calidad` |
-| Estándar visual | `!theme plain` y la paleta del grupo | `grep` (`tools/check_calidad.sh`) | `calidad` |
-| Consistencia entre diagramas | Clases vs secuencia (E1, E2, W1, W2) | `tools/check_consistencia.py` | `consistencia` |
-| Completitud | Cada CU tiene diagrama de clases y de secuencia | `tools/check_calidad.sh` | `calidad` |
-| Generación de documentación | SVG y PNG desde el texto, como artefacto | `plantuml -tsvg` / `-tpng` | `render` |
-| Control de versiones y revisión | PR obligatorio con la CI en verde | Protección de rama | — |
-| Intercambio de modelos | XMI estándar, ArgoUML y StarUML (opcional) | `plantuml -txmi[:argo\|:star]` | `xmi (opcional)` |
+- **El modelo es texto.** Cada diagrama es un `.puml` en `diagramas/`. Se puede
+  versionar, comparar y revisar como código.
+- **PlantUML lo interpreta.** Su CLI valida la sintaxis y dibuja SVG, PNG y XMI.
+- **La CI lo controla.** En cada pull request, GitHub Actions corre los controles.
+  `main` está protegida: sin CI en verde no hay merge.
 
-Los SVG/PNG quedan en el artefacto `diagramas-svg-png` de cada corrida, y los XMI
-en `diagramas-xmi` (corre en cada push a `main` o a mano desde *Actions → Run workflow*).
-PlantUML exporta a XMI solo los diagramas de clases.
+## Cómo funciona
+
+```
+editar .puml → pull request → CI ─┬─ sintaxis     plantuml -checkonly
+                                  ├─ consistencia clases vs secuencia
+                                  ├─ calidad      nombres, estilo, completitud, solo .puml
+                                  ├─ render       SVG y PNG como artefacto
+                                  └─ xmi          exportación opcional (en main)
+                                 ↓ todo en verde
+                               merge a main
+```
+
+| Función CASE | Control | Dónde |
+|---|---|---|
+| Validar el modelo | Sintaxis de cada `.puml` | `tools/check_sintaxis.sh` |
+| Consistencia | Clases vs secuencia (E1, E2, W1, W2) | `tools/check_consistencia.py` |
+| Reglas de modelado y estándar visual | Nombres, `!theme plain` y paleta, completitud | `tools/check_calidad.sh` |
+| Documentación | SVG y PNG desde el texto | job `render` |
+| Intercambio de modelos | XMI para ArgoUML y StarUML | job `xmi (opcional)` |
+| Revisión | PR obligatorio con CI en verde | protección de `main` |
 
 ## Reglas
 
-### Nombres
-
-```
-^CU-[0-9]{2}-(clases|secuencia|actividades|estados|paquetes|modelo-estructural|casos-de-uso-alto-nivel|generalizacion-actores)(-[0-9]+-<detalle>)?\.puml$
-```
-
-`<detalle>` va en minúsculas, sin tildes y separado por guiones. El `-n-` se usa cuando
-un diagrama se parte en varios: `CU-02-secuencia-1-carga.puml`, `CU-02-secuencia-2-validacion.puml`.
-
-### Estilo
-
-Cada archivo tiene `!theme plain`, el fondo `#F5F8FA` y el borde `#17324D`. Los
-diagramas de clases (`-clases`, `-modelo-estructural`) además llevan
-`HeaderBackgroundColor #EAF2F6`. Un solo `@startuml` por archivo.
-
-### Completitud
-
-Cada `CU-XX` (salvo `CU-00`, que es el diagrama general) necesita al menos un
-diagrama de clases (`CU-XX-clases*.puml` o `CU-XX-modelo-estructural.puml`) y uno
-de secuencia (`CU-XX-secuencia*.puml`).
-
-### Consistencia clases vs secuencia
-
-Se compara, dentro de cada CU, el diagrama de clases con todas sus secuencias.
-
-| Regla | Nivel | Qué detecta |
-|---|---|---|
-| **E1** | error | Un participante de la secuencia (`"obra:\nObra"`) es de un tipo que no existe como clase en el diagrama de clases del CU. |
-| **E2** | error | Un mensaje (`A -> B: metodo(...)`) llama a un método que la clase de `B` no declara ni hereda. |
-| **W1** | aviso | Una clase del diagrama no participa en ninguna secuencia del CU (no cuentan `enum`, `interface` ni `<<datatype>>`). |
-| **W2** | aviso | Un método declarado en una clase que sí participa nunca se invoca en las secuencias. |
-
-Los errores rompen la CI; los avisos se muestran como anotaciones en el PR sin
-bloquear. Las respuestas (`-->`), los mensajes a actores y los textos sin paréntesis no se
-analizan. Con `--strict` los avisos también fallan.
+- **Nombres:** `CU-XX-<tipo>[-n-<detalle>].puml`, por ejemplo `CU-02-secuencia-1-carga.puml`.
+- **Estilo:** `!theme plain`, fondo `#F5F8FA`, borde `#17324D`; las clases además usan `#EAF2F6`.
+- **Completitud:** cada CU (menos CU-00) tiene al menos un diagrama de clases y uno de secuencia.
+- **Solo `.puml`** en `diagramas/`: las imágenes se generan, no se suben.
+- **Consistencia**, dentro de cada CU:
+  - **E1** (error): un participante de la secuencia es de una clase que no existe.
+  - **E2** (error): un mensaje llama a un método que la clase no declara.
+  - **W1** (aviso): una clase no participa en ninguna secuencia.
+  - **W2** (aviso): un método nunca se invoca.
 
 ## Uso local
 
-Requisitos: Java 17+, Graphviz (para clases; sin él se puede usar `-Playout=smetana`) y
-`plantuml` en el `PATH` (`brew install plantuml`, `apt install plantuml` o el `.jar`).
+Requisitos: Java 17+, Graphviz y `plantuml` en el `PATH`.
 
 ```bash
-bash tools/check_sintaxis.sh            # sintaxis
-python3 tools/check_consistencia.py     # E1, E2, W1, W2
-bash tools/check_calidad.sh             # solo .puml, nombres, estilo, completitud
+bash tools/check_sintaxis.sh
+python3 tools/check_consistencia.py
+bash tools/check_calidad.sh
 plantuml -tsvg -o "$PWD/salida" diagramas/*.puml
 ```
 
-## Flujo de trabajo
-
-1. Rama nueva desde `main`, cambios en `diagramas/`.
-2. Pull request: corren `sintaxis`, `consistencia`, `calidad` y `render`.
-3. Con los cuatro en verde se puede hacer merge. `main` está protegida.
+Por qué PlantUML y no otra herramienta: [docs/herramienta-case.md](docs/herramienta-case.md).
