@@ -40,7 +40,7 @@ class Obra {
 class "Versión de presupuesto de costos" as VersionPresupuestoCostos {
   + identificador: identificador
   + numero: entero
-  + adendasAprobadas: lista de identificador
+  + adendasRegistradas: lista de identificador
   --
   + obtenerRubros(): lista de Rubro
 }
