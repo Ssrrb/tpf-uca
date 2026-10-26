@@ -265,14 +265,19 @@ def check_casos_de_uso(f, lns, r, solo_generalizacion):
 # ---------------------------------------------------------------------- clases
 def check_clases(f, lns, r):
     tipos, cuerpo = {}, 0
-    rels = []
+    rels, herencias = [], []
     for n, l in lns:
         if cuerpo:
             cuerpo += l.count("{") - l.count("}")
             continue
         m = CLASS_DECL.match(l)
         if m:
-            tipos[m.group(3) or m.group(2)] = m.group(1).split()[-1]
+            nombre = m.group(3) or m.group(2)
+            tipos[nombre] = m.group(1).split()[-1]
+            for clave, clase in (("extends", "generalización"), ("implements", "realización")):
+                e = re.search(rf'\b{clave}\s+([\w, ]+?)\s*(?:<<|\{{|$)', l)
+                for padre in (e.group(1).split(",") if e else ()):
+                    herencias.append((n, f"'{nombre} {clave} {padre.strip()}'", nombre, padre.strip(), clase))
             if m.group(4):
                 cuerpo = 1
             continue
@@ -306,14 +311,15 @@ def check_clases(f, lns, r):
                                                 f"multiplicidad 1 o 0..1, no {todo}")
         elif clase in ("generalización", "realización"):
             hijo, padre = (b, a) if izq == "<|" else (a, b)
-            th, tp = tipos.get(hijo, "class"), tipos.get(padre, "class")
-            if clase == "realización" and tp != "interface":
-                r.error(f, rel["n"], "CL4", f"{desc}: la realización apunta a una interfaz")
-            if clase == "generalización" and (th == "interface") != (tp == "interface"):
-                r.error(f, rel["n"], "CL4", f"{desc}: una clase realiza (<|..) una interfaz, "
-                                            "no la generaliza")
-            if clase == "generalización":
-                padres[hijo].add(padre)
+            herencias.append((rel["n"], desc, hijo, padre, clase))
+    for n, desc, hijo, padre, clase in herencias:
+        th, tp = tipos.get(hijo, "class"), tipos.get(padre, "class")
+        if clase == "realización" and tp != "interface":
+            r.error(f, n, "CL4", f"{desc}: la realización apunta a una interfaz")
+        if clase == "generalización" and (th == "interface") != (tp == "interface"):
+            r.error(f, n, "CL4", f"{desc}: una clase realiza (<|..) una interfaz, no la generaliza")
+        if clase == "generalización":
+            padres[hijo].add(padre)
     c = ciclos(padres)
     if c:
         r.error(f, None, "CL4", "herencia circular: " + " -> ".join(c))
@@ -356,7 +362,8 @@ def check_actividades(f, lns, r):
 
 
 # ---------------------------------------------------------------------- estados
-TRANSICION = re.compile(r'^\s*(?P<a>\[\*\]|[\w.]+)\s*-[-\w\[\]#,]*>\s*(?P<b>\[\*\]|[\w.]+)\s*(?::\s*(?P<label>.*))?$')
+TRANSICION = re.compile(r'^\s*(?P<a>\[\*\]|[\w.]+)\s*(?P<arrow><-[-\w\[\]#,]*|-[-\w\[\]#,]*>)\s*'
+                        r'(?P<b>\[\*\]|[\w.]+)\s*(?::\s*(?P<label>.*))?$')
 ETIQUETA = re.compile(r'^[^\[\]/]*(\[[^\[\]]+\])?\s*(/[^\[\]]*)?$')
 
 
@@ -381,6 +388,8 @@ def check_estados(f, lns, r):
         if not t:
             continue
         a, b, label = t.group("a"), t.group("b"), (t.group("label") or "").replace("\\n", " ").strip()
+        if t.group("arrow").startswith("<"):  # destino <-- origen
+            a, b = b, a
         region = pila[-1] if pila else None
         if a == "[*]":
             iniciales[region].append(n)

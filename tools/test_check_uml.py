@@ -128,6 +128,12 @@ class Clases(unittest.TestCase):
     def test_generalizacion_a_interfaz(self):
         self.assertIn("CL4", codigos(CL, CL_OK + "Pagable <|-- Linea\n"))
 
+    def test_herencia_circular_con_extends(self):
+        self.assertIn("CL4", codigos(CL, CL_OK + "class A extends B\nclass B extends A\n"))
+
+    def test_implements_a_clase(self):
+        self.assertIn("CL4", codigos(CL, CL_OK + "class A implements Producto\n"))
+
     def test_herencia_circular(self):
         self.assertIn("CL4", codigos(CL, CL_OK + "Linea <|-- Producto\nProducto <|-- Linea\n"))
 
@@ -207,6 +213,10 @@ activo --> [*]
 class Estados(unittest.TestCase):
     def test_correcto(self):
         self.assertEqual(codigos(ST, ST_OK), set())
+
+    def test_flecha_invertida(self):
+        cuerpo = ST_OK.replace("borrador --> activo : completar()", "activo <-- borrador : completar()")
+        self.assertEqual(codigos(ST, cuerpo), set())
 
     def test_dos_iniciales(self):
         self.assertIn("ST1", codigos(ST, ST_OK + "[*] --> borrador\n"))
