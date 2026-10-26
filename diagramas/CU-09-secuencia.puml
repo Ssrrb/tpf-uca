@@ -3,90 +3,75 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
 skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
 hide footbox
-title CU-09 · Registrar contrato y habilitar portal de subcontratista
+title CU-09 · Registrar contrato de subcontratista
 actor "Administrador" as Admin
-control "gestor:\nGestorContratos" as Gestor
+box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
-participant "proveedor:\nProveedor" as Prov
-participant "contrato:\nContratoSubcontrato" as Contrato
+participant "subcontratista:\nProveedor" as Prov
+participant "contrato:\nContrato" as Con
 participant "itemContrato:\nItemContrato" as IC
-participant "item:\nItemPresupuesto" as Item
-participant "usuario:\nUsuarioPortal" as UP
-actor "Subcontratista" as Sub
+participant "retencion:\nRetencion" as Ret
+end box
+box "ECMS" #EAF2F6
+participant "saldo:\nSaldoItem" as Saldo
+participant "item:\nItemCostos" as Item
+end box
 
-Admin -> Gestor: registrarSubcontrato(obra, proveedor, datos, archivo)
-Gestor -> Obra: usuarioEsAdmin(usuarioId)
-Obra --> Gestor: esAdmin: lógico
-break Usuario sin rol admin en la obra (NF-01)
-  Gestor --> Admin: deniega la operación
+Admin -> Obra: registrarContrato(subcontratista, número, fechas, archivo)
+Obra -> Prov: esSubcontratista()
+Prov --> Obra: sí
+Obra -> Obra: númeroContratoDisponible(número)
+break el número ya existe en la obra (5b)
+  Obra --> Admin: pide otro número (vuelve al paso 2)
 end
-Gestor -> Obra: existeNumeroContrato(numero)
-Obra --> Gestor: existe: lógico
-break Número repetido o archivo faltante
-  Gestor --> Admin: pide corregir antes de confirmar
+create Con
+Obra -> Con: «create»(subcontratista, número, fechas, archivo)
+Con -> Con: validarArchivo()
+break falta el archivo o el formato no está permitido (5c)
+  Con --> Admin: impide confirmar (vuelve al paso 2)
 end
-create Contrato
-Gestor -> Contrato: «create»(proveedor, datos, archivo)
-
-loop Por cada rubro o ítem del alcance
-  Admin -> Gestor: agregarItem(contrato, item, precio, limite)
-  Gestor -> Contrato: agregarItem(item, precio, limite)
-  create IC
-  Contrato -> IC: «create»
-  Contrato -> IC: validarLimite()
-  IC -> Item: limiteDisponible()
-  Item --> IC: disponible: decimal
-  alt Límite mayor a lo presupuestado o ítem ya asignado (RF-10)
-    IC --> Contrato: falso
-    Contrato --> Gestor: ítem rechazado
-    Gestor --> Admin: informa el exceso o el doble conteo
-  else Límite válido
-    IC --> Contrato: verdadero
+loop por cada ítem del alcance
+  Admin -> Con: agregarÍtem(ítem, precio, límite)
+  Con -> Saldo: cantidadPresupuestada()
+  Saldo --> Con: presupuestada
+  Con -> Saldo: disponibleParaContratos()
+  Saldo --> Con: disponible
+  alt el límite supera lo presupuestado (5a)
+    Con --> Admin: rechaza el ítem e informa el exceso
+  else la cantidad ya está asignada a otro contrato (5d, RF-10)
+    Con --> Admin: lo informa para evitar el doble conteo
+  else válido
+    create IC
+    Con -> IC: «create»(ítem, precio, límite)
   end
 end
-
-Admin -> Gestor: confirmar(contrato)
-Gestor -> Contrato: confirmar(usuarioId)
-loop Por cada ítem del contrato
-  Contrato -> Item: asignarCantidad(limite)
+Admin -> Con: configurarCondiciones(impuestos, retenciones, fondoReparo)
+loop por cada retención
+  create Ret
+  Con -> Ret: «create»(tipo, porcentaje)
 end
-Gestor --> Admin: contrato vigente con actor y fecha (NF-04)
-
-Admin -> Gestor: habilitarAcceso(contrato)
-Gestor -> Prov: obtenerUsuarioPortal()
-Prov --> Gestor: usuario [0..1]
-alt Ya tiene usuario por otro contrato (flujo 8a)
-  Gestor -> UP: agregarContrato(contrato)
-else No tiene usuario
-  create UP
-  Gestor -> UP: «create»(correo, rol subcontratista)
-  Gestor -> UP: agregarContrato(contrato)
+Admin -> Con: confirmar(actor)
+loop por cada ítem del contrato
+  Con -> Saldo: reservarParaContrato(cantidad)
 end
-Gestor --> Admin: acceso de solo consulta habilitado
-
-== Consulta del subcontratista (RF-24) ==
-Sub -> Gestor: consultar(usuario, contrato)
-Gestor -> UP: puedeVer(contrato)
-UP --> Gestor: permitido: lógico
-alt Es su contrato
-  Gestor -> IC: saldo()
-  IC --> Gestor: saldo: decimal
-  Gestor --> Sub: mediciones, versiones certificadas, valorizaciones y saldos
-else Otro contrato o datos internos (NF-02)
-  Gestor --> Sub: acceso denegado
-end
+Con --> Admin: contrato guardado y vinculado al alcance (RF-23)
+note over Item, Saldo
+  El saldo es del ítem de costos (código estable, RN-02).
+end note
 @enduml

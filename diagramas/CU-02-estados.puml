@@ -32,23 +32,24 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-02 · Estados de la Versión de presupuesto
-[*] --> en_carga : Presupuesto.crearVersion(archivo)
-en_carga --> pendiente_estructura : ArchivoOriginal.guardarOriginal()\n[guardado completo]
-en_carga --> descartada : descartarCargaIncompleta()\n[falla de almacenamiento o interrupción]
-pendiente_estructura --> pendiente_validacion : confirmarEstructura()\n[estructura válida]
-pendiente_validacion --> con_errores : validarDatos()\n[datos obligatorios inválidos]
-pendiente_validacion --> pendiente_aceptacion : validarDatos()\n[sin datos inválidos] / recalcularTotales()
-pendiente_aceptacion --> aceptada : aceptarResultado(aceptarDiferencias)
-aceptada --> disponible : Presupuesto.publicarVersion(version)
-pendiente_estructura --> cancelada : cancelar()
-pendiente_aceptacion --> cancelada : cancelar()
-con_errores --> [*]
-cancelada --> [*]
-descartada --> [*]
-disponible --> [*] : se activa en CU-03
-note right of con_errores
-  Cada error indica hoja, fila y columna (RF-03).
-  Corregir exige cargar otra vez el archivo.
+title CU-02 · Estados del Presupuesto del cliente
+state origen <<choice>>
+state "En carga" as en_carga
+state "Propuesta" as propuesta
+state "Finalizado" as finalizado
+
+[*] --> origen : crearPresupuestoCliente(actor)
+origen --> en_carga : [con XLSX] / cargarArchivo(archivo)
+origen --> propuesta : [sin XLSX (1a)] / agregarRubro(código, descripción)
+en_carga --> propuesta : guardar() [XLSX válido y no repetido]
+en_carga --> [*] : [archivo rechazado, repetido o carga interrumpida] / descartarCargaIncompleta()
+propuesta --> en_carga : cargarArchivo(archivo) [recarga]
+propuesta --> propuesta : confirmarEstructura() / validarDatos()
+propuesta --> finalizado : finalizar(actor) [estructura confirmada y datos válidos] / vincularPresupuestoCliente()
+finalizado --> [*]
+
+note right of finalizado
+  Inmutable (RN-01). Es la base
+  del presupuesto de costos (CU-03).
 end note
 @enduml

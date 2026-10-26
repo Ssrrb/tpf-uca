@@ -1,120 +1,104 @@
 @startuml
 !theme plain
 skinparam style strictuml
+title CU-12 · Liquidar subcontratista
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
-title CU-12 · Incorporar adenda al presupuesto de costos y liberar saldos
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+package "ECMS" {
+  class "Versión del certificado" as VersionCertificado {
+    número: entero
+    estado: guardada
+    --
+    + líneasSubcontratadasPorContrato(): lista
+    + enviarALiquidar(contrato, actor): número
+  }
 
-class "Motor de ingeniería" as MotorIngenieria <<control>> {
-  --
-  + obtenerAdendasRegistradas(obra: Obra): lista de Adenda
-  + verResumen(adenda: Adenda): lista de MovimientoAdenda
-  + incorporarAdenda(obra: Obra, adenda: Adenda): VersionPresupuestoCostos
+  class "Línea del certificado" as LineaCertificado {
+    cantidad: decimal
+    liquidada: lógico
+    --
+    + estaLiquidada(): lógico
+    + marcarLiquidada(liquidación): vacío
+  }
 }
 
-class Obra {
-  + identificador: identificador
-  + codigo: texto
-  + nombre: texto
-  --
-  + obtenerAdendasRegistradas(): lista de Adenda
-  + obtenerPresupuestoCostosVigente(): VersionPresupuestoCostos
-  + obtenerMedicionesConExceso(item: ItemPresupuesto): lista de MedicionAvance
+package "Motor de finanzas" {
+  class "Liquidaciones" as Liquidaciones {
+    --
+    + liquidar(versión, contrato, cantidades): Liquidación
+    + buscar(versión, contrato): Liquidación [0..1]
+  }
+
+  class "Liquidación" as Liquidacion {
+    número: entero
+    bruto: guaraníes
+    retenciones: guaraníes
+    fondoReparo: guaraníes
+    deducciones: guaraníes
+    impuestos: guaraníes
+    /neto: guaraníes
+    estado: pendiente_de_pago | pagada_parcial | pagada
+    --
+    + calcular(contrato): vacío
+  }
 }
 
-class Adenda {
-  + identificador: identificador
-  + numero: entero
-  + motivo: texto
-  + respaldo: archivo
-  + excepcionRegistrada: lógico
-  + incorporada: lógico
-  + costoERP: decimal [0..1]
-  + usuarioId: identificador
-  + fechaRegistro: fecha y hora
-  --
-  + obtenerMovimientos(): lista de MovimientoAdenda
-  + validar(): lógico
-  + registrarCosto(costo: decimal): vacío
+package "ERP" {
+  class Contrato {
+    número: texto
+    porcentajeFondoReparo: decimal
+    impuestos: decimal
+    --
+    + valorizar(ítem, cantidad): guaraníes
+    + excedeLímite(importe): lógico
+  }
+
+  class "Retención" as Retencion {
+    tipo: IVA | renta
+    porcentaje: decimal
+    --
+    + aplicar(base: guaraníes): guaraníes
+  }
 }
 
-class "Movimiento de adenda" as MovimientoAdenda {
-  + tipo: ampliacion | deduccion | variacion_de_precio
-  + cantidadNueva: decimal [0..1]
-  + precioNuevo: decimal [0..1]
-  + /efectoMonetario: decimal
-  + limite: decimal
-  + importeUtilizado: decimal
-  + /saldo: decimal
-  --
-  + calcularEfecto(): decimal
-}
+VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
+LineaCertificado "0..*" --> "0..1" Contrato : subcontratada en
+LineaCertificado "0..*" --> "0..1" Liquidacion : liquidada en
+Liquidaciones ..> Liquidacion : registra
+Liquidacion "0..*" --> "1" Contrato : de
+Liquidacion "0..1" --> "1" VersionCertificado : por
+Contrato "0..*" --> "0..*" Retencion : aplica
 
-class "Versión de presupuesto de costos" as VersionPresupuestoCostos {
-  + identificador: identificador
-  + numero: entero
-  + vigente: lógico
-  + fechaActivacion: fecha y hora [0..1]
-  + usuarioId: identificador [0..1]
-  --
-  + crearVersionNueva(adenda: Adenda): VersionPresupuestoCostos
-  + activar(usuarioId: identificador): vacío
-}
-
-class "Ítem de presupuesto" as ItemPresupuesto {
-  + identificador: identificador
-  + codigo: texto [0..1]
-  + descripcion: texto
-  + unidad: texto
-  + cantidadPresupuestada: decimal
-  + costoUnitario: decimal
-  + precioVenta: decimal
-  --
-  + aplicarMovimiento(movimiento: MovimientoAdenda): vacío
-  + calcularSaldoDisponible(): decimal
-}
-
-class "Medición de avance" as MedicionAvance {
-  + identificador: identificador
-  + cantidad: decimal
-  + unidad: texto
-  + cantidadExcedidaPendiente: decimal
-  --
-  + liberarExceso(saldoDisponible: decimal): decimal
-}
-
-MotorIngenieria ..> Obra : consulta
-MotorIngenieria ..> Adenda : incorpora
-
-Obra "1" *-- "0..*" Adenda : registra
-Adenda "1" *-- "1..*" MovimientoAdenda : contiene
-MovimientoAdenda "0..*" --> "1" ItemPresupuesto : modifica
-Obra "1" *-- "1..*" VersionPresupuestoCostos : versiones de costos
-VersionPresupuestoCostos "0..1" --> "0..1" VersionPresupuestoCostos : versión anterior
-VersionPresupuestoCostos "0..*" --> "0..*" Adenda : incorpora
-VersionPresupuestoCostos "1" *-- "1..*" ItemPresupuesto : contiene
-Obra "1" *-- "0..*" MedicionAvance : registra
-MedicionAvance "0..*" --> "1" ItemPresupuesto : mide
-
-note bottom of Adenda
-  Documento interno: el Ingeniero de obra registra
-  los cambios que le indicaron (CU-11). Las aprobaciones
-  contractuales quedan fuera del sistema (RF-21).
+note bottom of Liquidacion
+  Única por versión del certificado y contrato (RN-11):
+  un reintento no la duplica (NF-03).
+  Solo se liquida lo certificado al cliente.
 end note
 
-note bottom of VersionPresupuestoCostos
-  La versión anterior sigue consultable (NF-05).
-  El presupuesto del cliente no se modifica.
-end note
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

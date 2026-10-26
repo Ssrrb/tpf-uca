@@ -32,42 +32,34 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-10 · Actividades · Controlar costos y Curva S de la obra
+title CU-10 · Actividades · Controlar el costo de la obra con el ACU
 |Ingeniero de obra o Administrador|
 start
-:Seleccionar la obra y la fecha de corte;
-|Motor de ingeniería|
-if (¿El usuario pertenece a la obra?) then ([no])
-  :Impedir la consulta;
+:Seleccionar la obra y la fecha de consulta;
+|ECMS|
+:Reunir la versión vigente con su ACU, el apartado Adendas
+y las mediciones con sus insumos hasta la fecha;
+|Motor de finanzas|
+:Entregar los gastos imputados por rubro
+y las liquidaciones hasta la fecha;
+|ECMS|
+if (¿Hay mediciones o gastos hasta la fecha?) then ([no])
+  :Informar que no hay datos;
   stop
 else ([sí])
 endif
-:Consolidar presupuesto de costos vigente,
-mediciones aprobadas y versiones del certificado;
-if (¿Hay datos a la fecha de corte?) then ([no])
-  :Informar que no hay datos
-  y no dibujar la Curva S;
-  stop
-else ([sí])
-endif
-fork
-  :Calcular costo presupuestado, costo real,
-  diferencia y saldo por rubro e ítem;
-fork again
-  :Calcular la Curva S: avance físico, financiero
-  y físico pendiente de adenda;
-end fork
-:Mostrar costos y Curva S;
+:Calcular el costo del avance: propios con el ACU,
+subcontratados con lo liquidado (RF-26);
+:Mostrar presupuestado, consumido, liquidado, comprado,
+acopio, desvío, diferencias y saldo por rubro e ítem;
 |Ingeniero de obra o Administrador|
-repeat
-  :Filtrar o elegir un total;
-  |Motor de ingeniería|
-  :Mostrar la vista filtrada o el respaldo del total;
-  |Ingeniero de obra o Administrador|
-repeat while (¿Consulta otro total?) is ([sí]) not ([no])
-if (¿Exporta la consulta?) then ([sí])
-  |Motor de ingeniería|
-  :Generar archivo nuevo XLSX o PDF;
+:Seleccionar un total;
+|ECMS|
+:Mostrar el respaldo: medición con sus insumos
+o gasto con su comprobante (NF-12);
+|Ingeniero de obra o Administrador|
+if (¿El ACU estaba mal estimado?) then ([sí])
+  :Corregirlo en una versión nueva (CU-03);
 else ([no])
 endif
 stop

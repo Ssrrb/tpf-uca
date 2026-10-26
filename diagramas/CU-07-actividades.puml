@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-07 · Actividades · Registrar gasto de obra
+|Administrador o Ingeniero (caja chica)|
+start
+:Seleccionar la obra y el tipo de gasto
+(material, mano de obra o caja chica);
+:Elegir el proveedor o la persona del ERP
+e ingresar importe, fecha y medio de pago;
+if (¿Es compra de materiales?) then ([sí])
+  :Indicar el insumo y la cantidad;
+else ([no])
+endif
+repeat
+  :Imputar el importe a un rubro (y, si corresponde, a un ítem);
+  |Motor de finanzas|
+  if (¿El rubro existe en la versión vigente?) then ([sí])
+    :Registrar la imputación;
+  elseif (¿Es un gasto general de la obra?) then ([sí])
+    :Imputar a "Gastos generales de obra";
+  else ([no])
+    :Impedir la imputación;
+  endif
+  |Administrador o Ingeniero (caja chica)|
+repeat while (¿Queda importe por repartir?) is ([sí]) not ([no])
+:Adjuntar el comprobante;
+|Motor de finanzas|
+:Validar el importe;
+if (¿Caja chica por encima del tope y la registra el Ingeniero?) then ([sí])
+  :No permitir confirmar: lo registra el Administrador (RN-13);
+  stop
+else ([no])
+endif
+|Administrador o Ingeniero (caja chica)|
+:Confirmar;
+|Motor de finanzas|
+:Registrar el gasto y sumarlo al costo real del rubro;
+stop
+@enduml

@@ -1,69 +1,100 @@
 @startuml
 !theme plain
 skinparam style strictuml
+title CU-14 · Registrar cobros y pagos
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
-title CU-14 · Consultar tablero financiero
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+package "Motor de finanzas" {
+  abstract class "Documento pendiente" as DocumentoPendiente {
+    número: entero
+    total: guaraníes
+    saldoPendiente: guaraníes
+    --
+    + mostrarConOrigen(): VersiónCertificado
+    + validarImporte(importe, retenciones): lógico
+    + actualizarSaldo(movimiento): vacío
+  }
 
-class "Motor de ingeniería" as MotorIngenieria <<control>> {
-  --
-  + abrirTablero(usuarioId: identificador, obras: lista de Obra, fecha: fecha): TableroFinanciero
-  + verDetalle(indicador: IndicadorTablero): texto
+  class "Factura interna" as FacturaInterna
+  class "Liquidación" as Liquidacion
+  class "Fondo de reparo retenido" as FondoReparo {
+    contraparte: cliente | subcontratista
+  }
+
+  abstract class Movimiento {
+    importe: guaraníes
+    fecha: fecha
+    medio: texto
+    registradoPor: Usuario
+    --
+    + adjuntarComprobante(archivo): vacío
+    + agregarRetención(tipo, importe, comprobante): vacío
+    + confirmar(actor): vacío
+  }
+
+  class Cobro
+  class Pago
+
+  class "Retención" as Retencion {
+    tipo: IVA | renta
+    importe: guaraníes
+  }
+
+  class Comprobante {
+    tipo: recibo | comprobante | retención
+    archivo: archivo
+  }
 }
 
-class Obra {
-  + identificador: identificador
-  + codigo: texto
-  + nombre: texto
-  --
-  + verificarAcceso(usuarioId: identificador): lógico
-  + obtenerTotalesDeObra(fecha: fecha): lista de IndicadorTablero
+package "ERP" {
+  class Obra {
+    estado: EstadoObra
+    --
+    + permiteCobrosYPagos(): lógico
+    + estaEnRecepciónDefinitiva(): lógico
+  }
 }
 
-class "Tablero financiero" as TableroFinanciero {
-  + fecha: fecha
-  + moneda: texto = "PYG"
-  + filtroRubro: texto [0..1]
-  --
-  + agregarIndicadores(indicadores: lista de IndicadorTablero): vacío
-  + calcularDiferencias(): vacío
-}
+DocumentoPendiente <|-- FacturaInterna
+DocumentoPendiente <|-- Liquidacion
+DocumentoPendiente <|-- FondoReparo
+Movimiento <|-- Cobro
+Movimiento <|-- Pago
+DocumentoPendiente "1" *-- "0..*" Movimiento : cancela
+Movimiento "1" *-- "0..*" Retencion : retenciones
+Movimiento "1" *-- "1..*" Comprobante : adjuntos
+DocumentoPendiente "0..*" --> "1" Obra : de la obra
 
-class "Indicador del tablero" as IndicadorTablero {
-  + concepto: presupuesto_vigente | costo_propio | costo_subcontratado | certificado | facturado | cobrado | pagado | saldo
-  + rubro: texto [0..1]
-  + importe: decimal
-  + /diferencia: decimal [0..1]
-  + fecha: fecha
-  + unidad: texto
-  + moneda: texto
-  + procedencia: ECMS | ERP
-  + referenciaRespaldo: texto
-  --
-  + obtenerRespaldo(): texto
-}
-
-MotorIngenieria ..> Obra : consulta
-MotorIngenieria ..> TableroFinanciero : <<create>>
-TableroFinanciero "1" *-- "0..*" IndicadorTablero : muestra
-TableroFinanciero "0..*" --> "1..*" Obra : resume
-IndicadorTablero "0..*" --> "1" Obra : de
-
-note bottom of IndicadorTablero
-  Cada total indica fecha, unidad, moneda y
-  procedencia (NF-11) y permite recuperar su
-  respaldo: versión del presupuesto, mediciones,
-  versión del certificado o documento del ERP (NF-12).
+note bottom of Movimiento
+  Importe + retenciones <= saldo pendiente;
+  la retención cancela saldo igual que el efectivo (RN-14).
+  Ctrl+ no ejecuta pagos ni emite recibos oficiales.
 end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

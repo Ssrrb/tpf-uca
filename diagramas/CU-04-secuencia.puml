@@ -3,110 +3,97 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
 skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
 hide footbox
-title CU-04 · Registrar la medición de avance e insumos
+title CU-04 · Gestionar la medición de avance e insumos
 actor "Ingeniero de obra" as Ing
-control "motor:\nMotorIngenieria" as Motor
+box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
-participant "vigente:\nVersionPresupuestoCostos" as Version
-participant "item:\nItemPresupuesto" as Item
-participant "contrato:\nContratoSubcontrato" as Contrato
-participant "medicion:\nMedicionAvance" as Med
-participant "acu:\nAnalisisCostoUnitario" as ACU
-participant "insumo:\nInsumo" as Insumo
-participant "consumo:\nConsumoInsumo" as Consumo
-participant "evidencia:\nEvidencia" as Evid
+participant "contrato:\nContrato" as Con
+end box
+box "ECMS" #EAF2F6
+participant "item:\nItemCostos" as Item
+participant "saldo:\nSaldoItem" as Saldo
+participant "medicion:\nMedicion" as Med
+participant "consumo:\nConsumoInsumo" as Cons
+participant "evidencia:\nEvidencia" as Evi
+participant "ajuste:\nMedicionAjuste" as Aj
+end box
 
-Ing -> Motor: iniciarMedicion(obra)
-Motor -> Obra: obtenerPresupuestoCostosVigente()
-Obra --> Motor: vigente
-Motor -> Version: obtenerItems()
-Version --> Motor: ítems
-loop Por cada ítem
-  Motor -> Item: calcularSaldo()
-  Item --> Motor: saldo: decimal
+Ing -> Obra: permiteMediciones()
+Obra --> Ing: permitido: lógico
+break la obra no está en ejecución (RF-33)
+  Obra --> Ing: no se registran mediciones
 end
-Motor --> Ing: rubros e ítems con presupuestado, medido y saldo
+Ing -> Item: obtenerSaldo()
+Item --> Ing: cantidad contractual, medida y saldo (RN-04)
 
-Ing -> Motor: registrarMedicion(item, cantidad, unidad, ejecutor, contrato)
-opt Ejecutor subcontratado (flujo 3a)
-  Motor -> Contrato: incluyeItem(item)
-  Contrato --> Motor: incluido: lógico
-  break El contrato no incluye el ítem
-    Motor --> Ing: pide elegir otro contrato
-  end
-end
-Motor -> Obra: registrarMedicion(item, cantidad, unidad)
 create Med
-Obra -> Med: «create»
-Obra --> Motor: medicion
-
-Motor -> Item: obtenerACU()
-Item --> Motor: acu
-Motor -> ACU: proponerConsumos(cantidad)
-ACU --> Motor: insumos y cantidades sugeridas
-Ing -> Motor: cargarConsumos(medicion, consumos)
-loop Por cada insumo consumido
-  Motor -> Med: agregarConsumo(insumo, cantidad)
-  Med -> Insumo: obtenerPrecioVigente(fecha)
-  Insumo --> Med: precio: decimal
-  create Consumo
-  Med -> Consumo: «create»(cantidad, precio)
+Ing -> Med: «create»(ítem, cantidad, unidad, ejecutor)
+opt ejecuta un subcontratista (3a)
+  Med -> Con: saldoDisponible(ítem)
+  Con --> Med: saldo del contrato
 end
-
-Ing -> Motor: adjuntarEvidencia(medicion, archivo)
-Motor -> Med: adjuntarEvidencia(archivo)
-create Evid
-Med -> Evid: «create»(archivo, origen)
-Med -> Evid: guardarOriginal()
-
-Motor -> Med: verificarDobleConteo()
-Med --> Motor: medicionPrevia [0..1]
-break Cantidad ya contabilizada (RF-10)
-  Motor --> Ing: rechaza e indica la medición donde ya figura
+loop por cada insumo consumido
+  Ing -> Med: agregarInsumo(insumo, cantidad)
+  create Cons
+  Med -> Cons: «create»(insumo, cantidad)
 end
-Motor -> Item: calcularSaldo()
-Item --> Motor: saldo: decimal
-Motor -> Med: compararConSaldo(saldo)
-Med --> Motor: excedente: decimal
-opt La cantidad supera el saldo (flujo 7a)
-  Motor -> Med: separarExceso(excedente)
-  Motor --> Ing: informa el importe excedido (RF-09)
+Ing -> Med: adjuntarEvidencia(archivo)
+create Evi
+Med -> Evi: «create»(tipo, archivo)
+
+Med -> Saldo: estaContada(cantidad, medicion)
+Saldo --> Med: contada: lógico
+break ya está contada en otra medición (7b, RF-10)
+  Med --> Ing: rechazada; indica dónde figura (vuelve al paso 3)
 end
-Motor -> Med: validarDatos()
-Med --> Motor: faltantes: lista de texto
-break Faltan datos obligatorios o evidencia
-  Motor --> Ing: marca cada campo requerido
+Med -> Saldo: saldoContractual()
+Saldo --> Med: saldo
+opt la cantidad supera el saldo (7a, RF-09)
+  Med --> Ing: exceso como saldo negativo del rubro;\nqueda fuera del certificado hasta una adenda (CU-11)
 end
 
-alt Cancela (flujo 8a)
-  Ing -> Motor: cancelar(medicion)
-  Motor -> Med: cancelar()
-else Confirma
-  Ing -> Motor: confirmar(medicion)
-  Motor -> Med: confirmar(usuarioId)
-  Motor --> Ing: medición registrada con actor, fecha y obra (NF-04)
+Ing -> Med: confirmar(actor)
+Med -> Med: validarCompleta()
+break faltan datos obligatorios o evidencia (8a)
+  Med --> Ing: marca cada campo e impide confirmar
 end
+Med -> Saldo: registrarMedición(cantidad)
+opt ejecutor subcontratado
+  Med -> Con: descontarSaldo(ítem, cantidad)
+end
+Med --> Ing: medición registrada con actor, fecha, obra,\ninsumos y evidencia (RF-07)
 
-== Aprobación o rechazo de la medición (RF-08) ==
-Ing -> Motor: resolver(medicion, decision, motivo)
-alt Aprueba
-  Motor -> Med: aprobar(usuarioId)
-else Rechaza
-  Motor -> Med: rechazar(usuarioId, motivo)
+== *a Anular, enmendar o ajustar una medición registrada ==
+Ing -> Med: estaCertificada()
+Med --> Ing: certificada: lógico
+alt no certificada: anular
+  Ing -> Med: anular(motivo, actor)
+  Med -> Saldo: revertirMedición(cantidad)
+else no certificada: enmendar
+  Ing -> Med: enmendar(datos, motivo, actor)
+else certificada (RN-07)
+  Ing -> Med: registrarAjuste(cantidad, motivo, actor)
+  create Aj
+  Med -> Aj: «create»(original, cantidad, motivo)
+  note right of Aj
+    Entra en la versión siguiente
+    del certificado (CU-06).
+  end note
 end
-Motor --> Ing: decisión, actor y fecha registrados
 @enduml

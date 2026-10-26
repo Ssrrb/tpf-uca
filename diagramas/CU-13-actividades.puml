@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-13 · Actividades · Consultar tablero financiero
+|Administrador o Finanzas y tesorería|
+start
+:Ingresar al tablero y elegir una obra o toda la empresa;
+|Motor de finanzas|
+:Verificar organización, pertenencia a la obra y rol (NF-01);
+if (¿Hay obras sin acceso?) then ([sí])
+  :Excluirlas e indicarlo;
+else ([no])
+endif
+fork
+  |ECMS|
+  :Entregar lo presupuestado a costo y a venta,
+  lo certificado y el avance físico;
+fork again
+  |Motor de finanzas|
+  :Reunir lo facturado, cobrado y pagado y los saldos;
+end fork
+|Motor de finanzas|
+if (¿Falló la lectura de los datos de obra?) then ([sí])
+  :Marcarlos no disponibles con la fecha del último dato;
+else ([no])
+endif
+:Calcular el resultado económico y el financiero;
+:Mostrar los totales con fecha, unidad, moneda y procedencia,
+el avance físico y el plazo transcurrido;
+|Administrador o Finanzas y tesorería|
+:Seleccionar un total;
+|Motor de finanzas|
+:Abrir su respaldo (NF-12);
+|Administrador o Finanzas y tesorería|
+if (¿Exportar?) then ([sí])
+  :Exportar como XLSX o PDF de uso interno;
+else ([no])
+endif
+stop
+@enduml

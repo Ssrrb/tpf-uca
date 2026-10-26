@@ -3,64 +3,70 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 hide footbox
-title CU-02 · 1/3 · Carga del archivo
-actor "Ingeniero de obra" as Usuario
+title CU-02 · 1/3 · Carga del XLSX o creación en el sistema
+actor "Ingeniero de obra" as Ing
+box "ECMS" #EAF2F6
 participant "obra:\nObra" as Obra
-participant "presupuesto:\nPresupuesto" as Presupuesto
-participant "archivo:\nArchivoOriginal" as Archivo
-participant "version:\nVersionPresupuesto" as Version
-note over Usuario, Version
-  Inicio: obra seleccionada y usuario autorizado.
-end note
+participant "presupuesto:\nPresupuestoCliente" as Pres
+participant "archivo:\nArchivoOriginal" as Arch
+participant "rubro:\nRubro" as Rubro
+end box
 
-Usuario -> Obra: obtenerPresupuestos()
-Obra --> Usuario: lista de Presupuesto
-note over Usuario, Archivo
-  El usuario selecciona presupuesto y archivo.
-  archivo conserva nombre, tipoContenido, tamanoBytes,
-  huellaDigital y claveAlmacenamiento inmutables.
-end note
-Usuario -> Presupuesto: cargarArchivo(archivo)
-Presupuesto -> Archivo: validarFormato()
-Archivo --> Presupuesto: formatoValido: lógico
-Presupuesto -> Archivo: validarTamano(maximoBytes)
-Archivo --> Presupuesto: tamanoValido: lógico
-Presupuesto -> Archivo: verificarIntegridad()
-Archivo --> Presupuesto: integridadValida: lógico
-
-break Formato, tamaño o integridad inválidos
-  Presupuesto --> Usuario: carga rechazada; sin nueva versión
+Ing -> Obra: crearPresupuestoCliente(actor)
+break la obra ya tiene un presupuesto del cliente finalizado
+  Obra --> Ing: operación rechazada (RN-01)
 end
+create Pres
+Obra -> Pres: «create»(estado = propuesta)
+Obra --> Ing: presupuesto en propuesta
 
-Presupuesto -> Presupuesto: esArchivoRepetido(huellaDigital)
-break Mismo XLSX sin cambios (NF-07)
-  Presupuesto --> Usuario: archivo ya importado; no se crea otra versión
+alt carga desde XLSX
+  Ing -> Pres: cargarArchivo(archivo)
+  Pres -> Arch: validarFormato()
+  Arch --> Pres: válido: lógico
+  break no es XLSX, está dañado, tiene contraseña o supera el tamaño (2a)
+    Pres --> Ing: carga rechazada con el motivo; vuelve al paso 1
+  end
+  Pres -> Pres: esArchivoRepetido(huella)
+  break el mismo XLSX ya se cargó sin cambios (2b, NF-07)
+    Pres --> Ing: lo informa; no se crea otra carga
+  end
+  Pres -> Arch: guardar()
+  break falla el guardado o se interrumpe la carga (*a)
+    Pres -> Pres: descartarCargaIncompleta()
+    Pres --> Ing: carga descartada; se puede reintentar
+  end
+  Pres --> Ing: archivo original guardado (RF-02)
+  ref over Ing, Rubro
+    Continúa en 2/3: estructura y validación.
+  end ref
+else creación en el sistema sin XLSX (1a)
+  loop por cada rubro
+    Ing -> Pres: agregarRubro(código, descripción)
+    create Rubro
+    Pres -> Rubro: «create»(código, descripción)
+    loop por cada ítem del rubro
+      Ing -> Rubro: agregarÍtem(código, descripción, unidad, cantidad, precio)
+    end
+  end
+  ref over Ing, Rubro
+    Continúa en 2/3 desde la confirmación de la estructura (paso 4).
+  end ref
 end
-
-Presupuesto -> Presupuesto: crearVersion(archivo)
-note right of Presupuesto
-  version: identificador, numero, fechaCreacion
-  y usuarioCreadorId. numero no es revision.
-end note
-Presupuesto -> Archivo: guardarOriginal()
-break Falla de almacenamiento o interrupción de la carga
-  Presupuesto -> Version: descartarCargaIncompleta()
-  Presupuesto --> Usuario: carga descartada; permite reintentar
-end
-
-Presupuesto --> Usuario: version: VersionPresupuesto
-ref over Usuario, Version
-  Continúa en 2/3: Interpretación y validación.
-  Archivo guardado; versión pendiente de revisión.
-end ref
-
 @enduml

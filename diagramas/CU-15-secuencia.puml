@@ -3,60 +3,85 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 hide footbox
-title CU-15 · Registrar cobros y ejecutar pagos en tesorería
-actor "Finanzas y tesorería" as Finanzas
-control "tesoreria:\nTesoreria" as Tesoreria
-participant "documento:\nDocumentoFinanciero" as Documento
-participant "movimiento:\nMovimientoTesoreria" as Movimiento
-actor "Motor de ingeniería" as Motor <<sistema>>
+title CU-15 · Emitir presupuesto de adendas
+actor "Ingeniero de obra" as Ing
+box "ECMS" #EAF2F6
+participant "presupuesto:\nPresupuestoAdendas" as PA
+participant "apartado:\nApartadoAdendas" as Apa
+participant "version:\nVersionAdendas" as V
+participant "anterior:\nVersionAdendas" as Ant
+participant "linea:\nLineaAdenda" as Lin
+participant "adenda:\nAdenda" as Ad
+participant "certificado:\nCertificado" as Cert
+end box
 
-note over Finanzas, Movimiento
-  Todo ocurre dentro del Sistema ERP.
-end note
+Ing -> PA: versiones()
+PA --> Ing: versión vigente y anteriores (RF-06)
+opt solo quiere una versión anterior (2a)
+  Ing -> Ant: exportar(formato)
+  Ant --> Ing: XLSX o PDF; el CU termina
+end
 
-Finanzas -> Tesoreria: obtenerPendientes(obra)
-Tesoreria --> Finanzas: facturas pendientes de cobro y liquidaciones pendientes de pago
+Ing -> PA: emitirVersión(actor)
+PA -> PA: hayCambios()
+break no hay adendas nuevas ni cambios (4a)
+  PA --> Ing: lo informa; no se crea versión
+end
+PA -> Apa: adendasRegistradas()
+Apa --> PA: adendas con su precio de venta acordado
+create V
+PA -> V: «create»(número siguiente, anterior)
+PA -> V: armar(adendas)
+loop por cada adenda registrada
+  create Lin
+  V -> Lin: «create»(adenda, descripción, precioVenta)
+end
+V --> Ing: versión en edición (RF-21)
 
-Finanzas -> Tesoreria: registrarMovimiento(documento, importe, fecha, medio, comprobante)
-Tesoreria -> Documento: obtenerSaldo()
-Documento --> Tesoreria: saldo: decimal
-alt Falta el comprobante o el importe supera el saldo
-  Tesoreria --> Finanzas: marca el campo e impide registrar
-else Datos válidos
-  alt Factura al cliente: cobro
-    create Movimiento
-    Tesoreria -> Movimiento: «create» (cobro, importe, fecha, medio, comprobante)
-    Tesoreria -> Documento: aplicarMovimiento(movimiento)
-  else Liquidación a subcontratista: Finanzas aprueba el pago
-    create Movimiento
-    Tesoreria -> Movimiento: «create» (pago, importe, fecha, medio, comprobante)
-    Finanzas -> Movimiento: aprobarYEjecutar(usuarioId)
-    Tesoreria -> Documento: aplicarMovimiento(movimiento)
-  else Liquidación a subcontratista: Finanzas rechaza el pago
-    Finanzas -> Tesoreria: rechazarPago(documento, motivo)
-    Tesoreria -> Documento: registrarRechazo(motivo)
+opt corrige descripción o precio de una adenda (paso 5)
+  Ing -> V: corregirLínea(línea, descripción, precio, motivo)
+  V -> Lin: corregir(descripción, precio, motivo)
+  Lin -> Ad: estaCertificada()
+  Ad --> Lin: certificada: lógico
+  opt la adenda ya se certificó (RN-10)
+    Lin -> Cert: registrarAjustePendiente(adenda, diferencia)
+    note right of Cert
+      La diferencia entra como ajuste en
+      la versión siguiente del certificado.
+    end note
   end
-  note right of Documento
-    Aritmética decimal (NF-06). Si el importe es
-    parcial, el documento queda con saldo pendiente.
-    Si se rechaza el pago, la liquidación sigue
-    pendiente con el motivo registrado.
-  end note
-  Documento --> Tesoreria: saldo y estado actualizados
-  Tesoreria -> Motor: publicarEstado(documento, saldo)
-  note right of Motor
-    El ECMS lo refleja en el avance físico-financiero,
-    el tablero (CU-14) y el portal del subcontratista.
-  end note
-  Tesoreria --> Finanzas: cobro, pago o rechazo registrado
+end
+
+alt confirma (paso 6)
+  Ing -> V: guardar(actor)
+  V -> V: validarMotivos()
+  break falta el motivo de una corrección (6b)
+    V --> Ing: marca el campo (vuelve al paso 5)
+  end
+  V -> PA: activar(version)
+  PA -> Ant: pasarAAnterior()
+  V --> Ing: versión vinculada a la anterior, con actor y fecha (NF-05)
+  opt exporta para enviarla al cliente (7a, PR-04)
+    Ing -> V: exportar(formato)
+  end
+else cancela (6a)
+  Ing -> V: cancelar()
+  V --> Ing: no se crea versión; la vigente no cambia
 end
 @enduml

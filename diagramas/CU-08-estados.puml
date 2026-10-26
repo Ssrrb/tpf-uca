@@ -32,15 +32,28 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-08 · Estados de la Factura
-[*] --> generada : recibir VersionCertificadoEnviada\n/ calcularImportes()
-generada --> sin_confirmar : marcarSinConfirmar(dato)\n[faltan datos fiscales del cliente]
-sin_confirmar --> generada : completar datos fiscales
-generada --> confirmada : confirmar(usuarioId)\n[usuario con acceso a Finanzas]\n/ CuentaACobrar.registrar(factura)
-confirmada --> [*] : el cobro sigue en CU-15
-note right of generada
-  Una versión nueva de un certificado
-  ya facturado genera una nota de ajuste
-  vinculada, no otra factura.
+title CU-08 · Estados de la Factura interna
+state confirmacion <<choice>>
+state cobro <<choice>>
+state "Generada" as generada
+state "Pendiente de adjuntar la legal" as pendiente_de_adjuntar
+state "A cobrar" as a_cobrar
+state "Cobrada parcialmente" as cobrada_parcial
+state "Cobrada" as cobrada
+
+[*] --> generada : generarFactura(versión, actor)
+generada --> confirmacion : confirmar(actor)
+confirmacion --> pendiente_de_adjuntar : [sin factura legal (6a)]
+confirmacion --> a_cobrar : [factura legal adjunta]
+pendiente_de_adjuntar --> a_cobrar : adjuntarFacturaLegal(número, fecha, importe, archivo)
+a_cobrar --> cobro : registrarCobro(importe, retenciones) [CU-14]
+cobrada_parcial --> cobro : registrarCobro(importe, retenciones) [CU-14]
+cobro --> cobrada_parcial : [queda saldo pendiente]
+cobro --> cobrada : [saldo = 0]
+cobrada --> [*]
+
+note right of a_cobrar
+  Una nota de crédito interna sigue
+  el mismo ciclo con signo negativo.
 end note
 @enduml

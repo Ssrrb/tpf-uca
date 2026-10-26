@@ -1,122 +1,125 @@
 @startuml
 !theme plain
 skinparam style strictuml
+title CU-10 · Controlar el costo de la obra con el ACU
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-10 · Controlar costos y Curva S de la obra
+package "ECMS" {
+  class "Control de costos" as ControlCostos {
+    fechaConsulta: fecha
+    filtro: rubro | ejecutor | tipo de gasto [0..1]
+    --
+    + consultar(obra, fechaConsulta): lista de LíneaControl
+    + filtrar(criterio): vacío
+    + verRespaldo(total): respaldo
+    + exportar(formato: XLSX | PDF): archivo
+  }
 
-class "Motor de ingeniería" as MotorIngenieria <<control>> {
-  --
-  + consultarCostos(obra: Obra, fechaCorte: fecha): ConsultaCostos
-  + filtrar(consulta: ConsultaCostos, rubro: texto, ejecutor: texto): vacío
-  + verOrigen(linea: LineaCosto): lista de respaldo
-  + exportar(consulta: ConsultaCostos, formato: XLSX | PDF): archivo
+  class "Línea de control" as LineaControl {
+    costoPresupuestado: guaraníes
+    consumidoACU: guaraníes
+    liquidadoSubcontratos: guaraníes
+    compradoGastos: guaraníes
+    acopioMateriales: guaraníes
+    desvíoManoObraEquipos: guaraníes
+    /diferencia: guaraníes
+    /saldo: guaraníes
+  }
+
+  class "Versión del presupuesto de costos" as VersionCostos {
+    estado: vigente
+    --
+    + obtenerÍtems(): lista de ÍtemCostos
+  }
+
+  class "Apartado Adendas" as ApartadoAdendas {
+    --
+    + costoPorÍtem(ítem): guaraníes
+  }
+
+  class "Ítem de costos" as ItemCostos {
+    ejecutor: propio | subcontratista
+    --
+    + calcularCostoPresupuestado(): guaraníes
+  }
+
+  class "Análisis de costo unitario" as ACU {
+    --
+    + costoConsumido(consumos, fecha): guaraníes
+  }
+
+  class "Medición" as Medicion {
+    fechaEjecución: fecha
+    --
+    + consumosHasta(fecha): lista de ConsumoInsumo
+    + verEvidencia(): lista de Evidencia
+  }
 }
 
-class Obra {
-  + identificador: identificador
-  + codigo: texto
-  --
-  + perteneceUsuario(usuarioId: identificador): lógico
-  + obtenerPresupuestoCostosVigente(): VersionPresupuestoCostos
-  + obtenerMedicionesAprobadas(fechaCorte: fecha): lista de MedicionAvance
-  + obtenerVersionesCertificado(fechaCorte: fecha): lista de VersionCertificado
+package "Motor de finanzas" {
+  class "Consulta de costos reales" as CostosReales {
+    --
+    + gastosPorRubro(obra, fecha): lista de Gasto
+    + liquidacionesHasta(obra, fecha): lista de Liquidación
+  }
+
+  class Gasto {
+    fechaComprobante: fecha
+    importe: guaraníes
+    --
+    + verComprobante(): Comprobante
+  }
 }
 
-class "Versión de presupuesto de costos" as VersionPresupuestoCostos {
-  + numero: entero
-  --
-  + obtenerItems(): lista de ItemPresupuesto
+package "ERP" {
+  class Insumo {
+    --
+    + obtenerPrecioVigente(fecha): guaraníes [0..1]
+  }
 }
 
-class "Ítem de presupuesto" as ItemPresupuesto {
-  + rubro: texto
-  + descripcion: texto
-  + cantidadPresupuestada: decimal
-  + costoUnitario: decimal
-  --
-  + costoPresupuestado(): decimal
-}
+ControlCostos "1" *-- "0..*" LineaControl : por rubro e ítem
+ControlCostos ..> VersionCostos : usa
+ControlCostos ..> ApartadoAdendas : usa
+ControlCostos ..> Medicion : usa
+ControlCostos ..> CostosReales : usa
+VersionCostos "1" *-- "1..*" ItemCostos : contiene
+ItemCostos "1" *-- "0..1" ACU : análisis
+Medicion "0..*" --> "1" ItemCostos : mide
+ACU ..> Insumo : precios
+CostosReales ..> Gasto : consulta
+LineaControl "0..*" --> "1" ItemCostos : de
 
-class "Medición de avance" as MedicionAvance {
-  + cantidad: decimal
-  + ejecutor: propio | subcontratado
-  + fecha: fecha
-  + cantidadExcedidaPendiente: decimal
-  --
-  + costoReal(): decimal
-}
-
-class "Versión de certificado" as VersionCertificado {
-  + numeroVersion: entero
-  + fecha: fecha
-  --
-  + importeCertificadoHasta(fechaCorte: fecha): decimal
-}
-
-class "Consulta de costos" as ConsultaCostos {
-  + fechaCorte: fecha
-  + moneda: texto = "PYG"
-  + filtroRubro: texto [0..1]
-  + filtroEjecutor: propio | subcontratista [0..1]
-  --
-  + agregarLinea(linea: LineaCosto): vacío
-  + aplicarFiltro(rubro: texto, ejecutor: texto): vacío
-  + estaVacia(): lógico
-  + exportar(formato: XLSX | PDF): archivo
-}
-
-class "Línea de costo" as LineaCosto {
-  + rubro: texto
-  + item: texto
-  + costoPresupuestado: decimal
-  + costoReal: decimal
-  + /diferencia: decimal
-  + /saldo: decimal
-  + origenes: lista de respaldo
-  --
-  + obtenerOrigen(): lista de respaldo
-}
-
-class "Curva S" as CurvaS {
-  + fechaCorte: fecha
-  + avanceFisico: lista de puntos
-  + avanceFinanciero: lista de puntos
-  + fisicoPendienteAdenda: lista de puntos
-  --
-  + calcular(mediciones: lista de MedicionAvance, versiones: lista de VersionCertificado): vacío
-}
-
-MotorIngenieria ..> Obra : consulta
-MotorIngenieria ..> ConsultaCostos : genera
-Obra "1" *-- "1..*" VersionPresupuestoCostos : versiones de costos
-VersionPresupuestoCostos "1" *-- "1..*" ItemPresupuesto : contiene
-Obra "1" *-- "0..*" MedicionAvance : registra
-MedicionAvance "0..*" --> "1" ItemPresupuesto : mide
-Obra "1" *-- "0..*" VersionCertificado : versiones del certificado
-ConsultaCostos "0..*" --> "1" Obra : de
-ConsultaCostos "1" *-- "0..*" LineaCosto : contiene
-ConsultaCostos "1" *-- "1" CurvaS : dibuja
-LineaCosto "0..*" --> "1" ItemPresupuesto : costea
-
-note bottom of LineaCosto
-  costoReal suma lo propio (consumos de la medición)
-  y lo subcontratado. origenes guarda las mediciones,
-  versiones del certificado o documentos usados (NF-12).
+note bottom of LineaControl
+  Materiales: comprado - consumido = acopio, no mayor costo.
+  Mano de obra y equipos: la diferencia es desvío (RF-26).
+  La consulta no modifica ni cierra nada.
 end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

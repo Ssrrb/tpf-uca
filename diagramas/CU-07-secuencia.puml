@@ -3,78 +3,85 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
 skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
 hide footbox
-title CU-07 · Enviar a facturar la versión del certificado y derivar al ERP
-actor "Administrador" as Admin
-control "motor:\nMotorIngenieria" as Motor
+title CU-07 · Registrar gasto de obra
+actor "Administrador\n(o Ingeniero de obra\nen caja chica, 1a)" as Usr
+box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
-participant "certificado:\nCertificadoObra" as Cert
-participant "version:\nVersionCertificado" as Version
-participant "archivo:\nArchivoExportado" as Archivo
-participant "evento:\nEventoVersionEnviada" as Evento
-actor "Sistema ERP" as ERP <<sistema>>
+participant "proveedor:\nProveedor" as Prov
+participant "persona:\nPersona" as Pers
+end box
+box "Motor de finanzas" #EAF2F6
+participant "gasto:\nGasto" as G
+participant "imputacion:\nImputacion" as Imp
+participant "comprobante:\nComprobante" as Comp
+participant "costo:\nCostoReal" as CR
+end box
+box "ECMS" #EAF2F6
+participant "vigente:\nVersionCostos" as VC
+end box
 
-Admin -> Motor: abrirUltimaVersion(obra)
-Motor -> Obra: obtenerCertificado()
-Obra --> Motor: certificado
-Motor -> Cert: obtenerUltimaVersion()
-Cert --> Motor: version
-Motor --> Admin: versión del certificado con su valorización
-
-alt Solo exportar (flujo 5a)
-  Admin -> Motor: exportar(version, formato)
-  Motor -> Version: exportar(formato)
-  create Archivo
-  Version -> Archivo: «create»
-  Version -> Archivo: generar()
-  Motor --> Admin: archivo nuevo XLSX o PDF; no se publica el evento
-else Enviar a facturar
-  Admin -> Motor: enviarAFacturar(version, numero, fecha, destinatario)
-  Motor -> Obra: usuarioPuedeFacturar(usuarioId)
-  Obra --> Motor: permitido: lógico
-  break Usuario sin rol admin ni acceso al ECMS (RF-17)
-    Motor --> Admin: impide el envío
-  end
-  Motor -> Obra: existeNumeroCertificado(numero)
-  Obra --> Motor: existe: lógico
-  break Número repetido en la obra
-    Motor --> Admin: pide otro número
-  end
-  Motor -> Version: registrarEnvio(numero, fecha, destinatario, usuarioId)
-  note right of Version
-    Registra quién la envió y cuándo
-    (RF-17, NF-04).
-  end note
-  Motor -> Version: exportar(formato)
-  create Archivo
-  Version -> Archivo: «create»
-  Version -> Archivo: generar()
-  create Evento
-  Motor -> Evento: «create»(version, claveUnica)
-  Motor -> Evento: publicar()
-  Evento -> ERP: versionCertificadoEnviada(version) por el puente ECMS–ERP
-  alt El ERP confirma
-    ERP --> Evento: acuse
-    Motor -> Evento: confirmarAcuse()
-  else El ERP no confirma
-    loop Hasta recibir el acuse
-      Motor -> Evento: reintentar()
-      Evento -> ERP: versionCertificadoEnviada(version) con la misma claveUnica
-    end
-  end
-  Motor --> Admin: versión enviada a facturar (sigue en CU-08 y CU-13)
+Usr -> Obra: permiteGastos()
+Obra --> Usr: permitido: lógico
+create G
+Usr -> G: «create»(obra, tipo, importe, fecha, medio, actor)
+alt material o caja chica con proveedor
+  G -> Prov: estaActivo()
+  Prov --> G: activo: lógico
+else mano de obra propia
+  G -> Pers: estaActiva()
+  Pers --> G: activa: lógico
 end
+opt compra de materiales
+  Usr -> G: indicarInsumo(insumo, cantidad)
+end
+loop por cada rubro al que se imputa (3a: varios rubros)
+  Usr -> G: imputar(rubro, ítem, importe)
+  G -> VC: obtenerRubro(código)
+  VC --> G: rubro [0..1]
+  alt rubro de la versión vigente
+    create Imp
+    G -> Imp: «create»(rubro, importe)
+  else gasto que no es de un rubro en particular (3b)
+    G -> VC: rubroGastosGenerales()
+    VC --> G: "Gastos generales de obra"
+    G -> Imp: «create»(gastos generales, importe)
+  else rubro inexistente en la vigente (3b)
+    G --> Usr: impide imputar
+  end
+end
+Usr -> G: adjuntarComprobante(archivo)
+create Comp
+G -> Comp: «create»(tipo, archivo)
+G -> G: validarImporte()
+opt gasto de caja chica (1a, RN-13)
+  G -> Obra: obtenerTopeCajaChica()
+  Obra --> G: tope
+  break el importe supera el tope y lo registra el Ingeniero
+    G --> Usr: no permite confirmar; lo registra el Administrador
+  end
+end
+Usr -> G: confirmar(actor)
+break falta el comprobante (6a)
+  G --> Usr: marca el campo e impide confirmar (vuelve al paso 4)
+end
+loop por cada imputación
+  G -> CR: sumar(importe)
+end
+G --> Usr: gasto registrado; suma al costo real del rubro (RF-31)
 @enduml

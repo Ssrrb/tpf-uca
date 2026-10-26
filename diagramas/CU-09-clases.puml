@@ -1,104 +1,102 @@
 @startuml
 !theme plain
 skinparam style strictuml
+title CU-09 · Registrar contrato de subcontratista
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-09 · Registrar contrato y habilitar portal de subcontratista
+package "ERP" {
+  class Obra {
+    código: texto
+    --
+    + númeroContratoDisponible(número): lógico
+    + registrarContrato(subcontratista, número, fechas, archivo): Contrato
+  }
 
-class "Gestor de contratos" as GestorContratos <<control>> {
-  --
-  + registrarSubcontrato(obra: Obra, proveedor: Proveedor, datos: texto, archivo: archivo): ContratoSubcontrato
-  + agregarItem(contrato: ContratoSubcontrato, item: ItemPresupuesto, precio: decimal, limite: decimal): vacío
-  + confirmar(contrato: ContratoSubcontrato): vacío
-  + habilitarAcceso(contrato: ContratoSubcontrato): UsuarioPortal
-  + consultar(usuario: UsuarioPortal, contrato: ContratoSubcontrato): datos del contrato
+  class Proveedor {
+    ruc: texto
+    esSubcontratista: lógico
+    --
+    + esSubcontratista(): lógico
+  }
+
+  class Contrato {
+    número: texto
+    fechaInicio: fecha
+    fechaFin: fecha
+    archivo: archivo
+    impuestos: decimal
+    porcentajeFondoReparo: decimal
+    registradoPor: Usuario
+    fecha: fecha y hora
+    --
+    + validarArchivo(): lógico
+    + agregarÍtem(ítem, precio, límite): vacío
+    + configurarCondiciones(impuestos, retenciones, fondoReparo): vacío
+    + confirmar(actor): vacío
+  }
+
+  class "Ítem del contrato" as ItemContrato {
+    precio: guaraníes
+    límite: decimal
+  }
+
+  class "Retención" as Retencion {
+    tipo: IVA | renta
+    porcentaje: decimal
+  }
 }
 
-class Obra {
-  + identificador: identificador
-  + codigo: texto
-  --
-  + usuarioEsAdmin(usuarioId: identificador): lógico
-  + existeNumeroContrato(numero: texto): lógico
+package "ECMS" {
+  class "Saldo del ítem" as SaldoItem {
+    cantidadPresupuestada: decimal
+    asignadaAContratos: decimal
+    --
+    + cantidadPresupuestada(): decimal
+    + disponibleParaContratos(): decimal
+    + reservarParaContrato(cantidad): vacío
+  }
+
+  class "Ítem de costos" as ItemCostos {
+    código: texto {estable}
+  }
 }
 
-class Proveedor {
-  + razonSocial: texto
-  + ruc: texto
-  --
-  + obtenerUsuarioPortal(): UsuarioPortal [0..1]
-}
+Obra "1" *-- "0..*" Contrato : subcontratos
+Contrato "0..*" --> "1" Proveedor : con
+Contrato "1" *-- "1..*" ItemContrato : alcance
+ItemContrato "0..*" --> "1" ItemCostos : ítem
+ItemCostos "1" *-- "1" SaldoItem : saldo
+Contrato "0..*" --> "0..*" Retencion : aplica
 
-class "Contrato de subcontrato" as ContratoSubcontrato {
-  + numero: texto
-  + fechaInicio: fecha
-  + fechaFin: fecha
-  + impuestos: decimal
-  + retenciones: decimal
-  + fondoReparo: decimal
-  + archivoContrato: archivo
-  + estado: borrador | vigente
-  + usuarioRegistroId: identificador
-  + fechaRegistro: fecha y hora
-  --
-  + agregarItem(item: ItemPresupuesto, precio: decimal, limite: decimal): ItemContrato
-  + confirmar(usuarioId: identificador): vacío
-}
-
-class "Ítem del contrato" as ItemContrato {
-  + precio: decimal
-  + limite: decimal
-  + cantidadCertificada: decimal
-  --
-  + validarLimite(): lógico
-  + saldo(): decimal
-}
-
-class "Ítem de presupuesto" as ItemPresupuesto {
-  + codigo: texto
-  + descripcion: texto
-  + cantidadPresupuestada: decimal
-  + cantidadAsignada: decimal
-  --
-  + limiteDisponible(): decimal
-  + asignarCantidad(cantidad: decimal): vacío
-}
-
-class "Usuario del portal" as UsuarioPortal {
-  + correo: texto
-  + rol: texto = "subcontratista"
-  --
-  + agregarContrato(contrato: ContratoSubcontrato): vacío
-  + puedeVer(contrato: ContratoSubcontrato): lógico
-}
-
-GestorContratos ..> Obra : consulta
-GestorContratos ..> ContratoSubcontrato : registra
-Obra "1" *-- "0..*" ContratoSubcontrato : subcontratos
-ContratoSubcontrato "0..*" --> "1" Proveedor : con
-ContratoSubcontrato "1" *-- "1..*" ItemContrato : alcance
-ItemContrato "0..*" --> "1" ItemPresupuesto : refiere a
-Proveedor "1" -- "0..1" UsuarioPortal : accede con
-UsuarioPortal "0..*" --> "1..*" ContratoSubcontrato : consulta solo estos
-
-note bottom of UsuarioPortal
-  Solo consulta: no ve presupuestos internos, márgenes,
-  salarios ni otros contratos (NF-02), y no registra
-  mediciones: las carga el Ingeniero de obra (CU-04).
+note bottom of SaldoItem
+  El ECMS lleva el saldo de cada ítem y el ERP lo consulta:
+  ninguna cantidad se asigna a dos contratos (RF-10, RN-05).
 end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

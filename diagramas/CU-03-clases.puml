@@ -1,74 +1,133 @@
 @startuml
 !theme plain
 skinparam style strictuml
+title CU-03 · Armar y versionar el presupuesto de costos
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-03 · Activar y versionar el presupuesto
+package "ECMS" {
+  class "Presupuesto de costos" as PresupuestoCostos {
+    --
+    + consultarVersiones(): lista de VersiónCostos
+    + obtenerVigente(): VersiónCostos [0..1]
+    + crearPrimeraVersión(base: PresupuestoCliente, actor): VersiónCostos
+    + crearVersiónCorrectiva(motivo, actor): VersiónCostos
+    + activar(versión, actor): vacío
+  }
 
-class "Motor de ingeniería" as MotorIngenieria <<control>> {
-  --
-  + prepararActivacion(obra: Obra, version: VersionPresupuesto): lista de texto
-  + activarVersion(obra: Obra, version: VersionPresupuesto): VersionPresupuesto
-  + cancelar(): vacío
+  class "Versión del presupuesto de costos" as VersionCostos {
+    número: entero
+    estado: EstadoVersiónCostos
+    motivo: texto [0..1]
+    creadaPor: Usuario
+    fecha: fecha y hora
+    /costoPresupuestado: guaraníes
+    --
+    + copiarRubros(base: PresupuestoCliente): vacío
+    + agregarRubroGastosGenerales(): vacío
+    + completarÍtem(ítem, ejecutor, acu): vacío
+    + calcularCosto(): guaraníes
+    + validarDatos(): lista de texto
+    + marcarVigente(actor): vacío
+    + pasarAHistórica(): vacío
+    + cancelar(): vacío
+  }
+
+  class "Rubro de costos" as RubroCostos {
+    código: texto {estable}
+    descripción: texto
+    esGastosGenerales: lógico
+  }
+
+  class "Ítem de costos" as ItemCostos {
+    código: texto {estable}
+    unidad: texto
+    cantidad: decimal
+    ejecutor: propio | subcontratista
+    --
+    + estaCertificado(): lógico
+    + definirEjecutor(ejecutor): vacío
+    + calcularCostoPresupuestado(): guaraníes
+  }
+
+  class "Análisis de costo unitario" as ACU {
+    --
+    + calcularCostoUnitario(fecha): guaraníes
+  }
+
+  class "Línea de ACU" as LineaACU {
+    tipo: material | mano de obra | equipo
+    cantidadPorUnidad: decimal
+    --
+    + calcularCosto(fecha): guaraníes
+  }
+
+  class "Presupuesto del cliente" as PresupuestoCliente {
+    estado: finalizado
+    --
+    + obtenerRubros(): lista de Rubro
+  }
+
+  class "Apartado Adendas" as ApartadoAdendas {
+    --
+    + costoTotal(): guaraníes
+  }
 }
 
-class Obra {
-  + identificador: identificador
-  + codigo: texto
-  + nombre: texto
-  --
-  + usuarioPuedeActivar(usuarioId: identificador): lógico
-  + obtenerPresupuestoCostos(): Presupuesto
+package "ERP" {
+  class Insumo {
+    código: texto
+    unidad: texto
+    --
+    + obtenerPrecioVigente(fecha): guaraníes [0..1]
+  }
 }
 
-class Presupuesto {
-  + identificador: identificador
-  + tipo: cliente | costos | adenda
-  + moneda: texto = "PYG"
-  --
-  + obtenerVigente(): VersionPresupuesto [0..1]
-  + activarVersion(version: VersionPresupuesto, usuarioId: identificador): vacío
-}
+PresupuestoCostos "1" *-- "1..*" VersionCostos : versiones
+PresupuestoCostos "1" *-- "1" ApartadoAdendas : se suma a la vigente
+VersionCostos "0..*" --> "1" PresupuestoCliente : se basa en
+VersionCostos "0..1" --> "0..1" VersionCostos : versión anterior
+VersionCostos "1" *-- "1..*" RubroCostos : contiene
+RubroCostos "1" *-- "0..*" ItemCostos : agrupa
+ItemCostos "1" *-- "0..1" ACU : análisis
+ACU "1" *-- "1..*" LineaACU : insumos
+LineaACU "0..*" --> "1" Insumo : usa
 
-class "Versión de presupuesto" as VersionPresupuesto {
-  + identificador: identificador
-  + numero: entero
-  + estado: disponible | vigente | historica
-  + estructuraConfirmada: lógico
-  + datosValidos: lógico
-  + archivoOriginalId: identificador
-  + fechaActivacion: fecha y hora [0..1]
-  + usuarioActivacionId: identificador [0..1]
-  --
-  + verificarActivable(): lista de texto
-  + activar(usuarioId: identificador): vacío
-  + pasarAHistorica(): vacío
-}
-
-MotorIngenieria ..> Obra : consulta
-MotorIngenieria ..> Presupuesto : activa
-Obra "1" *-- "1..*" Presupuesto : tiene
-Presupuesto "1" *-- "1..*" VersionPresupuesto : conserva versiones
-VersionPresupuesto "0..1" --> "0..1" VersionPresupuesto : versión anterior
-
-note bottom of VersionPresupuesto
-  Una sola versión vigente por presupuesto.
-  La anterior pasa a histórica y sigue consultable
-  con su archivo original (NF-05).
+note bottom of VersionCostos
+  Solo una versión vigente por obra.
+  Corregir cantidad, unidad, precio o ubicación crea
+  una versión nueva; completar ejecutor, insumos o ACU
+  de un ítem no certificado, no (RN-03).
 end note
+
+note bottom of ItemCostos
+  El código se conserva entre versiones y lo vincula
+  con su ítem del presupuesto del cliente (RN-02).
+end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

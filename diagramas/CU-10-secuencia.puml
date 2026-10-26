@@ -3,91 +3,93 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
 skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
 hide footbox
-title CU-10 · Controlar costos y Curva S de la obra
-actor "Ingeniero de obra" as Ing
-control "motor:\nMotorIngenieria" as Motor
-participant "obra:\nObra" as Obra
-participant "vigente:\nVersionPresupuestoCostos" as Version
-participant "item:\nItemPresupuesto" as Item
-participant "medicion:\nMedicionAvance" as Med
-participant "certificado:\nVersionCertificado" as Cert
-participant "consulta:\nConsultaCostos" as Consulta
-participant "linea:\nLineaCosto" as Linea
-participant "curva:\nCurvaS" as Curva
+title CU-10 · Controlar el costo de la obra con el ACU
+actor "Ingeniero de obra\n(o Administrador)" as Ing
+box "ECMS" #EAF2F6
+participant "control:\nControlCostos" as Ctrl
+participant "vigente:\nVersionCostos" as VC
+participant "apartado:\nApartadoAdendas" as Apa
+participant "item:\nItemCostos" as Item
+participant "medicion:\nMedicion" as Med
+participant "acu:\nACU" as Acu
+participant "linea:\nLineaControl" as Lin
+end box
+box "ERP" #EAF2F6
+participant "insumo:\nInsumo" as Ins
+end box
+box "Motor de finanzas" #EAF2F6
+participant "costos:\nCostosReales" as CR
+participant "gasto:\nGasto" as G
+end box
 
-Ing -> Motor: consultarCostos(obra, fechaCorte)
-Motor -> Obra: perteneceUsuario(usuarioId)
-Obra --> Motor: pertenece: lógico
-break Usuario sin pertenencia a la obra (NF-01)
-  Motor --> Ing: impide la consulta
+Ing -> Ctrl: consultar(obra, fechaConsulta)
+Ctrl -> VC: obtenerÍtems()
+VC --> Ctrl: ítems con su ACU
+loop por cada ítem con mediciones hasta la fecha
+  Ctrl -> Med: consumosHasta(fecha)
+  Med --> Ctrl: insumos consumidos
 end
-Motor -> Obra: obtenerPresupuestoCostosVigente()
-Obra --> Motor: vigente
-Motor -> Version: obtenerItems()
-Version --> Motor: ítems
-Motor -> Obra: obtenerMedicionesAprobadas(fechaCorte)
-Obra --> Motor: mediciones
-Motor -> Obra: obtenerVersionesCertificado(fechaCorte)
-Obra --> Motor: versiones
-create Consulta
-Motor -> Consulta: «create»(obra, fechaCorte)
-
-loop Por cada ítem del presupuesto
-  Motor -> Item: costoPresupuestado()
-  Item --> Motor: costo presupuestado
-  loop Por cada medición del ítem
-    Motor -> Med: costoReal()
-    Med --> Motor: costo propio o subcontratado
-  end
-  create Linea
-  Motor -> Linea: «create»(item, costoPresupuestado, costoReal, origenes)
-  Motor -> Consulta: agregarLinea(linea)
+Ctrl -> CR: gastosPorRubro(obra, fecha)
+CR --> Ctrl: gastos imputados por rubro (RF-31)
+Ctrl -> CR: liquidacionesHasta(obra, fecha)
+CR --> Ctrl: liquidaciones de subcontratistas (RF-25)
+break no hay mediciones ni gastos hasta la fecha (1b)
+  Ctrl --> Ing: lo informa; el CU termina
 end
-Motor -> Cert: importeCertificadoHasta(fechaCorte)
-Cert --> Motor: importe certificado
 
-Motor -> Consulta: estaVacia()
-Consulta --> Motor: vacia: lógico
-alt Sin datos a la fecha de corte
-  Motor --> Ing: lo informa y no dibuja la Curva S
-else Hay datos
-  create Curva
-  Consulta -> Curva: «create»(fechaCorte)
-  Motor -> Curva: calcular(mediciones, versiones)
-  note right of Curva
-    Separa avance físico, financiero
-    y físico pendiente de adenda (RF-27).
-  end note
-  Motor --> Ing: costos por rubro e ítem, diferencia, saldo y Curva S
-
-  opt Filtra por rubro o ejecutor (flujo 1a)
-    Ing -> Motor: filtrar(consulta, rubro, ejecutor)
-    Motor -> Consulta: aplicarFiltro(rubro, ejecutor)
-    Motor --> Ing: vista recalculada
+loop por cada ítem
+  Ctrl -> Item: calcularCostoPresupuestado()
+  Ctrl -> Apa: costoPorÍtem(ítem)
+  alt ítem propio
+    Ctrl -> Acu: costoConsumido(consumos, fecha)
+    loop por cada insumo consumido
+      Acu -> Ins: obtenerPrecioVigente(fecha)
+      Ins --> Acu: precio [0..1]
+    end
+    break insumo sin precio vigente (3a)
+      Acu --> Ing: informa el insumo; no calcula ese rubro
+    end
+  else ítem subcontratado
+    note right of Ctrl
+      Costo = lo liquidado al precio del contrato.
+    end note
   end
-  Ing -> Motor: verOrigen(linea)
-  Motor -> Linea: obtenerOrigen()
-  Linea --> Motor: respaldos
-  Motor --> Ing: mediciones, versiones del certificado o documentos (NF-12)
-  opt Exporta (flujo 6a)
-    Ing -> Motor: exportar(consulta, formato)
-    Motor -> Consulta: exportar(formato)
-    Consulta --> Motor: archivo nuevo
-    Motor --> Ing: archivo XLSX o PDF
-  end
+  create Lin
+  Ctrl -> Lin: «create»(presupuestado, consumido, liquidado, comprado)
 end
+Ctrl --> Ing: por rubro e ítem: presupuestado, consumido según ACU,\nliquidado, comprado, acopio, desvío, diferencias y saldo,\nincluidos los rubros en negativo (RF-26)
+
+opt filtra por rubro, ejecutor o tipo de gasto (1a)
+  Ing -> Ctrl: filtrar(criterio)
+end
+Ing -> Ctrl: verRespaldo(total)
+alt el total sale de mediciones
+  Ctrl -> Med: verEvidencia()
+else el total sale de gastos
+  Ctrl -> G: verComprobante()
+end
+Ctrl --> Ing: respaldo (NF-12)
+opt exporta (7a)
+  Ing -> Ctrl: exportar(formato)
+end
+note over Ing, Lin
+  5a: si la diferencia muestra un ACU mal estimado,
+  el Ingeniero lo corrige en una versión nueva (CU-03).
+end note
 @enduml

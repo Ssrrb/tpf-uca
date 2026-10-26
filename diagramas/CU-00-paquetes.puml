@@ -1,0 +1,109 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title Paquetes · Subsistemas de Ctrl+
+package "Ctrl+ (aplicación web, una base de datos)" as app {
+  package "Interfaces entre módulos" as itf {
+  }
+  package "ECMS (ingeniería)" as ecms {
+    package "Presupuestos" as pres {
+    }
+    package "Mediciones" as med {
+    }
+    package "Certificados" as cert {
+    }
+    package "Adendas" as aden {
+    }
+    package "Control de costos" as ctrl {
+    }
+  }
+  package "Motor de finanzas" as mf {
+    package "Gastos" as gas {
+    }
+    package "Facturación interna" as fac {
+    }
+    package "Liquidaciones" as liq {
+    }
+    package "Cobros y pagos" as cyp {
+    }
+    package "Tablero financiero" as tab {
+    }
+  }
+  package "ERP (recursos)" as erp {
+    package "Obras y usuarios" as obr {
+    }
+    package "Catálogos" as cat {
+    }
+    package "Contratos" as con {
+    }
+  }
+}
+
+ecms ..> erp : <<use>>
+mf ..> erp : <<use>>
+ecms ..> itf : <<use>>
+mf ..> itf : <<use>>
+
+med ..> pres : <<use>>
+cert ..> med : <<use>>
+cert ..> aden : <<use>>
+aden ..> pres : <<use>>
+ctrl ..> pres : <<use>>
+ctrl ..> med : <<use>>
+cyp ..> fac : <<use>>
+cyp ..> liq : <<use>>
+tab ..> cyp : <<use>>
+tab ..> gas : <<use>>
+con ..> cat : <<use>>
+obr ..> cat : <<use>>
+
+note right of itf
+  Contratos que publican el ECMS
+  (versiones del certificado, saldos,
+  avance) y el Motor de finanzas
+  (gastos y liquidaciones). Así el ECMS
+  y el Motor no dependen entre sí (PR-05).
+end note
+
+note bottom of erp
+  Usuarios, roles y permisos, obras, insumos,
+  personal, proveedores, clientes, retenciones
+  y contratos. No calcula costos ni genera documentos.
+end note
+
+legend bottom
+  Flecha discontinua con punta abierta = dependencia (UML 2): el origen usa al destino.
+  Sin dependencias circulares entre paquetes.
+endlegend
+@enduml

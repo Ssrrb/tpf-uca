@@ -3,58 +3,68 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 hide footbox
-title CU-14 · Consultar tablero financiero
-actor "Administrador" as Admin
-control "motor:\nMotorIngenieria" as Motor
+title CU-14 · Registrar cobros y pagos
+actor "Finanzas y tesorería" as Fin
+box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
-participant "tablero:\nTableroFinanciero" as Tablero
-participant "indicador:\nIndicadorTablero" as Indicador
-actor "Sistema ERP" as ERP <<sistema>>
+end box
+box "Motor de finanzas" #EAF2F6
+participant "documento:\nDocumentoPendiente" as Doc
+participant "movimiento:\nMovimiento" as Mov
+participant "retencion:\nRetencion" as Ret
+participant "comprobante:\nComprobante" as Comp
+end box
 
-Admin -> Motor: abrirTablero(usuarioId, obras, fecha)
-create Tablero
-Motor -> Tablero: «create» (fecha, moneda PYG)
-loop Por cada obra seleccionada
-  Motor -> Obra: verificarAcceso(usuarioId)
-  Obra --> Motor: permitido: lógico
-  alt Sin acceso a la obra (NF-01)
-    Motor -> Motor: omite la obra
-  else Con acceso
-    Motor -> Obra: obtenerTotalesDeObra(fecha)
-    Obra --> Motor: indicadores de presupuesto, costos y certificado
-    Motor -> Tablero: agregarIndicadores(indicadores)
-    Motor -> ERP: obtenerTotalesFinancieros(obra, fecha)
-    alt El ERP responde
-      ERP --> Motor: facturado, cobrado, pagado y saldos
-      Motor -> Tablero: agregarIndicadores(indicadoresERP)
-    else El ERP no responde
-      ERP --> Motor: error
-      note right of Tablero
-        Los financieros se marcan como no disponibles,
-        con la fecha del último dato recibido.
-      end note
-    end
-  end
+Fin -> Obra: permiteCobrosYPagos()
+Obra --> Fin: permitido hasta la recepción definitiva (RF-33)
+alt factura a cobrar o liquidación a pagar (paso 1)
+  Fin -> Doc: mostrarConOrigen()
+else devolución del fondo de reparo (1a)
+  Fin -> Obra: estaEnRecepciónDefinitiva()
+  Obra --> Fin: sí
+  Fin -> Doc: mostrarConOrigen()
 end
-Motor -> Tablero: calcularDiferencias()
-Motor --> Admin: totales por obra y rubro con fecha, unidad,\nmoneda y procedencia (NF-11)
+Doc --> Fin: documento, versión del certificado de la que deriva y saldo
 
-opt Filtra por rubro o fecha
-  Admin -> Motor: abrirTablero(usuarioId, obras, fechaNueva)
-  note right of Motor: recalcula los totales a esa fecha
+create Mov
+Fin -> Mov: «create» Cobro o Pago(importe, fecha, medio)
+opt el cliente es agente de retención
+  Fin -> Mov: agregarRetención(tipo, importe, comprobante)
+  create Ret
+  Mov -> Ret: «create»(tipo, importe)
 end
-
-Admin -> Motor: verDetalle(indicador)
-Motor -> Indicador: obtenerRespaldo()
-Indicador --> Motor: respaldo usado para calcular el total
-Motor --> Admin: respaldo (NF-12)
+Fin -> Mov: adjuntarComprobante(archivo)
+create Comp
+Mov -> Comp: «create»(tipo, archivo)
+Mov -> Doc: validarImporte(importe, retenciones)
+Doc --> Mov: válido: lógico
+break importe + retenciones supera el saldo pendiente (5a, RN-14)
+  Mov --> Fin: lo informa e impide registrar (vuelve al paso 3)
+end
+Fin -> Mov: confirmar(actor)
+break falta el comprobante (6a)
+  Mov --> Fin: marca el campo e impide confirmar (vuelve al paso 4)
+end
+Mov -> Doc: actualizarSaldo(movimiento)
+Doc --> Fin: saldo actualizado; lo refleja el tablero (CU-13)
+note over Fin, Comp
+  3a: si el cobro o pago es parcial, el documento queda
+  con saldo pendiente y se puede volver a registrar.
+end note
 @enduml
