@@ -49,6 +49,7 @@ final class Actividades {
     private static final class Nodo {
         String id, tipo, nombre, particion;
         int ancho, alto, rango, x, y, filaY, filaAlto;
+        boolean saleIzq, saleDer, saleAbajo;
         IModelElement modelo;
         IDiagramElement forma;
         final List<Nodo> salen = new ArrayList<>(), entran = new ArrayList<>();
@@ -150,7 +151,14 @@ final class Actividades {
             if (guarda != null) {
                 guarda = guarda.replaceAll("^\\[|\\]$", "");
             }
-            Point[] puntos = ruta(de, hacia, vuelta.contains(de.id + ">" + hacia.id), anchos, particiones, k++);
+            Point[] puntos = ruta(de, hacia, vuelta.contains(de.id + ">" + hacia.id), anchos, particiones, k++,
+                nodos.values());
+            if (rombo(de)) {
+                int dc = X0 + inicio(anchos, particiones.indexOf(de.particion)) + de.x + de.ancho / 2;
+                de.saleIzq |= puntos[0].x < dc;
+                de.saleDer |= puntos[0].x > dc;
+                de.saleAbajo |= puntos[0].x == dc;
+            }
             try {
                 IDiagramElement con = dm.createConnector(d, cf, de.forma, hacia.forma, puntos);
                 // La guarda se pone con el flujo ya dibujado: puesta antes, VP no la guardó (v0.3).
@@ -162,8 +170,26 @@ final class Actividades {
                     }
                 }
                 con.resetCaption();
+                if (guarda != null) {
+                    guardaJuntoAlRombo(con, de, puntos, nombre);
+                }
             } catch (RuntimeException ex) {
                 log.add(nombre + ": no pude dibujar el flujo " + de.id + " → " + hacia.id + ": " + ex);
+            }
+        }
+        // La pregunta de una decisión va debajo del rombo y la cruza la rama que
+        // sale por abajo: se la pasa a un costado libre.
+        for (Nodo n : nodos.values()) {
+            if (rombo(n) && n.saleAbajo && n.forma != null) {
+                try {
+                    com.vp.plugin.diagram.ICaptionUIModel c = n.forma.getCaptionUIModel();
+                    if (c != null && (!n.saleIzq || !n.saleDer)) {
+                        c.setSide(!n.saleIzq ? com.vp.plugin.diagram.ICaptionUIModel.SIDE_WEST
+                            : com.vp.plugin.diagram.ICaptionUIModel.SIDE_EAST);
+                    }
+                } catch (RuntimeException ex) {
+                    log.add(nombre + ": no pude mover la pregunta de " + n.id + ": " + ex);
+                }
             }
         }
         log.add(nombre + ": " + particiones.size() + " carriles, " + nodos.size() + " nodos, " + flujos.size()
@@ -268,9 +294,8 @@ final class Actividades {
             case "JoinNode": m = c.createJoinNode(); break;
             default: m = c.createActivityAction();
         }
-        if (n.nombre != null) {
-            m.setName(n.nombre);
-        }
+        // Sin nombre, VP muestra el automático (MergeNode2, …) debajo del rombo.
+        m.setName(n.nombre == null ? "" : n.nombre);
         return m;
     }
 
@@ -426,6 +451,31 @@ final class Actividades {
                 n.filaAlto = alto;
                 x[i] += n.ancho + SEP_H;
             }
+            // Solo en su carril y fila: se alinea bajo sus predecesores del mismo
+            // carril, para que las cadenas bajen derechas y no en zigzag.
+            int[] cuantos = new int[particiones.size()];
+            for (Nodo n : fila) {
+                cuantos[particiones.indexOf(n.particion)]++;
+            }
+            for (Nodo n : fila) {
+                int i = particiones.indexOf(n.particion);
+                // Las uniones quedan centradas entre las ramas que juntan.
+                if (cuantos[i] != 1 || union(n)) {
+                    continue;
+                }
+                double suma = 0;
+                int c = 0;
+                for (Nodo q : n.entran) {
+                    if (q.rango < n.rango && q.particion.equals(n.particion)) {
+                        suma += q.x + q.ancho / 2;
+                        c++;
+                    }
+                }
+                if (c > 0) {
+                    n.x = Math.max(MARGEN / 2, Math.min(anchos[i] - MARGEN / 2 - n.ancho,
+                        (int) Math.round(suma / c) - n.ancho / 2));
+                }
+            }
             y += alto + SEP_V;
         }
         return anchos;
@@ -434,43 +484,184 @@ final class Actividades {
     /**
      * Recorrido ortogonal de un flujo, de borde a borde: VP toma los puntos tal
      * cual, así que pasarle los centros dejaba las flechas dentro de los nodos (v0.4).
-     * Los tramos horizontales van por los huecos entre filas y los verticales
-     * largos por los bordes de los carriles, donde no hay nodos.
+     * Como en PlantUML, las ramas de una decisión salen por el vértice del lado
+     * de su destino y las que llegan a una unión entran por el vértice de su
+     * lado. Los tramos horizontales van por los huecos entre filas y los
+     * verticales largos por los bordes de los carriles, donde no hay nodos.
      */
-    private static Point[] ruta(Nodo de, Nodo a, boolean vuelta, int[] anchos, List<String> particiones, int k) {
+    private static Point[] ruta(Nodo de, Nodo a, boolean vuelta, int[] anchos, List<String> particiones, int k,
+                                Iterable<Nodo> todos) {
         int id = particiones.indexOf(de.particion), ia = particiones.indexOf(a.particion);
         int dx = X0 + inicio(anchos, id) + de.x, ax = X0 + inicio(anchos, ia) + a.x;
         int dy = Y0 + CABECERA + de.y, ay = Y0 + CABECERA + a.y;
         int dc = dx + de.ancho / 2, ac = ax + a.ancho / 2;
-        int off = 6 * (k % 4);
+        int dm = dy + de.alto / 2, am = ay + a.alto / 2;
+        int off = 10 * (k % 5);
         if (vuelta) {
             // Sale por la derecha, sube por el borde derecho del carril y entra por la derecha.
             int xr = X0 + inicio(anchos, Math.max(id, ia)) + anchos[Math.max(id, ia)] - 8 - off;
-            int yd = dy + de.alto / 2, ya = ay + a.alto / 2;
-            return new Point[] {new Point(dx + de.ancho, yd), new Point(xr, yd), new Point(xr, ya),
-                new Point(ax + a.ancho, ya)};
+            return new Point[] {new Point(dx + de.ancho, dm), new Point(xr, dm), new Point(xr, am),
+                new Point(ax + a.ancho, am)};
         }
-        int sale = dy + de.alto, entra = ay;
-        // Por debajo del texto que VP pone bajo las decisiones y uniones.
-        int bajoOrigen = Y0 + CABECERA + de.filaY + de.filaAlto + SEP_V * 2 / 3 - off / 2;
-        int sobreDestino = Y0 + CABECERA + a.filaY - SEP_V / 2 + off / 2;
-        if (Math.abs(dc - ac) < 4) {
-            if (a.rango == de.rango + 1) {
-                return new Point[] {new Point(dc, sale), new Point(ac, entra)};
+        boolean alineados = Math.abs(dc - ac) < 4, contigua = a.rango == de.rango + 1;
+        if (rombo(de) && !contigua && id == ia) {
+            // Rama que saltea filas (p. ej. el «no» que va directo a la unión): sale
+            // por el vértice derecho y rodea por fuera de los nodos intermedios.
+            int afuera = Math.max(dx + de.ancho, ax + a.ancho) + 20;
+            for (Nodo n : todos) {
+                if (n.particion.equals(de.particion) && n.rango > de.rango && n.rango < a.rango) {
+                    afuera = Math.max(afuera, X0 + inicio(anchos, id) + n.x + n.ancho + 20 + off / 2);
+                }
             }
-        } else if (a.rango == de.rango + 1) {
-            return new Point[] {new Point(dc, sale), new Point(dc, bajoOrigen), new Point(ac, bajoOrigen),
-                new Point(ac, entra)};
+            afuera = Math.min(afuera, X0 + inicio(anchos, id) + anchos[id] - 8 - off);
+            if (union(a)) {
+                return new Point[] {new Point(dx + de.ancho, dm), new Point(afuera, dm), new Point(afuera, am),
+                    new Point(ax + a.ancho, am)};
+            }
+            int sobre = Y0 + CABECERA + a.filaY - SEP_V / 2 + off / 2;
+            return new Point[] {new Point(dx + de.ancho, dm), new Point(afuera, dm), new Point(afuera, sobre),
+                new Point(ac, sobre), new Point(ac, ay)};
         }
-        // Salto de varias filas: baja por el borde del carril para no cruzar nodos.
-        int canal;
-        if (id == ia) {
-            canal = X0 + inicio(anchos, id) + 8 + off;
+        List<Point> p = new ArrayList<>();
+        // Salida
+        int x, y;
+        if (rombo(de) && !alineados && contigua && libre(de, dc, ac, todos, anchos, particiones)) {
+            x = ac < dc ? dx : dx + de.ancho;
+            y = dm;
         } else {
-            canal = X0 + inicio(anchos, Math.max(id, ia)) + (ia > id ? -8 - off : 8 + off);
+            x = dc;
+            y = dy + de.alto;
         }
-        return new Point[] {new Point(dc, sale), new Point(dc, bajoOrigen), new Point(canal, bajoOrigen),
-            new Point(canal, sobreDestino), new Point(ac, sobreDestino), new Point(ac, entra)};
+        p.add(new Point(x, y));
+        // Llegada: por el vértice lateral de una unión (salvo desde el costado de
+        // un rombo, que ya llega de lado) o por arriba.
+        boolean lateral = union(a) && !alineados && y != dm;
+        Integer canal = null;
+        if (!contigua) {
+            canal = id == ia ? X0 + inicio(anchos, id) + 8 + off
+                : X0 + inicio(anchos, Math.max(id, ia)) + (ia > id ? -8 - off : 8 + off);
+        }
+        int vx = canal != null ? canal : x;
+        int ex = lateral ? (vx < ac ? ax : ax + a.ancho) : (alineados ? x : ac), ey = lateral ? am : ay;
+        int bajo = Y0 + CABECERA + de.filaY + de.filaAlto + SEP_V * 2 / 3 - off / 2;
+        int sobre = Y0 + CABECERA + a.filaY - SEP_V / 2 + off / 2;
+        if (y == dm) {
+            // Salió por un costado del rombo: horizontal hasta su columna (o el canal) y baja.
+            if (canal != null) {
+                p.add(new Point(canal, y));
+                p.add(new Point(canal, sobre));
+                p.add(new Point(ex, sobre));
+            } else {
+                p.add(new Point(ex, y));
+            }
+        } else if (contigua && !alineados) {
+            if (lateral) {
+                p.add(new Point(x, ey));
+            } else {
+                p.add(new Point(x, bajo));
+                p.add(new Point(ex, bajo));
+            }
+        } else if (!contigua) {
+            p.add(new Point(x, bajo));
+            p.add(new Point(canal, bajo));
+            if (lateral) {
+                p.add(new Point(canal, ey));
+            } else {
+                p.add(new Point(canal, sobre));
+                p.add(new Point(ex, sobre));
+            }
+        }
+        p.add(new Point(ex, ey));
+        List<Point> sinRepetir = new ArrayList<>();
+        for (Point q : p) {
+            if (sinRepetir.isEmpty() || !sinRepetir.get(sinRepetir.size() - 1).equals(q)) {
+                sinRepetir.add(q);
+            }
+        }
+        return sinRepetir.toArray(new Point[0]);
+    }
+
+    /** Sin otro nodo de la misma fila entre el rombo y la columna de destino. */
+    private static boolean libre(Nodo de, int desde, int hasta, Iterable<Nodo> todos, int[] anchos,
+                                 List<String> particiones) {
+        int lo = Math.min(desde, hasta), hi = Math.max(desde, hasta);
+        for (Nodo n : todos) {
+            if (n == de || n.rango != de.rango) {
+                continue;
+            }
+            int nx = X0 + inicio(anchos, particiones.indexOf(n.particion)) + n.x;
+            if (nx < hi && nx + n.ancho > lo) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean rombo(Nodo n) {
+        return "DecisionNode".equals(n.tipo);
+    }
+
+    private static boolean union(Nodo n) {
+        return "MergeNode".equals(n.tipo);
+    }
+
+    /**
+     * VP ubica la guarda a mitad del recorrido, que en un salto largo queda lejos
+     * de la decisión (v0.5). Se la lleva junto a la salida del rombo, como en
+     * PlantUML. No está documentado si el rótulo usa coordenadas del diagrama o
+     * relativas al nodo de origen (así lo guarda el .vpp): se deduce comparando
+     * dónde lo dejó VP con el punto medio del recorrido.
+     */
+    private void guardaJuntoAlRombo(IDiagramElement con, Nodo de, Point[] p, String nombre) {
+        try {
+            com.vp.plugin.diagram.ICaptionUIModel c = con.getCaptionUIModel();
+            if (c == null) {
+                return;
+            }
+            int w = c.getWidth(), h = c.getHeight();
+            Point medio = medio(p);
+            Point origen = new Point(de.forma.getX(), de.forma.getY());
+            int cx = c.getX() + w / 2;
+            boolean relativo = Math.abs(cx - (medio.x - origen.x)) < Math.abs(cx - medio.x);
+            int x, y;
+            if (p[0].y == p[1].y && p[1].x < p[0].x) {
+                x = p[0].x - w - 4;
+                y = p[0].y - h - 2;
+            } else if (p[0].y == p[1].y) {
+                x = p[0].x + 4;
+                y = p[0].y - h - 2;
+            } else {
+                x = p[0].x + 4;
+                y = p[0].y + 2;
+            }
+            if (relativo) {
+                x -= origen.x;
+                y -= origen.y;
+            }
+            c.setX(x);
+            c.setY(y);
+            log.add(nombre + ": guarda ubicada (" + (relativo ? "relativa" : "absoluta") + ") en " + x + "," + y);
+        } catch (RuntimeException ex) {
+            log.add(nombre + ": no pude mover la guarda: " + ex);
+        }
+    }
+
+    private static Point medio(Point[] p) {
+        double total = 0;
+        for (int i = 1; i < p.length; i++) {
+            total += p[i].distance(p[i - 1]);
+        }
+        double falta = total / 2;
+        for (int i = 1; i < p.length; i++) {
+            double l = p[i].distance(p[i - 1]);
+            if (l >= falta && l > 0) {
+                double t = falta / l;
+                return new Point((int) (p[i - 1].x + t * (p[i].x - p[i - 1].x)),
+                    (int) (p[i - 1].y + t * (p[i].y - p[i - 1].y)));
+            }
+            falta -= l;
+        }
+        return p[0];
     }
 
     private static int inicio(int[] anchos, int i) {
