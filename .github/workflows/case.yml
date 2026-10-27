@@ -1,7 +1,8 @@
-# CI de la herramienta CASE: PlantUML por línea de comandos.
-# Jobs obligatorios para hacer merge en main: sintaxis, consistencia, calidad, render.
-# calidad incluye la notación UML de la cátedra (tools/check_uml.py).
-# El job xmi es opcional: corre en main o a mano y nunca bloquea.
+# CI de la herramienta CASE: PlantUML por línea de comandos + modelo UML 2.5.1.
+# Cadena del modelo (cada job necesita el anterior):
+#   sintaxis → subconjunto → consistencia → xmi → validar-uml
+# En paralelo: calidad (notación de la cátedra) y render (SVG/PNG).
+# Para bloquear el merge, todos los jobs deben ser checks obligatorios de main.
 name: CASE PlantUML
 
 on:
@@ -9,11 +10,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      exportar_xmi:
-        description: "Exportar los diagramas de clases a XMI"
-        type: boolean
-        default: true
 
 permissions:
   contents: read
@@ -32,16 +28,44 @@ jobs:
       - name: plantuml -checkonly (cada .puml)
         run: bash tools/check_sintaxis.sh diagramas
 
-  consistencia:
-    name: consistencia
+  subconjunto:
+    name: subconjunto
+    needs: sintaxis
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Clases vs secuencia (E1, E2, W1, W2)
+      - name: Pruebas del pipeline con errores inyectados
+        run: python3 tools/uml/test_modelo.py
+      - name: Construcciones traducibles a UML 2.5.1 (P1)
+        run: python3 tools/modelo.py diagramas --gh --fallar-en P1
+
+  consistencia:
+    name: consistencia
+    needs: subconjunto
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Clases vs secuencia por CU (E1, E2, W1, W2)
         run: python3 tools/check_consistencia.py --gh diagramas
+      - name: Modelo único CU-01 a CU-16 (C1 a C6)
+        run: python3 tools/modelo.py diagramas --gh --fallar-en C1,C2,C3,C4,C5,C6
+      - name: Reporte en el resumen del job
+        if: always()
+        run: cat build/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-modelo
+          path: |
+            build/model.json
+            build/report.md
+          retention-days: 30
 
   calidad:
     name: calidad
@@ -77,24 +101,68 @@ jobs:
           retention-days: 30
 
   xmi:
-    name: xmi (opcional)
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.exportar_xmi)
-    needs: sintaxis
-    continue-on-error: true
+    name: xmi
+    needs: consistencia
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/plantuml
-      - name: Exportar XMI (estándar, ArgoUML y StarUML)
-        # PlantUML exporta a XMI solo los diagramas de clases.
-        run: |
-          shopt -s nullglob
-          clases=(diagramas/*-clases*.puml diagramas/*-modelo-estructural*.puml)
-          plantuml -txmi      -o "$PWD/salida/xmi/estandar" "${clases[@]}"
-          plantuml -txmi:argo -o "$PWD/salida/xmi/argouml"  "${clases[@]}"
-          plantuml -txmi:star -o "$PWD/salida/xmi/staruml"  "${clases[@]}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generar build/model.xmi (XMI 2.5.1, UML 2.5.1)
+        run: python3 tools/modelo.py diagramas --xmi
       - uses: actions/upload-artifact@v4
         with:
-          name: diagramas-xmi
-          path: salida/xmi/
+          name: modelo-uml
+          path: |
+            build/model.json
+            build/model.xmi
+            build/report.md
+          retention-days: 30
+
+  validar-uml:
+    name: validar-uml
+    needs: xmi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: modelo-uml
+          path: build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/tpf-uca/eclipse
+          key: eclipse-uml2-${{ hashFiles('tools/uml/eclipse/descargar.sh') }}
+      - name: Validar contra los archivos normativos de OMG (XMI.xsd y UML.xmi)
+        run: |
+          pip install --quiet lxml==5.3.0
+          python3 tools/uml/validar_omg.py build/model.xmi --out build/validacion-omg.md
+      - name: Validar con Eclipse UML2 (EMF Diagnostician)
+        if: always()
+        run: |
+          D=$(bash tools/uml/eclipse/descargar.sh)
+          CP=$(ls "$D"/*.jar | tr '\n' ':')
+          javac -d build/java -cp "$CP" tools/uml/eclipse/ValidarUML.java
+          java -Dstdout.encoding=UTF-8 -cp "build/java:$CP" ValidarUML build/model.xmi | tee build/validacion-eclipse.txt
+          exit "${PIPESTATUS[0]}"
+      - name: Resultado en el resumen del job
+        if: always()
+        run: |
+          cat build/validacion-omg.md >> "$GITHUB_STEP_SUMMARY" || true
+          { echo '## Eclipse UML2'; echo '```'; tail -40 build/validacion-eclipse.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validacion-uml
+          path: |
+            build/validacion-omg.md
+            build/validacion-eclipse.txt
           retention-days: 30

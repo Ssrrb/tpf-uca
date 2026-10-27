@@ -6,6 +6,7 @@ los une en un modelo único, corre los checks de consistencia y escribe el
 reporte. Sale con 1 si hay errores.
 
 Uso: modelo.py [directorio] [--out build] [--xmi] [--gh] [--incluir-cu00]
+               [--fallar-en P1,C1,...]   (por defecto falla con cualquier error)
 """
 import json
 import sys
@@ -48,6 +49,11 @@ def main(argv):
     if '--out' in argv:
         out = Path(argv[argv.index('--out') + 1])
         args.remove(str(out))
+    codigos = None
+    if '--fallar-en' in argv:
+        valor = argv[argv.index('--fallar-en') + 1]
+        args.remove(valor)
+        codigos = set(valor.split(','))
     directorio = args[0] if args else 'diagramas'
     modelo, problemas, archivos = construir(directorio, incluir_cu00='--incluir-cu00' in argv)
     datos = modelo.a_json()
@@ -73,14 +79,17 @@ def main(argv):
         resumen['XMI'] = f'{out}/model.xmi ({len(gen.ids)} elementos con xmi:id)'
     md, errores = checks.reporte(problemas.lista, resumen)
     (out / 'report.md').write_text(md, encoding='utf-8')
+    if codigos is not None:
+        errores = sum(1 for p in problemas.lista if p['nivel'] == 'error' and p['codigo'] in codigos)
     if '--gh' in argv:
         for p in problemas.lista:
-            if p['nivel'] in ('error', 'aviso'):
+            if p['nivel'] in ('error', 'aviso') and (codigos is None or p['codigo'] in codigos):
                 archivo, _, linea = p['src'].partition(':')
                 nivel = 'error' if p['nivel'] == 'error' else 'warning'
                 print(f'::{nivel} file={archivo},line={linea or 1}::{p["codigo"]} {p["msg"]}')
     avisos = sum(1 for p in problemas.lista if p['nivel'] == 'aviso')
-    print(f'Modelo: {len(archivos)} diagramas → {out}/model.json; {errores} errores, '
+    alcance = f' ({",".join(sorted(codigos))})' if codigos else ''
+    print(f'Modelo: {len(archivos)} diagramas → {out}/model.json; {errores} errores{alcance}, '
           f'{avisos} avisos → {out}/report.md')
     return 1 if errores else 0
 

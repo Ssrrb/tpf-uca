@@ -28,7 +28,7 @@ editar .puml → pull request → CI ─┬─ sintaxis     plantuml -checkonly
                                   ├─ calidad      nombres, estilo, completitud, solo .puml
                                   │               + notación UML de la cátedra
                                   ├─ render       SVG y PNG como artefacto
-                                  └─ xmi          exportación opcional (en main)
+                                  └─ subconjunto → consistencia del modelo → xmi → validar-uml
                                  ↓ todo en verde
                                merge a main
 ```
@@ -66,6 +66,25 @@ editar .puml → pull request → CI ─┬─ sintaxis     plantuml -checkonly
   - **W1** (aviso): una clase no participa en ninguna secuencia.
   - **W2** (aviso): un método nunca se invoca.
 
+## Modelo UML 2.5.1 y Visual Paradigm
+
+Los `.puml` son el borrador rápido. A partir de ellos la CI arma un modelo único
+de CU-01 a CU-16 (CU-00 queda fuera) y lo exporta como XMI 2.5.1 / UML 2.5.1
+para importarlo en Visual Paradigm:
+
+```
+.puml → tools/modelo.py → build/model.json + build/report.md → build/model.xmi → VP
+                           (P1, C1-C6)                         validado con OMG y Eclipse UML2
+```
+
+- Cómo se traduce cada construcción: [docs/uml-subset.md](docs/uml-subset.md).
+- Cómo importarlo en VP: [docs/import-vp.md](docs/import-vp.md).
+- Checks del modelo único (fallan el build): **P1** construcción sin traducción a
+  UML 2.5.1, **C1** nombres duplicados o variantes, **C2** la misma clase con
+  tipo o paquete distinto, **C3** lifeline sin clase o mensaje a una operación
+  inexistente, **C4** referencia a algo no definido, **C5** multiplicidades,
+  tipos o firmas incompatibles entre diagramas, **C6** convención de nombres.
+
 ## Uso local
 
 Requisitos: Java 17+, Graphviz y `plantuml` en el `PATH`.
@@ -77,6 +96,14 @@ bash tools/check_calidad.sh
 python3 tools/check_uml.py
 python3 tools/test_check_uml.py
 plantuml -tsvg -o "$PWD/salida" diagramas/*.puml
+
+# Modelo UML 2.5.1
+python3 tools/uml/test_modelo.py
+python3 tools/modelo.py diagramas --xmi          # build/model.json, report.md, model.xmi
+python3 tools/uml/validar_omg.py build/model.xmi  # necesita acceso a www.omg.org
+D=$(bash tools/uml/eclipse/descargar.sh); CP=$(ls "$D"/*.jar | tr '\n' ':')
+javac -d build/java -cp "$CP" tools/uml/eclipse/ValidarUML.java
+java -cp "build/java:$CP" ValidarUML build/model.xmi
 ```
 
 Por qué PlantUML y no otra herramienta: [docs/herramienta-case.md](docs/herramienta-case.md).
