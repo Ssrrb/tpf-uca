@@ -1,97 +1,124 @@
 @startuml
 !theme plain
 skinparam style strictuml
+title CU-07 · Registrar gasto de obra
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-07 · Enviar a facturar la versión del certificado y derivar al ERP
+package "Motor de finanzas" {
+  class Gasto {
+    tipo: TipoGasto
+    importe: guaraníes
+    fecha: fecha
+    medioPago: texto
+    cantidad: decimal [0..1]
+    registradoPor: Usuario
+    fechaRegistro: fecha y hora
+    --
+    + indicarInsumo(insumo, cantidad): vacío
+    + imputar(rubro, ítem, importe): vacío
+    + adjuntarComprobante(archivo): vacío
+    + validarImporte(): lógico
+    + confirmar(actor): vacío
+  }
 
-class "Motor de ingeniería" as MotorIngenieria <<control>> {
-  --
-  + abrirUltimaVersion(obra: Obra): VersionCertificado
-  + enviarAFacturar(version: VersionCertificado, numero: texto, fecha: fecha, destinatario: texto): vacío
-  + exportar(version: VersionCertificado, formato: XLSX | PDF): ArchivoExportado
+  class "Imputación" as Imputacion {
+    importe: guaraníes
+  }
+
+  class Comprobante {
+    tipo: factura | planilla | ticket
+    archivo: archivo
+  }
+
+  class "Costo real del rubro" as CostoReal {
+    total: guaraníes
+    --
+    + sumar(importe): vacío
+  }
+
+  enum TipoGasto {
+    material
+    mano_de_obra
+    caja_chica
+  }
 }
 
-class Obra {
-  + identificador: identificador
-  + codigo: texto
-  + nombre: texto
-  --
-  + usuarioPuedeFacturar(usuarioId: identificador): lógico
-  + existeNumeroCertificado(numero: texto): lógico
-  + obtenerCertificado(): CertificadoObra
+package "ECMS" {
+  class "Versión del presupuesto de costos" as VersionCostos {
+    estado: vigente
+    --
+    + obtenerRubro(código): RubroCostos [0..1]
+    + rubroGastosGenerales(): RubroCostos
+  }
+
+  class "Rubro de costos" as RubroCostos {
+    código: texto {estable}
+  }
 }
 
-class "Certificado de obra" as CertificadoObra {
-  + identificador: identificador
-  --
-  + obtenerUltimaVersion(): VersionCertificado
+package "ERP" {
+  class Obra {
+    topeCajaChica: guaraníes
+    --
+    + permiteGastos(): lógico
+    + obtenerTopeCajaChica(): guaraníes
+  }
+
+  class Proveedor {
+    --
+    + estaActivo(): lógico
+  }
+
+  class "Persona (RRHH)" as Persona {
+    --
+    + estaActiva(): lógico
+  }
+
+  class Insumo {
+    código: texto
+  }
 }
 
-class "Versión de certificado" as VersionCertificado {
-  + numeroVersion: entero
-  + numeroCertificado: texto [0..1]
-  + fecha: fecha [0..1]
-  + destinatario: texto [0..1]
-  + enviadaAFacturar: lógico
-  + usuarioEnvioId: identificador [0..1]
-  + fechaEnvio: fecha y hora [0..1]
-  + versionPresupuestoCostosId: identificador
-  --
-  + registrarEnvio(numero: texto, fecha: fecha, destinatario: texto, usuarioId: identificador): vacío
-  + exportar(formato: XLSX | PDF): ArchivoExportado
-}
+Gasto "0..*" --> "1" Obra : de la obra
+Gasto "0..*" --> "0..1" Proveedor : pagado a
+Gasto "0..*" --> "0..1" Persona : pagado a
+Gasto "0..*" --> "0..1" Insumo : compra de
+Gasto "1" *-- "1..*" Imputacion : se reparte en
+Imputacion "0..*" --> "1" RubroCostos : imputa a
+Gasto "1" *-- "1" Comprobante : respaldo
+CostoReal "0..1" --> "1" RubroCostos : de
+VersionCostos "1" *-- "1..*" RubroCostos : contiene
 
-class "Archivo exportado" as ArchivoExportado {
-  + nombre: texto
-  + formato: XLSX | PDF
-  + huellaDigital: texto {inmutable}
-  + fechaGeneracion: fecha y hora
-  --
-  + generar(): vacío
-}
-
-class "Evento de versión enviada" as EventoVersionEnviada {
-  + claveUnica: texto
-  + estado: pendiente | confirmado
-  + intentos: entero
-  + fechaPublicacion: fecha y hora
-  --
-  + publicar(): vacío
-  + confirmarAcuse(): vacío
-  + reintentar(): vacío
-}
-
-MotorIngenieria ..> Obra : consulta
-MotorIngenieria ..> VersionCertificado : envía a facturar
-Obra "1" *-- "1" CertificadoObra : único certificado
-CertificadoObra "1" *-- "1..*" VersionCertificado : versiones
-VersionCertificado "1" *-- "0..*" ArchivoExportado : exportado como
-VersionCertificado "1" *-- "0..1" EventoVersionEnviada : publica
-
-note bottom of VersionCertificado
-  El certificado no tiene estados: enviar a facturar
-  marca una versión, que sigue consultable (NF-05).
-  Una corrección es una versión nueva (CU-06).
+note bottom of Gasto
+  Caja chica: no supera el tope de la obra;
+  por encima lo registra el Administrador (RN-13).
+  El presupuesto de costos no cambia.
 end note
 
-note bottom of EventoVersionEnviada
-  claveUnica evita duplicar el evento
-  en los reintentos hacia el ERP (PR-05).
-end note
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

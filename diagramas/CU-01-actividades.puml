@@ -32,40 +32,38 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-01 · Actividades · Crear obra y asignar responsables
+title CU-01 · Actividades · Gestionar obra
 |Administrador|
 start
-:Ingresar código, nombre, dirección,
-fechas y comitente de la obra;
-|Motor de ingeniería|
-if (¿Tiene rol admin vigente en la organización?) then ([no])
-  :Denegar la operación;
-  stop
-else ([sí])
-endif
-if (¿Código disponible?) then ([no])
-  :Pedir otro código;
-  stop
-else ([sí])
-endif
-if (¿Datos válidos?) then ([no])
-  :Mostrar los errores de validación;
-  stop
-else ([sí])
-endif
-:Crear la obra con su configuración inicial
-y registrar creador y fecha;
-|Administrador|
-repeat
-  :Seleccionar un responsable;
-  |Motor de ingeniería|
-  if (¿Es miembro de la organización?) then ([sí])
-    :Crear la asignación de responsable;
+if (¿Crear una obra o avanzar el estado de una existente?) then ([crear])
+  :Solicitar crear una obra;
+  repeat
+    :Ingresar código, nombre, dirección, fechas, cliente,
+    impuestos, límite de adendas, tope de caja chica
+    y, si corresponde, anticipo y fondo de reparo;
+    :Asignar los responsables y el rol de cada uno;
+    :Confirmar la creación;
+    |ERP|
+    if (¿El código ya está en uso?) then ([sí])
+      :Pedir otro código;
+    elseif (¿Algún responsable no es miembro?) then ([sí])
+      :Rechazar la asignación;
+    else ([no])
+      :Registrar la obra en ejecución, sus
+      responsables, el actor y la fecha;
+    endif
+    |Administrador|
+  repeat while (¿Hubo un rechazo?) is ([sí]) not ([no])
+else ([avanzar estado])
+  :Elegir una obra existente;
+  |ERP|
+  if (¿La obra está cerrada?) then ([sí])
+    :Informar que no hay estado siguiente;
   else ([no])
-    :Rechazar la asignación;
+    :Pasar al estado siguiente y registrar
+    actor y fecha (RF-33, RN-12);
   endif
-  |Administrador|
-repeat while (¿Hay más responsables?) is ([sí]) not ([no])
-:Confirmar la creación de la obra;
+endif
+|Administrador|
 stop
 @enduml

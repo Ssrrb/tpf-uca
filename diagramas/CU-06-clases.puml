@@ -1,212 +1,135 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-06 · Generar certificación y costo del rubro
+title CU-06 · Generar versión del certificado de avance
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+package "ECMS" {
+  class "Certificado de avance" as Certificado {
+    --
+    + generarVersiónSiguiente(actor): VersiónCertificado
+    + últimaVersión(): VersiónCertificado [0..1]
+  }
 
-class "Motor de ingeniería" as MotorIngenieria <<control>> {
-  --
-  + generarCertificacion(obra: Obra, desdeUltimaVersion: lógico): VersionCertificado
-  + calcularCostoAvance(obra: Obra, fecha: fecha): lista de CostoRubro
-  + guardarCertificado(version: VersionCertificado): vacío
+  class "Versión del certificado" as VersionCertificado {
+    número: entero
+    bruto: guaraníes
+    amortizaciónAnticipo: guaraníes
+    fondoReparo: guaraníes
+    neto: guaraníes
+    iva: guaraníes
+    guardadaPor: Usuario [0..1]
+    fecha: fecha y hora [0..1]
+    --
+    + agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo): vacío
+    + tomarCantidades(): vacío
+    + calcularImportes(): vacío
+    + señalar(): lista de Señalamiento
+    + guardar(actor): vacío
+    + exportar(formato: XLSX | PDF): archivo
+  }
+
+  class "Línea del certificado" as LineaCertificado {
+    tipo: cantidad | ajuste
+    cantidad: decimal
+    precioUnitario: guaraníes
+    importe: guaraníes
+    avanceAnterior: decimal
+    /acumulado: decimal
+    motivo: texto [0..1]
+    --
+    + valorizar(precio: guaraníes): guaraníes
+  }
+
+  class "Medición" as Medicion {
+    cantidad: decimal
+    --
+    + cantidadNoCertificada(): decimal
+    + marcarCertificada(versión): vacío
+  }
+
+  class "Saldo del ítem" as SaldoItem {
+    /saldoContractual: decimal
+    --
+    + saldoContractual(): decimal
+    + registrarCertificado(cantidad): vacío
+  }
+
+  class "Presupuesto del cliente" as PresupuestoCliente {
+    --
+    + precioUnitario(ítem): guaraníes [0..1]
+  }
+
+  class "Presupuesto de adendas" as PresupuestoAdendas {
+    --
+    + precioVigente(ítem, fecha): guaraníes [0..1]
+  }
+
+  class "Señalamiento" as Senalamiento {
+    tipo: exceso | medición faltante | precio sin movimiento\n | diferencia de totales | mayor costo
+    datoOrigen: texto
+  }
 }
 
-class Obra {
-  + identificador: identificador
-  + codigo: texto
-  + nombre: texto
-  + porcentajeImpuestos: decimal
-  + porcentajeFondoRetencion: decimal
-  --
-  + obtenerCertificado(): CertificadoObra
-  + obtenerPresupuestoCostosVigente(): VersionPresupuestoCostos
-  + obtenerMedicionesSinCertificar(fecha: fecha): lista de MedicionAvance
-  + obtenerPorcentajeImpuestos(): decimal
-  + obtenerPorcentajeFondoRetencion(): decimal
+package "ERP" {
+  class Obra {
+    estado: EstadoObra
+    porcentajeIVA: decimal
+    porcentajeFondoReparo: decimal
+    --
+    + permiteCertificar(): lógico
+  }
+
+  class Anticipo {
+    saldoPorAmortizar: guaraníes
+    --
+    + amortizar(bruto: guaraníes): guaraníes
+  }
 }
 
-class "Versión de presupuesto de costos" as VersionPresupuestoCostos {
-  + identificador: identificador
-  + numero: entero
-  + adendasRegistradas: lista de identificador
-  --
-  + obtenerRubros(): lista de Rubro
-}
-
-class Rubro {
-  + identificador: identificador
-  + codigo: texto [0..1]
-  + descripcion: texto
-  --
-  + obtenerItems(): lista de ItemPresupuesto
-}
-
-class "Ítem de presupuesto" as ItemPresupuesto {
-  + identificador: identificador
-  + codigo: texto [0..1]
-  + descripcion: texto
-  + unidad: texto
-  + cantidadPresupuestada: decimal
-  + precioVenta: decimal [0..1]
-  --
-  + obtenerPrecioVentaVigente(fecha: fecha): decimal [0..1]
-  + tieneMovimientoVigente(fecha: fecha): lógico
-}
-
-class "Medición de avance" as MedicionAvance {
-  + identificador: identificador
-  + cantidad: decimal
-  + unidad: texto
-  + ejecutor: propio | subcontratado
-  + fechaRegistro: fecha y hora
-  + estado: registrada | corregida | cancelada
-  + cantidadExcedidaPendiente: decimal
-  --
-  + obtenerCantidadCertificable(): decimal
-  + obtenerConsumos(): lista de ConsumoInsumo
-}
-
-class "Consumo de insumo" as ConsumoInsumo {
-  + cantidad: decimal
-  + unidad: texto
-  --
-  + calcularCosto(fecha: fecha): decimal [0..1]
-}
-
-class Insumo {
-  + codigo: texto
-  + descripcion: texto
-  + tipo: material | mano_de_obra | equipo
-  --
-  + obtenerPrecioVigente(fecha: fecha): decimal [0..1]
-}
-
-class "Análisis de costo unitario" as AnalisisCostoUnitario {
-  + unidad: texto
-  --
-  + calcularCostoUnitario(fecha: fecha): decimal
-}
-
-class "Certificado de obra" as CertificadoObra {
-  + identificador: identificador
-  + numero: texto
-  --
-  + crearVersion(desdeUltimaVersion: lógico): VersionCertificado
-  + obtenerUltimaVersion(): VersionCertificado [0..1]
-}
-
-class "Versión de certificado" as VersionCertificado {
-  + numero: entero
-  + fechaHasta: fecha
-  + fechaGeneracion: fecha y hora
-  + usuarioId: identificador
-  + señalamientos: lista de texto
-  + /subtotal: decimal
-  + /importeImpuestos: decimal
-  + /importeFondos: decimal
-  + /total: decimal
-  --
-  + agregarLinea(item: ItemPresupuesto, cantidad: decimal, precio: decimal): LineaCertificado
-  + aplicarImpuestosYFondos(porcentajeImpuestos: decimal, porcentajeFondo: decimal): vacío
-  + calcularTotales(): decimal
-  + señalar(tipo: exceso | medicion_faltante | precio_sin_movimiento_vigente | diferencia_de_totales | insumo_sin_precio, descripcion: texto, origen: texto): vacío
-  + obtenerSenalamientos(): lista de texto
-  + tieneBloqueos(): lógico
-  + guardar(): vacío
-}
-
-class "Línea de certificado" as LineaCertificado {
-  + cantidadCertificable: decimal
-  + precioVenta: decimal
-  + /importe: decimal
-  --
-  + calcularImporte(): decimal
-}
-
-class "Costo del rubro" as CostoRubro {
-  + fecha: fecha
-  + /costoAvance: decimal
-  + /costoPresupuestado: decimal
-  + /diferencia: decimal
-  + calculado: lógico
-  --
-  + agregarCostoItem(item: ItemPresupuesto): CostoItem
-  + calcularDiferencia(): decimal
-}
-
-class "Costo del ítem" as CostoItem {
-  + cantidadAvance: decimal
-  + costoMateriales: decimal
-  + costoManoObra: decimal
-  + costoEquipos: decimal
-  + /costoAvance: decimal
-  + costoPresupuestado: decimal
-  + /diferencia: decimal
-  --
-  + sumarConsumo(tipoInsumo: material | mano_de_obra | equipo, importe: decimal): vacío
-  + calcularCostoPresupuestado(acu: AnalisisCostoUnitario): decimal
-}
-
-MotorIngenieria ..> Obra : consulta
-MotorIngenieria ..> CertificadoObra : usa
-MotorIngenieria ..> CostoRubro : <<create>>
-
-Obra "1" *-- "1..*" VersionPresupuestoCostos : versiones de costos
-VersionPresupuestoCostos "1" *-- "0..*" Rubro : contiene
-Rubro "1" *-- "0..*" ItemPresupuesto : agrupa
-ItemPresupuesto "0..*" --> "0..1" AnalisisCostoUnitario : se calcula con
-Obra "1" *-- "0..*" MedicionAvance : registra
-MedicionAvance "0..*" --> "1" ItemPresupuesto : mide
-MedicionAvance "1" *-- "0..*" ConsumoInsumo : insumos consumidos
-ConsumoInsumo "0..*" --> "1" Insumo : consume
-
-Obra "1" *-- "1" CertificadoObra : un solo documento
-CertificadoObra "1" *-- "1..*" VersionCertificado : versiones
-VersionCertificado "0..1" --> "0..1" VersionCertificado : versión anterior
-VersionCertificado "0..*" --> "1" VersionPresupuestoCostos : valoriza con
-VersionCertificado "1" *-- "1..*" LineaCertificado : contiene
-LineaCertificado "0..*" --> "1" ItemPresupuesto : certifica
-LineaCertificado "0..*" --> "1..*" MedicionAvance : respaldada por
-
-VersionCertificado "1" -- "0..*" CostoRubro : costo a la misma fecha
-CostoRubro "0..*" --> "1" Rubro : costea
-CostoRubro "1" *-- "1..*" CostoItem : detalla
-CostoItem "0..*" --> "1" ItemPresupuesto : costea
-
-note bottom of CertificadoObra
-  Documento interno de control de avance: uno por obra,
-  con ítems propios y subcontratados (el pago al
-  subcontratista lo registra el ERP).
-  Cada certificación es una versión nueva, desde cero
-  o desde la última. No tiene estados: toda versión
-  se puede retomar y modificar.
-end note
+Certificado "0..1" --> "1" Obra : de la obra
+Certificado "1" *-- "0..*" VersionCertificado : versiones numeradas
+VersionCertificado "0..1" --> "0..1" VersionCertificado : anterior
+VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
+LineaCertificado "0..1" --> "0..*" Medicion : certifica
+LineaCertificado "0..*" --> "0..1" VersionCertificado : ajuste de
+LineaCertificado "0..*" --> "1" SaldoItem : ítem
+VersionCertificado "0..*" --> "1" PresupuestoCliente : precios
+VersionCertificado "0..*" --> "0..1" PresupuestoAdendas : precios de adendas
+VersionCertificado "1" *-- "0..*" Senalamiento : señala
+VersionCertificado "0..*" --> "0..1" Anticipo : amortiza
 
 note bottom of VersionCertificado
-  Solo certifica mediciones registradas hasta la fecha
-  que no figuran en el certificado de la obra; excluye
-  la cantidad excedida pendiente de adenda (RF-09, RF-22).
-  total = subtotal + impuestos - fondos de retención (RF-13).
-  Se valoriza con el presupuesto de costos vigente y sus
-  adendas registradas; no modifica el presupuesto del cliente.
+  Orden de cálculo (RN-08): bruto, amortización del anticipo,
+  fondo de reparo, neto e IVA, en guaraníes enteros
+  redondeados por línea (RN-09).
+  Guardada, no se modifica ni se reemplaza (RN-06).
 end note
 
-note bottom of CostoRubro
-  costoAvance = materiales + mano de obra + equipos,
-  con los insumos cargados a precio vigente (RF-26).
-  Si un insumo no tiene precio vigente, calculado = falso
-  y se señala el insumo.
-end note
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

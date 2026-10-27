@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-02 · 3/3 · Totales y finalización
+actor "Ingeniero de obra" as Ing
+box "ECMS" #EAF2F6
+participant "presupuesto:\nPresupuestoCliente" as Pres
+participant "rubro:\nRubro" as Rubro
+participant "item:\nItem" as Item
+participant "informe:\nInformeImportacion" as Inf
+participant "obra:\nObra" as Obra
+end box
+
+Pres -> Pres: recalcularTotales()
+loop por cada rubro
+  Pres -> Rubro: recalcularTotal()
+  loop por cada ítem
+    Rubro -> Item: recalcularTotal()
+    Item --> Rubro: total
+  end
+  Rubro --> Pres: total del rubro
+end
+Pres -> Pres: compararTotales()
+loop por cada total declarado distinto del recalculado
+  Pres -> Inf: registrarDiferencia(rubro, declarado, recalculado)
+end
+Pres --> Ing: resultado de la validación y diferencias,\nsin alterar el archivo original (RF-04)
+opt hay diferencias de totales (7a)
+  alt acepta con las diferencias informadas
+    Ing -> Inf: aceptarDiferencias()
+  else corrige el archivo
+    ref over Ing, Obra
+      Recarga el XLSX: vuelve a 1/3.
+    end ref
+  end
+end
+alt finaliza (paso 8)
+  Ing -> Pres: finalizar(actor)
+  Pres -> Obra: vincularPresupuestoCliente(presupuesto)
+  Pres --> Ing: presupuesto contractual inmutable,\ncon actor y fecha; base del CU-03
+else no lo finaliza todavía (8a)
+  Pres --> Ing: queda en propuesta; se puede recargar o editar
+end
+@enduml

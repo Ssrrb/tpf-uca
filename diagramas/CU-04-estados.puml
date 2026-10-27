@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-04 · Estados de la Medición
+state confirmacion <<choice>>
+state "En carga" as en_carga
+state "Registrada" as registrada
+state "Retenida (excede el saldo)" as retenida
+state "Anulada" as anulada
+state "Certificada" as certificada
+
+[*] --> en_carga : crear(ítem, cantidad, ejecutor)
+en_carga --> confirmacion : confirmar(actor) [datos completos y no contada]
+confirmacion --> registrada : [dentro del saldo contractual]
+confirmacion --> retenida : [supera el saldo contractual]
+retenida --> registrada : registrarAdenda(adenda) [CU-11 cubre el exceso]
+registrada --> registrada : enmendar(datos, motivo, actor)
+registrada --> anulada : anular(motivo, actor)
+retenida --> anulada : anular(motivo, actor)
+registrada --> certificada : guardar(versión) [CU-06]
+certificada --> certificada : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
+anulada --> [*]
+certificada --> [*]
+
+note right of certificada
+  No se anula ni se enmienda:
+  se corrige con una medición
+  de ajuste (RN-07).
+end note
+@enduml

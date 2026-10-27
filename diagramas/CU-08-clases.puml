@@ -1,99 +1,116 @@
 @startuml
 !theme plain
 skinparam style strictuml
+title CU-08 · Generar factura interna del certificado
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-08 · Generar factura al cliente en ERP
+package "Motor de finanzas" {
+  class "Facturación interna" as Facturacion {
+    --
+    + listarPendientes(obra): lista
+    + generarFactura(versión, actor): DocumentoInterno
+    + generarFacturaAnticipo(anticipo, actor): FacturaInterna
+  }
 
-class "Facturación" as Facturacion <<control>> {
-  --
-  + recibirVersionEnviada(evento: EventoVersionEnviada): vacío
-  + confirmarFactura(factura: Factura): vacío
-  + buscarFactura(obraId: identificador, claveUnica: texto): Factura [0..1]
-  + usuarioTieneAccesoFinanzas(usuarioId: identificador): lógico
+  abstract class "Documento interno" as DocumentoInterno {
+    número: entero
+    moneda: PYG
+    neto: guaraníes
+    iva: guaraníes
+    /total: guaraníes
+    sinValidezFiscal: lógico = verdadero
+    estado: EstadoDocumento
+    motivoDiferencia: texto [0..1]
+    --
+    + adjuntarFacturaLegal(número, fecha, importe, archivo): vacío
+    + compararConLegal(): guaraníes
+    + registrarMotivoDiferencia(motivo): vacío
+    + confirmar(actor): vacío
+  }
+
+  class "Factura interna" as FacturaInterna
+  class "Nota de crédito interna" as NotaCreditoInterna
+
+  class "Factura legal" as FacturaLegal {
+    número: texto
+    fecha: fecha
+    importe: guaraníes
+    archivo: archivo
+  }
+
+  class "Cuenta a cobrar" as CuentaACobrar {
+    saldoPendiente: guaraníes
+  }
 }
 
-class "Evento de versión enviada" as EventoVersionEnviada {
-  + claveUnica: texto
-  + obraId: identificador
-  + numeroVersion: entero
-  + importeCertificado: decimal
-  + impuestos: decimal
-  + retenciones: decimal
-  --
-  + obtenerDatos(): datos de la versión
+package "ECMS" {
+  class "Versión del certificado" as VersionCertificado {
+    neto: guaraníes
+    iva: guaraníes
+    --
+    + importeSinFacturar(): guaraníes
+  }
 }
 
-class "Ficha del cliente" as FichaCliente {
-  + razonSocial: texto
-  + ruc: texto [0..1]
-  + direccionFiscal: texto [0..1]
-  + correo: texto
-  --
-  + tieneDatosFiscales(): lógico
-  + datoFaltante(): texto
-  + recibirFactura(factura: Factura): vacío
+package "ERP" {
+  class Obra {
+    --
+    + datosCliente(): Cliente [0..1]
+  }
+
+  class Anticipo {
+    importe: guaraníes
+    facturado: lógico
+    --
+    + marcarFacturado(): vacío
+  }
+
+  class Cliente {
+    razónSocial: texto
+    ruc: texto
+  }
 }
 
-class Factura {
-  + numero: texto
-  + fecha: fecha
-  + moneda: texto = "PYG"
-  + importeCertificado: decimal
-  + impuestos: decimal
-  + retenciones: decimal
-  + /importeTotal: decimal
-  + numeroVersionCertificado: entero
-  + estado: generada | sin_confirmar | confirmada
-  + usuarioConfirmacionId: identificador [0..1]
-  --
-  + calcularImportes(): decimal
-  + marcarSinConfirmar(datoFaltante: texto): vacío
-  + confirmar(usuarioId: identificador): vacío
-  + vincularNota(nota: NotaAjuste): vacío
-}
+DocumentoInterno <|-- FacturaInterna
+DocumentoInterno <|-- NotaCreditoInterna
+DocumentoInterno "0..*" --> "0..1" VersionCertificado : corresponde a
+FacturaInterna "0..1" --> "0..1" Anticipo : factura
+DocumentoInterno "1" *-- "0..1" FacturaLegal : adjunta
+DocumentoInterno "1" *-- "1" CuentaACobrar : registra
+DocumentoInterno "0..*" --> "1" Obra : de la obra
+Obra "0..*" --> "1" Cliente : cliente
+Facturacion ..> DocumentoInterno : genera
 
-class "Nota de ajuste" as NotaAjuste {
-  + tipo: credito | debito
-  + importe: decimal
-  + fecha: fecha
-  --
-  + calcularDiferencia(anterior: Factura, version: EventoVersionEnviada): decimal
-}
-
-class "Cuenta a cobrar" as CuentaACobrar {
-  + importe: decimal
-  + saldo: decimal
-  + fechaRegistro: fecha
-  --
-  + registrar(factura: Factura): vacío
-}
-
-Facturacion ..> EventoVersionEnviada : recibe
-Facturacion ..> Factura : genera
-EventoVersionEnviada "1" -- "0..1" Factura : origina
-Factura "0..*" --> "1" FichaCliente : se emite a
-Factura "1" *-- "0..*" NotaAjuste : ajustada por
-Factura "1" -- "1" CuentaACobrar : registra
-
-note bottom of NotaAjuste
-  Una versión nueva de un certificado ya facturado
-  no crea otra factura: genera una nota de crédito
-  o débito por la diferencia (flujo 1a).
+note bottom of DocumentoInterno
+  Toma el neto y el IVA de la versión sin recalcularlos (RN-08).
+  Sin crédito fiscal ni validez ante Marangatu:
+  la factura legal se emite fuera de Ctrl+.
 end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

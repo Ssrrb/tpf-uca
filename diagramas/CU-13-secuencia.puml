@@ -3,83 +3,67 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 hide footbox
-title CU-13 · Liquidar y derivar pago a subcontratista
-actor "Ingeniero de obra" as Ingeniero
-actor "Administrador" as Admin
-control "motor:\nMotorIngenieria" as Motor
-participant "version:\nVersionCertificado" as Version
-participant "linea:\nLineaCertificado" as Linea
-participant "contrato:\nContratoSubcontrato" as Contrato
-participant "liquidacion:\nLiquidacionSubcontrato" as Liquidacion
-actor "Sistema ERP" as ERP <<sistema>>
+title CU-13 · Consultar tablero financiero
+actor "Administrador\n(o Finanzas y tesorería)" as Adm
+box "Motor de finanzas" #EAF2F6
+participant "tablero:\nTablero" as Tab
+participant "libro:\nLibroFinanciero" as Lib
+participant "total:\nTotalTablero" as Tot
+end box
+box "ERP" #EAF2F6
+participant "usuario:\nUsuario" as Usr
+participant "obra:\nObra" as Obra
+end box
+box "ECMS" #EAF2F6
+participant "resumen:\nResumenObra" as Res
+end box
 
-note over Ingeniero, Version
-  Inicio: versión del certificado enviada a facturar (CU-07).
-end note
-
-Ingeniero -> Motor: obtenerContratosALiquidar(version)
-Motor -> Version: obtenerLineasSubcontratadas(todas)
-Version --> Motor: lineas: lista de LineaCertificado
-loop Por cada línea subcontratada
-  Motor -> Linea: obtenerContrato()
-  Linea --> Motor: contrato: ContratoSubcontrato
-end
-Motor --> Ingeniero: líneas agrupadas por contrato
-
-loop Por cada contrato a liquidar
-  Ingeniero -> Motor: prepararLiquidacion(version, contrato)
-  create Liquidacion
-  Motor -> Liquidacion: «create» (version, contrato)
-  Motor -> Version: obtenerLineasSubcontratadas(contrato)
-  Version --> Motor: lineas: lista de LineaCertificado
-  loop Por cada línea del contrato
-    Motor -> Linea: estaLiquidada()
-    Linea --> Motor: liquidada: lógico
-    alt Ya liquidada en otra versión
-      Motor --> Ingeniero: excluye la línea e informa la versión (RF-10)
-    else Sin liquidar
-      Motor -> Liquidacion: agregarLinea(linea)
-    end
+Adm -> Tab: consultar(alcance, usuario)
+loop por cada obra del alcance
+  Tab -> Usr: tieneAcceso(obra)
+  Usr --> Tab: acceso: lógico
+  alt sin acceso a la obra (1b)
+    Tab --> Adm: excluye sus datos y lo indica
+  else con acceso
+  Tab -> Res: presupuestado(obra)
+  Res --> Tab: a costo (con apartado Adendas) y a venta (cliente + adendas)
+  break falla la lectura de los datos de obra (3a)
+    Tab --> Adm: los marca no disponibles con la fecha del último dato
   end
-  Motor -> Liquidacion: calcularImporte()
-  Liquidacion --> Motor: importe: decimal
-  Motor -> Contrato: verificarLimite(importe)
-  Contrato --> Motor: dentroDelLimite: lógico
-  alt Supera el límite del contrato
-    Motor --> Ingeniero: informa e impide derivar este contrato
-  else Dentro del límite
-    Motor --> Admin: liquidación con cantidades y valorización
-    alt El Administrador confirma
-      Admin -> Motor: confirmarDerivacion(liquidacion)
-      Motor -> ERP: enviarMedicionCertificada(contrato, lineas) (RF-25)
-      alt El ERP rechaza o no responde
-        ERP --> Motor: error
-        Motor --> Admin: no se marca nada como liquidado; puede reintentar
-      else Liquidación registrada
-        ERP -> ERP: calcular monto con retenciones,\ndeducciones e impuestos del contrato
-        ERP --> Motor: numero, montoAPagar
-        Motor -> Liquidacion: registrarReferenciaERP(numero, montoAPagar)
-        loop Por cada línea incluida
-          Motor -> Linea: marcarLiquidada(liquidacion)
-        end
-        Motor -> Contrato: actualizarSaldo(montoAPagar)
-        Motor --> Admin: liquidación pendiente de pago en tesorería (CU-15)
-      end
-    else No confirma
-      Motor --> Admin: no se envía nada al ERP
-    end
+  Tab -> Res: certificadoPorRubro(obra, fecha)
+  Tab -> Res: avanceFísico(obra, fecha)
+  Tab -> Obra: plazoTranscurrido(fecha)
+  Tab -> Lib: totales(obra, fecha)
+  Lib --> Tab: facturado, cobrado, pagado y saldos
+  Tab -> Lib: resultadoEconómico(obra, fecha)
+  Tab -> Lib: resultadoFinanciero(obra, fecha)
+  create Tot
+  Tab -> Tot: «create»(concepto, importe, fecha, unidad, PYG, procedencia)
   end
 end
-note over Motor, Contrato
-  El subcontratista ve el saldo actualizado en su portal (CU-09).
-end note
+Tab --> Adm: totales por obra y empresa, avance físico y plazo\ntranscurrido en porcentaje (RF-28, NF-11)
+opt filtra por rubro o fecha (1a)
+  Adm -> Tab: filtrar(rubro, fecha)
+end
+Adm -> Tab: abrirRespaldo(total)
+Tab --> Adm: versión del presupuesto o del certificado, factura interna\ncon la legal, recibo o comprobante (NF-12)
+opt exporta (6a, RF-18)
+  Adm -> Tab: exportar(formato)
+end
 @enduml

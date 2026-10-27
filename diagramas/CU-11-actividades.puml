@@ -32,50 +32,46 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-11 · Actividades · Registrar adenda (movimiento presupuestario)
+title CU-11 · Actividades · Registrar adenda
 |Ingeniero de obra|
 start
 :Seleccionar la obra;
-|Motor de ingeniería|
-if (¿El usuario puede registrar adendas en la obra?) then ([no])
-  :Denegar la operación;
+|ECMS|
+:Mostrar los ítems con saldo negativo
+y la cantidad retenida de cada uno;
+|Ingeniero de obra|
+if (¿Registra una adenda?) then ([no, queda como mayor costo])
   stop
 else ([sí])
 endif
-:Obtener el presupuesto de costos vigente;
-if (¿Hay cantidades retenidas por exceso?) then ([sí])
-  :Ofrecer incluirlas en la adenda;
-else ([no])
+if (¿Qué registra?) then ([exceso o cambio de un ítem])
+  :Elegir el ítem, el tipo, la cantidad,
+  el precio de venta y el costo;
+elseif (¿Es un trabajo que no existe?) then ([ítem nuevo])
+  :Ingresar rubro, descripción, unidad,
+  cantidad, precio de venta y costo;
+else ([ampliación de plazo])
+  :Ingresar la nueva fecha de fin;
 endif
-|Ingeniero de obra|
-repeat
-  :Elegir ítem, tipo de movimiento
-  y nueva cantidad o precio;
-  |Motor de ingeniería|
-  :Calcular el efecto del movimiento;
-  |Ingeniero de obra|
-repeat while (¿Agrega otro ítem?) is ([sí]) not ([no])
-|Motor de ingeniería|
-:Mostrar efecto monetario, límite acumulado,
-importe utilizado y saldo proyectado;
-|Ingeniero de obra|
 :Ingresar el motivo y adjuntar el respaldo;
-:Presionar Guardar;
-|Motor de ingeniería|
-if (¿Datos completos?) then ([no])
-  :Marcar los campos faltantes;
-  stop
-else ([sí])
-endif
-if (¿Excede el límite sin excepción registrada?) then ([sí])
-  :Informar el exceso e impedir guardar;
+|ECMS|
+:Calcular precio de venta, costo, límite,
+utilizado y saldo (RF-20);
+if (¿Supera el límite de la obra?) then ([sí])
+  :Informar e impedir confirmar;
   stop
 else ([no])
 endif
-:Guardar la adenda registrada con actor y fecha;
-note right
-  El presupuesto de costos vigente no cambia
-  hasta incorporarla (CU-12).
-end note
+|Ingeniero de obra|
+:Confirmar;
+|ECMS|
+:Registrar el costo en el apartado Adendas
+y el precio en el presupuesto de adendas;
+if (¿Es ampliación de plazo?) then ([sí])
+  :Actualizar la fecha de fin vigente de la obra;
+else ([no])
+  :Sumar la cantidad al saldo contractual
+  y liberar la cantidad retenida (RN-04);
+endif
 stop
 @enduml

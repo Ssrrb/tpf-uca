@@ -1,0 +1,94 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-06 · 1/2 · Tomar cantidades y calcular la versión
+actor "Ingeniero de obra" as Ing
+box "ERP" #EAF2F6
+participant "obra:\nObra" as Obra
+participant "anticipo:\nAnticipo" as Ant
+end box
+box "ECMS" #EAF2F6
+participant "certificado:\nCertificado" as Cert
+participant "version:\nVersionCertificado" as V
+participant "medicion:\nMedicion" as Med
+participant "saldo:\nSaldoItem" as Saldo
+participant "linea:\nLineaCertificado" as Lin
+participant "cliente:\nPresupuestoCliente" as Cli
+participant "adendas:\nPresupuestoAdendas" as Ade
+participant "senal:\nSenalamiento" as Sen
+end box
+
+Ing -> Obra: permiteCertificar()
+Obra --> Ing: permitido: lógico
+break la obra no está en ejecución (RF-33)
+  Obra --> Ing: no se generan versiones
+end
+Ing -> Cert: generarVersiónSiguiente(actor)
+Cert -> Cert: últimaVersión()
+create V
+Cert -> V: «create»(número siguiente, anterior)
+opt error en una versión ya guardada (1a, RN-06)
+  Ing -> V: agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo)
+end
+
+V -> V: tomarCantidades()
+loop por cada ítem con mediciones o ajustes sin certificar
+  V -> Med: cantidadNoCertificada()
+  Med --> V: cantidad
+  V -> Saldo: saldoContractual()
+  Saldo --> V: saldo
+  note right of V
+    Excluye lo que supera el saldo contractual
+    sin adenda (RF-09). Incluye lo que cubre
+    una adenda registrada (CU-11).
+  end note
+  create Lin
+  V -> Lin: «create»(ítem, cantidad certificable)
+  V -> Cli: precioUnitario(ítem)
+  Cli --> V: precio [0..1]
+  opt ítem de adenda o sin precio en el presupuesto del cliente
+    V -> Ade: precioVigente(ítem, fecha)
+    Ade --> V: precio [0..1]
+  end
+  break sin precio unitario en ninguno de los dos (3a)
+    V --> Ing: lo señala con su dato de origen e impide confirmar
+  end
+  V -> Lin: valorizar(precio)
+  Lin --> V: importe redondeado (RN-09)
+end
+
+V -> V: calcularImportes()
+V -> Ant: amortizar(bruto)
+Ant --> V: amortización hasta cancelar el anticipo
+note right of V
+  bruto - amortización - fondo de reparo = neto;
+  IVA sobre el neto (RF-13, RN-08).
+end note
+V -> V: señalar()
+loop por cada exceso, medición faltante, precio sin movimiento,\ndiferencia de totales o mayor costo (RF-15)
+  create Sen
+  V -> Sen: «create»(tipo, datoOrigen)
+end
+V --> Ing: versión con avance anterior, de la versión\ny acumulado por ítem (RF-12)
+ref over Ing, Sen
+  Continúa en 2/2: revisión y guardado.
+end ref
+@enduml

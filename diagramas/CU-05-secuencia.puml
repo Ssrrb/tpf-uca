@@ -3,15 +3,17 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
 skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
@@ -19,58 +21,47 @@ skinparam note {
 hide footbox
 title CU-05 · Mantener catálogos y banco de insumos
 actor "Administrador" as Admin
-control "motor:\nMotorIngenieria" as Motor
+box "ERP" #EAF2F6
 participant "catalogo:\nCatalogo" as Cat
+participant "insumo:\nInsumo" as Ins
 participant "recurso:\nRecurso" as Rec
-participant "nuevo:\nPrecioRecurso" as Precio
-participant "anterior:\nPrecioRecurso" as Anterior
+participant "precioActual:\nPrecio" as PAct
+participant "precioNuevo:\nPrecio" as PNue
+end box
 
-Admin -> Motor: listarRecursos(tipo, filtros)
-Motor -> Cat: puedeAdministrar(usuarioId)
-Cat --> Motor: permitido: lógico
-break Usuario sin rol admin (NF-01)
-  Motor --> Admin: impide la operación
-end
-Motor -> Cat: listarRecursos(filtros, pagina)
-Cat --> Motor: recursos
-Motor --> Admin: lista paginada con filtros por código, nombre y rubro
+Admin -> Cat: listar(filtro)
+Cat --> Admin: lista paginada por código, nombre y rubro
 
-alt Crear recurso (pasos 3 a 7)
-  Admin -> Motor: crearRecurso(datos, precio, vigenteDesde)
-  Motor -> Cat: existeCodigo(codigo)
-  Cat --> Motor: existe: lógico
-  break Código ya existente
-    Motor --> Admin: pide otro código
+alt crear un recurso (paso 3)
+  Admin -> Cat: crearRecurso(datos)
+  Cat -> Cat: códigoDisponible(código)
+  break el código ya existe (5a)
+    Cat --> Admin: pide otro código (vuelve al paso 3)
   end
-  Motor -> Cat: agregarRecurso(codigo, descripcion, unidad, categoria, usuarioId)
-  create Rec
-  Cat -> Rec: «create»
-  Motor -> Rec: registrarPrecio(valor, vigenteDesde, usuarioId)
-  create Precio
-  Rec -> Precio: «create»
-  Rec -> Precio: esValorValido()
-  Precio --> Rec: válido: lógico
-  Motor --> Admin: recurso guardado con su precio vigente
-else Modificar datos (flujo 3a)
-  Admin -> Motor: modificarRecurso(recurso, datos)
-  Motor -> Rec: actualizarDatos(descripcion, unidad, categoria, usuarioId)
-  Motor --> Admin: recurso actualizado con actor y fecha
-else Actualizar precio (flujo 4a)
-  Admin -> Motor: actualizarPrecio(recurso, valor, vigenteDesde)
-  Motor -> Rec: registrarPrecio(valor, vigenteDesde, usuarioId)
-  Rec -> Anterior: seSuperponeCon(vigenteDesde)
-  Anterior --> Rec: superpuesto: lógico
-  break Vigencia superpuesta
-    Rec --> Motor: rechaza e indica la vigencia en conflicto
-    Motor --> Admin: precio rechazado
+  create Ins
+  Cat -> Ins: «create»(código, descripción, unidad, categoría)
+  Admin -> Ins: registrarPrecio(valor, vigenteDesde)
+  create PNue
+  Ins -> PNue: «create»(valor, vigenteDesde)
+else modificar un recurso (3a)
+  Admin -> Rec: modificar(datos)
+else dar de baja un recurso (3b)
+  Admin -> Rec: darDeBaja(actor)
+  note right of Rec
+    Inactivo: no se ofrece en cargas nuevas
+    y se conserva en lo ya registrado.
+  end note
+else actualizar un precio (4a)
+  Admin -> Ins: registrarPrecio(valor, vigenteDesde)
+  Ins -> Ins: obtenerPrecioVigente(vigenteDesde)
+  Ins -> PAct: seSuperpone(vigenteDesde)
+  PAct --> Ins: superpone: lógico
+  break la vigencia se superpone con otro precio (5b)
+    Ins --> Admin: rechaza; indica la vigencia en conflicto
   end
-  Rec -> Anterior: cerrarVigencia(vigenteDesde)
-  create Precio
-  Rec -> Precio: «create»
-  Motor --> Admin: precio nuevo vigente; el anterior queda como histórico
-else Dar de baja (flujo 3b)
-  Admin -> Motor: darDeBaja(recurso)
-  Motor -> Rec: darDeBaja(usuarioId)
-  Motor --> Admin: recurso inactivo; se conserva en lo ya registrado
+  Ins -> PAct: cerrarVigencia(vigenteDesde - 1 día)
+  create PNue
+  Ins -> PNue: «create»(valor, vigenteDesde)
 end
+Ins --> Admin: recurso y precio vigente guardados con actor y fecha
 @enduml

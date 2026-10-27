@@ -1,61 +1,98 @@
 @startuml
 !theme plain
 skinparam style strictuml
+title CU-15 · Emitir presupuesto de adendas
 hide circle
-hide empty members
+hide empty methods
+hide empty fields
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
-title CU-15 · Registrar cobros y ejecutar pagos en tesorería
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+package "ECMS" {
+  class "Presupuesto de adendas" as PresupuestoAdendas {
+    --
+    + versiones(): lista de VersiónAdendas
+    + hayCambios(): lógico
+    + emitirVersión(actor): VersiónAdendas
+    + activar(versión): vacío
+  }
 
-class "Tesorería" as Tesoreria <<control>> {
-  --
-  + obtenerPendientes(obra: texto): lista de DocumentoFinanciero
-  + registrarMovimiento(documento: DocumentoFinanciero, importe: decimal, fecha: fecha, medio: texto, comprobante: archivo): MovimientoTesoreria
-  + rechazarPago(documento: DocumentoFinanciero, motivo: texto): vacío
+  class "Versión del presupuesto de adendas" as VersionAdendas {
+    número: entero
+    estado: en_edición | vigente | anterior | descartada
+    motivo: texto [0..1]
+    emitidaPor: Usuario
+    fecha: fecha y hora
+    /total: guaraníes
+    --
+    + armar(adendas): vacío
+    + corregirLínea(línea, descripción, precio, motivo): vacío
+    + validarMotivos(): lista de texto
+    + guardar(actor): vacío
+    + pasarAAnterior(): vacío
+    + cancelar(): vacío
+    + exportar(formato: XLSX | PDF): archivo
+  }
+
+  class "Línea de adenda" as LineaAdenda {
+    descripción: texto
+    precioVenta: guaraníes
+    motivoCorrección: texto [0..1]
+    --
+    + corregir(descripción, precio, motivo): guaraníes
+  }
+
+  class "Apartado Adendas" as ApartadoAdendas {
+    --
+    + adendasRegistradas(): lista de Adenda
+  }
+
+  class Adenda {
+    precioVenta: guaraníes
+    --
+    + estaCertificada(): lógico
+  }
+
+  class "Certificado de avance" as Certificado {
+    --
+    + registrarAjustePendiente(adenda, diferencia): vacío
+  }
 }
 
-class "Documento financiero" as DocumentoFinanciero {
-  + numero: texto
-  + tipo: factura_cliente | liquidacion_subcontrato
-  + obra: texto
-  + versionCertificado: entero
-  + importeTotal: decimal
-  + /saldo: decimal
-  + motivoRechazo: texto [0..1]
-  --
-  + obtenerSaldo(): decimal
-  + aplicarMovimiento(movimiento: MovimientoTesoreria): vacío
-  + registrarRechazo(motivo: texto): vacío
-}
+PresupuestoAdendas "1" *-- "0..*" VersionAdendas : versiones
+VersionAdendas "0..1" --> "0..1" VersionAdendas : anterior
+VersionAdendas "1" *-- "1..*" LineaAdenda : líneas
+LineaAdenda "0..*" --> "1" Adenda : de
+ApartadoAdendas "1" *-- "0..*" Adenda : registradas (CU-11)
+PresupuestoAdendas ..> ApartadoAdendas : toma las adendas
+LineaAdenda ..> Certificado : ajuste si ya se certificó
 
-class "Movimiento de tesorería" as MovimientoTesoreria {
-  + tipo: cobro | pago
-  + importe: decimal
-  + fecha: fecha
-  + medio: texto
-  + comprobante: archivo
-  + usuarioId: identificador
-  + aprobado: lógico
-  --
-  + aprobarYEjecutar(usuarioId: identificador): vacío
-}
-
-Tesoreria ..> DocumentoFinanciero : consulta
-Tesoreria ..> MovimientoTesoreria : <<create>>
-DocumentoFinanciero "1" *-- "0..*" MovimientoTesoreria : se cancela con
-
-note bottom of DocumentoFinanciero
-  Factura al cliente (CU-08) o liquidación a subcontratista
-  (CU-13), derivadas de una versión del certificado enviada
-  a facturar. El ERP es dueño de estos documentos (PR-06).
+note bottom of VersionAdendas
+  Documento contractual con el cliente. A diferencia del
+  presupuesto del cliente se puede editar: cada edición
+  crea una versión y conserva la anterior (RF-06, NF-05).
 end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
 @enduml

@@ -1,0 +1,64 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-09 · Actividades · Registrar contrato de subcontratista
+|Administrador|
+start
+:Elegir registrar un subcontrato en la obra;
+repeat
+  :Seleccionar el subcontratista e ingresar
+  número, fechas y archivo del contrato;
+  |ERP|
+repeat while (¿Número repetido o archivo faltante o no permitido?) is ([sí]) not ([no])
+|Administrador|
+repeat
+  :Seleccionar un ítem del alcance
+  e ingresar precio y límite;
+  |ERP|
+  :Consultar el saldo del ítem en el ECMS (RN-05);
+  if (¿El límite supera lo presupuestado?) then ([sí])
+    :Rechazar el ítem e informar el exceso;
+  elseif (¿Ya está asignado a otro contrato?) then ([sí])
+    :Informar para evitar el doble conteo;
+  else ([no])
+    :Agregar el ítem al alcance;
+  endif
+  |Administrador|
+repeat while (¿Hay más ítems?) is ([sí]) not ([no])
+:Ingresar impuestos, retenciones y fondo de reparo;
+:Confirmar el contrato;
+|ERP|
+:Guardar el contrato y su vínculo con el alcance (RF-23);
+stop
+@enduml

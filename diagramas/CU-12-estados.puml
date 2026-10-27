@@ -1,0 +1,55 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-12 · Estados de la Liquidación
+state pago <<choice>>
+state "Pendiente de pago" as pendiente_de_pago
+state "Pagada parcialmente" as pagada_parcial
+state "Pagada" as pagada
+state "Fondo de reparo devuelto" as fondo_devuelto
+
+[*] --> pendiente_de_pago : liquidar(versión, contrato, cantidades) / calcular(contrato)
+pendiente_de_pago --> pago : registrarPago(importe) [CU-14]
+pagada_parcial --> pago : registrarPago(importe) [CU-14]
+pago --> pagada_parcial : [queda saldo pendiente]
+pago --> pagada : [saldo = 0]
+pagada --> fondo_devuelto : registrarDevoluciónFondo() [recepción definitiva del contrato]
+pagada --> [*] : [sin fondo de reparo retenido]
+fondo_devuelto --> [*]
+
+note right of pendiente_de_pago
+  El pago se hace fuera de Ctrl+
+  y se registra en CU-14 (RF-30).
+end note
+@enduml

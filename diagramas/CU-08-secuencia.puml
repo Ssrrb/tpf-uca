@@ -3,70 +3,81 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
 skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
 hide footbox
-title CU-08 · Generar factura al cliente en ERP
-actor "Motor de ingeniería" as Motor <<sistema>>
-control "facturacion:\nFacturacion" as Fac
-participant "evento:\nEventoVersionEnviada" as Evento
-participant "anterior:\nFactura" as Anterior
-participant "nota:\nNotaAjuste" as Nota
-participant "ficha:\nFichaCliente" as Ficha
-participant "factura:\nFactura" as Factura
-participant "cuenta:\nCuentaACobrar" as Cuenta
+title CU-08 · Generar factura interna del certificado
 actor "Finanzas y tesorería" as Fin
-actor "Cliente" as Cliente
+box "Motor de finanzas" #EAF2F6
+participant "facturacion:\nFacturacion" as Fac
+participant "factura:\nDocumentoInterno" as Doc
+participant "legal:\nFacturaLegal" as Leg
+participant "cuenta:\nCuentaACobrar" as CxC
+end box
+box "ECMS" #EAF2F6
+participant "version:\nVersionCertificado" as V
+end box
+box "ERP" #EAF2F6
+participant "obra:\nObra" as Obra
+participant "anticipo:\nAnticipo" as Ant
+end box
 
-Motor -> Fac: recibirVersionEnviada(evento)
-Fac -> Evento: obtenerDatos()
-Evento --> Fac: obra, versión, importe, impuestos y retenciones
-Fac -> Fac: buscarFactura(obraId, claveUnica)
-alt Misma versión ya facturada (excepción)
-  Fac --> Motor: acuse de recepción; no se genera otra factura
-else Versión nueva de un certificado ya facturado (flujo 1a)
-  create Nota
-  Fac -> Nota: «create»
-  Fac -> Nota: calcularDiferencia(anterior, evento)
-  Nota --> Fac: diferencia: decimal
-  Fac -> Anterior: vincularNota(nota)
-  Fac --> Motor: acuse de recepción
-else Versión sin facturar
-  Fac -> Ficha: tieneDatosFiscales()
-  Ficha --> Fac: completos: lógico
-  create Factura
-  Fac -> Factura: «create»(evento, ficha)
-  Fac -> Factura: calcularImportes()
-  Factura --> Fac: importeTotal en PYG
-  opt Faltan datos fiscales del cliente
-    Fac -> Ficha: datoFaltante()
-    Ficha --> Fac: dato: texto
-    Fac -> Factura: marcarSinConfirmar(dato)
-  end
-  Fac --> Motor: acuse de recepción
-
-  Fin -> Fac: confirmarFactura(factura)
-  Fac -> Fac: usuarioTieneAccesoFinanzas(usuarioId)
-  break Usuario sin acceso a Finanzas en la obra
-    Fac --> Fin: impide confirmar
-  end
-  Fac -> Factura: confirmar(usuarioId)
-  create Cuenta
-  Fac -> Cuenta: «create»
-  Fac -> Cuenta: registrar(factura)
-  Fac -> Ficha: recibirFactura(factura)
-  Ficha -> Cliente: envía la factura
-  Fac --> Fin: factura confirmada y registrada como cuenta a cobrar
+Fin -> Fac: listarPendientes(obra)
+loop por cada versión guardada
+  Fac -> V: importeSinFacturar()
+  V --> Fac: importe
 end
+Fac --> Fin: versiones con importe sin facturar y anticipo sin facturar
+
+alt elige una versión del certificado (paso 3)
+  Fin -> Fac: generarFactura(version, actor)
+  Fac -> Obra: datosCliente()
+  Obra --> Fac: cliente [0..1]
+  break faltan datos del cliente (4a)
+    Fac --> Fin: informa el dato faltante; no genera la factura
+  end
+  alt neto positivo
+    create Doc
+    Fac -> Doc: «create» FacturaInterna(neto, iva de la versión)
+  else neto negativo por ajustes (3a)
+    Fac -> Doc: «create» NotaCreditoInterna(neto, iva de la versión)
+  end
+else elige el anticipo (3b, RF-32)
+  Fin -> Fac: generarFacturaAnticipo(anticipo, actor)
+  Fac -> Doc: «create» FacturaInterna(importe del anticipo)
+  Fac -> Ant: marcarFacturado()
+end
+Fac --> Fin: documento en PYG, sin validez fiscal (RF-14)
+
+alt adjunta la factura legal (paso 6)
+  Fin -> Doc: adjuntarFacturaLegal(número, fecha, importe, archivo)
+  create Leg
+  Doc -> Leg: «create»(número, fecha, importe, archivo)
+  Doc -> Doc: compararConLegal()
+  opt el importe legal difiere del interno (6b)
+    Doc --> Fin: señala la diferencia
+    Fin -> Doc: registrarMotivoDiferencia(motivo)
+  end
+else la legal todavía no se emitió (6a)
+  note over Fin, Doc
+    Confirma sin adjunto: queda pendiente de adjuntar.
+  end note
+end
+Fin -> Doc: confirmar(actor)
+create CxC
+Doc -> CxC: «create»(saldoPendiente = total)
+Doc --> Fin: cuenta a cobrar de la obra vinculada a la versión
 @enduml

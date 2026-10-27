@@ -1,0 +1,128 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title CU-01 · Gestionar obra
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+left to right direction
+
+package "ERP" {
+  class "Organización" as Organizacion {
+    nombre: texto
+    --
+    + códigoDisponible(código: texto): lógico
+    + crearObra(datos, responsables, actor): Obra
+  }
+
+  class Usuario {
+    nombre: texto
+    correo: texto
+    --
+    + obtenerMembresía(organización): Membresía [0..1]
+  }
+
+  class "Membresía" as Membresia {
+    rol: texto
+    --
+    + obtenerRol(): texto
+  }
+
+  class Cliente {
+    razónSocial: texto
+    ruc: texto
+    --
+    + estaActivo(): lógico
+  }
+
+  class Obra {
+    código: texto
+    nombre: texto
+    dirección: texto
+    fechaInicio: fecha
+    fechaFin: fecha
+    porcentajeIVA: decimal
+    límiteAdendas: decimal
+    topeCajaChica: guaraníes
+    porcentajeFondoReparo: decimal [0..1]
+    estado: EstadoObra
+    registradaPor: Usuario
+    fechaRegistro: fecha y hora
+    --
+    + validarDatos(): lista de texto
+    + definirAnticipo(modalidad, valor): Anticipo
+    + asignarResponsable(usuario, rol, permisos): Asignación
+    + avanzarEstado(actor): EstadoObra
+  }
+
+  class Anticipo {
+    modalidad: porcentaje | importe
+    valor: decimal
+  }
+
+  class "Asignación" as Asignacion {
+    rol: RolEnObra
+    permisos: lista de texto
+    fechaAsignación: fecha y hora
+  }
+
+  class "Cambio de estado" as CambioEstado {
+    desde: EstadoObra
+    hasta: EstadoObra
+    actor: Usuario
+    fecha: fecha y hora
+  }
+
+  enum EstadoObra {
+    en_ejecucion
+    recepcion_provisoria
+    recepcion_definitiva
+    cerrada
+  }
+
+  enum RolEnObra {
+    ingeniero_de_obra
+    finanzas_y_tesoreria
+  }
+}
+
+Organizacion "1" *-- "0..*" Obra : tiene
+Membresia "0..*" --> "1" Usuario : corresponde a
+Membresia "0..*" --> "1" Organizacion : pertenece a
+Obra "0..*" --> "1" Cliente : contratada por
+Obra "1" *-- "0..1" Anticipo : configura
+Obra "1" *-- "0..*" Asignacion : responsables
+Asignacion "0..*" --> "1" Usuario : asigna a
+Obra "1" *-- "0..*" CambioEstado : historial
+
+note bottom of Obra
+  Código único por organización (5a).
+  El estado solo avanza (RF-33, RN-12).
+end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida (navegable hacia la clase apuntada).
+  Rombo relleno = composición: la parte no existe sin el todo.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
+@enduml

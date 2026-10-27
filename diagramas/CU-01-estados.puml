@@ -1,0 +1,59 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-01 · Estados de la Obra
+state "En ejecución" as en_ejecucion
+state "Recepción provisoria" as recepcion_provisoria
+state "Recepción definitiva" as recepcion_definitiva
+state "Cerrada" as cerrada
+
+en_ejecucion : mediciones y certificados: sí
+en_ejecucion : adendas, gastos, facturas, cobros y pagos: sí
+recepcion_provisoria : mediciones y certificados: no
+recepcion_provisoria : adendas, gastos, facturas, cobros y pagos: sí
+recepcion_definitiva : adendas, gastos, facturas, cobros y pagos: sí
+recepcion_definitiva : devolución del fondo de reparo: sí
+cerrada : solo consultas
+
+[*] --> en_ejecucion : crearObra(datos, responsables, actor) / registrar actor y fecha
+en_ejecucion --> recepcion_provisoria : avanzarEstado(actor)
+recepcion_provisoria --> recepcion_definitiva : avanzarEstado(actor)
+recepcion_definitiva --> cerrada : avanzarEstado(actor)
+cerrada --> [*]
+
+note right of cerrada
+  Los estados solo avanzan (RF-33, RN-12).
+  Cada cambio queda con actor y fecha.
+end note
+@enduml

@@ -18,77 +18,60 @@ skinparam swimlane {
   BorderColor #17324D
   TitleBackgroundColor #EAF2F6
 }
-title CU-06 · Actividades · Generar certificación y costo del rubro
-
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-06 · Actividades · Generar versión del certificado de avance
 |Ingeniero de obra|
 start
-:Seleccionar la obra;
-if (¿Generar desde la última versión?) then ([sí])
-  |Motor de ingeniería|
-  :Crear una versión nueva del certificado de la obra
-  a partir de la última, con sus líneas;
-else ([no])
-  |Motor de ingeniería|
-  :Crear una versión nueva del certificado
-  de la obra desde cero;
-endif
-:Buscar mediciones registradas hasta la fecha
-que no figuran en el certificado de la obra;
-if (¿Hay mediciones sin certificar?) then ([no])
-  :Informar que no hay mediciones para certificar;
+:Seleccionar la obra y generar la versión siguiente;
+|ECMS|
+if (¿La obra está en ejecución?) then ([no])
+  :Informar que no se generan versiones;
   stop
 else ([sí])
 endif
-:Tomar las cantidades certificables, propias y subcontratadas
-(excluir las propuestas de exceso pendientes);
-
-fork
-  :Valorizar cada ítem con cantidad certificable
-  por precio de venta vigente
-  (presupuesto de costos y adendas registradas);
-  if (¿Ítem sin precio de venta o sin movimiento vigente?) then ([sí])
-    :Señalar el ítem con su dato de origen
-    e impedir continuar;
-    stop
-  else ([no])
-  endif
-  :Aplicar impuestos y fondos de retención
-  según la configuración de la obra;
-fork again
-  :Calcular el costo del avance por rubro e ítem
-  (materiales, mano de obra y equipos);
-  if (¿Insumo sin precio vigente en el catálogo?) then ([sí])
-    :Informar el insumo y no calcular
-    el costo de ese rubro;
-  else ([no])
-    :Comparar el costo del avance con la versión
-    vigente del presupuesto de costos;
-  endif
-end fork
-
-:Señalar excesos, mediciones faltantes,
-precios sin movimiento vigente y diferencias de totales;
-
 |Ingeniero de obra|
-:Revisar el certificado, el costo por rubro
-y los señalamientos;
-
-|Motor de ingeniería|
-:Guardar la versión con sus respaldos
-(no modifica el presupuesto del cliente);
-
-note right
-  Queda como última versión, modificable
-  con una versión nueva. El certificado no tiene estados.
-end note
-
+if (¿Hay un error en una versión guardada?) then ([sí])
+  :Agregar líneas de ajuste con motivo,
+  vinculadas a la versión que corrigen (RN-06);
+else ([no])
+endif
+|ECMS|
+:Tomar las cantidades medidas no certificadas,
+los ajustes y lo cubierto por adendas;
+:Excluir lo que supera el saldo contractual sin adenda;
+:Valorizar con el precio del presupuesto
+del cliente o del de adendas (RF-13);
+if (¿Algún ítem no tiene precio unitario?) then ([sí])
+  :Señalarlo con su dato de origen
+  e impedir confirmar hasta corregirlo;
+  stop
+else ([no])
+endif
+:Calcular bruto, amortización del anticipo,
+fondo de reparo, neto e IVA (RN-08);
+:Señalar excesos, faltantes, precios sin movimiento,
+diferencias y mayores costos (RF-15);
 |Ingeniero de obra|
-if (¿Enviar a facturar?) then ([sí])
-  :Enviar a facturar la versión (CU-07);
-  :El ERP genera la factura al cliente (CU-08);
-  note right
-    El pago al subcontratista lo registra el ERP.
-  end note
+:Revisar la versión y los señalamientos;
+:Confirmar;
+|ECMS|
+:Guardar la versión con sus respaldos y vínculos;
+|Ingeniero de obra|
+if (¿Exportar?) then ([sí])
+  :Exportar como XLSX o PDF de uso interno;
 else ([no])
 endif
 stop

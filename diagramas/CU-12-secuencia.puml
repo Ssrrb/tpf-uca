@@ -3,87 +3,84 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
 hide footbox
-title CU-12 · Incorporar adenda al presupuesto de costos y liberar saldos
-actor "Ingeniero de obra" as Ingeniero
-control "motor:\nMotorIngenieria" as Motor
-participant "obra:\nObra" as Obra
-participant "adenda:\nAdenda" as Adenda
-participant "movimiento:\nMovimientoAdenda" as Movimiento
-participant "vigente:\nVersionPresupuestoCostos" as Vigente
-participant "nueva:\nVersionPresupuestoCostos" as Nueva
-participant "item:\nItemPresupuesto" as Item
-participant "medicion:\nMedicionAvance" as Medicion
-actor "Sistema ERP" as ERP <<sistema>>
+title CU-12 · Liquidar subcontratista
+actor "Ingeniero de obra" as Ing
+box "ECMS" #EAF2F6
+participant "version:\nVersionCertificado" as V
+participant "linea:\nLineaCertificado" as Lin
+end box
+box "ERP" #EAF2F6
+participant "contrato:\nContrato" as Con
+participant "retencion:\nRetencion" as Ret
+end box
+box "Motor de finanzas" #EAF2F6
+participant "liquidaciones:\nLiquidaciones" as Mot
+participant "liquidacion:\nLiquidacion" as Liq
+end box
 
-Ingeniero -> Motor: obtenerAdendasRegistradas(obra)
-Motor -> Obra: obtenerAdendasRegistradas()
-Obra --> Motor: adendas: lista de Adenda
-Motor --> Ingeniero: adendas registradas sin incorporar
-
-Ingeniero -> Motor: verResumen(adenda)
-Motor -> Adenda: obtenerMovimientos()
-Adenda --> Motor: movimientos: lista de MovimientoAdenda
-loop Por cada movimiento
-  Motor -> Movimiento: calcularEfecto()
-  Movimiento --> Motor: efecto, límite, utilizado y saldo
-end
-Motor --> Ingeniero: rubros e ítems afectados con su efecto (RF-20)
-
-Ingeniero -> Motor: incorporarAdenda(obra, adenda)
-Motor -> Adenda: validar()
-Adenda --> Motor: válida: lógico
-alt Datos incompletos o exceso sin excepción registrada
-  Motor --> Ingeniero: informa los datos faltantes e impide incorporar (RF-20)
-else Adenda válida
-  Motor -> Obra: obtenerPresupuestoCostosVigente()
-  Obra --> Motor: vigente: VersionPresupuestoCostos
-  Motor -> Vigente: crearVersionNueva(adenda)
-  create Nueva
-  Vigente -> Nueva: «create» (copia de ítems, versión anterior)
-  loop Por cada movimiento de la adenda
-    Nueva -> Item: aplicarMovimiento(movimiento)
-  end
-  Vigente --> Motor: nueva: VersionPresupuestoCostos
-
-  Motor -> ERP: calcularCostoAdenda(adenda, nueva)
-  alt El ERP no devuelve el costo
-    ERP --> Motor: error
-    Motor --> Ingeniero: no se crea la versión, sigue la vigente; puede reintentar
-  else Costo calculado
-    ERP --> Motor: costo: decimal
-    Motor -> Adenda: registrarCosto(costo)
-
-    loop Por cada ítem ampliado
-      Motor -> Item: calcularSaldoDisponible()
-      Item --> Motor: saldo: decimal
-      Motor -> Obra: obtenerMedicionesConExceso(item)
-      Obra --> Motor: mediciones: lista de MedicionAvance
-      loop Por cada medición con exceso, mientras haya saldo
-        Motor -> Medicion: liberarExceso(saldo)
-        Medicion --> Motor: cantidadLiberada: decimal
-        note right of Motor
-          saldo = saldo - cantidadLiberada
-        end note
-      end
+Ing -> V: líneasSubcontratadasPorContrato()
+V --> Ing: ítems subcontratados sin liquidar, agrupados por contrato
+loop por cada contrato de la versión (3a)
+  loop por cada línea del contrato
+    Ing -> Con: valorizar(ítem, cantidad)
+    Con --> Ing: importe al precio del contrato (RF-25)
+    V -> Lin: estaLiquidada()
+    Lin --> V: liquidada: lógico
+    opt ya se liquidó en otra versión (4a, RF-10)
+      V --> Ing: la excluye e informa en cuál
     end
-    note right of Medicion
-      Lo liberado entra en la próxima versión
-      del certificado (CU-06, RF-22). Lo que la
-      adenda no cubre sigue pendiente (RF-09).
-    end note
-
-    Motor -> Nueva: activar(usuarioId)
-    Nueva --> Motor: activada
-    Motor --> Ingeniero: versión vigente nueva y cantidades liberadas
+  end
+  V -> Con: excedeLímite(importe)
+  Con --> V: excede: lógico
+  break supera el límite del contrato (4b)
+    V --> Ing: impide enviar ese contrato (vuelve al paso 3)
+  end
+  alt confirma el envío (paso 5)
+    Ing -> V: enviarALiquidar(contrato, actor)
+    V -> Mot: liquidar(version, contrato, cantidades)
+    Mot -> Mot: buscar(version, contrato)
+    alt ya existe (reintento, NF-03)
+      Mot --> V: número de la liquidación existente
+    else no existe
+      create Liq
+      Mot -> Liq: «create»(version, contrato, cantidades)
+      Mot -> Liq: calcular(contrato)
+      Liq -> Con: valorizar(ítem, cantidad)
+      loop por cada retención del contrato
+        Liq -> Ret: aplicar(base)
+        Ret --> Liq: importe retenido
+      end
+      note right of Liq
+        Aplica fondo de reparo, deducciones e
+        impuestos del contrato; queda pendiente de pago.
+      end note
+      Mot --> V: número de la liquidación
+    end
+    break falla el registro en el Motor de finanzas (7a)
+      V --> Ing: no se marca ninguna cantidad; el CU termina
+    end
+    loop por cada línea enviada
+      V -> Lin: marcarLiquidada(liquidacion)
+    end
+    V --> Ing: liquidación pendiente de pago (CU-14)
+  else no confirma (5a)
+    V --> Ing: no se envía nada; las cantidades quedan sin liquidar
   end
 end
 @enduml

@@ -32,20 +32,21 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-15 · Estados del Documento financiero
-[*] --> pendiente : factura confirmada (CU-08)\no liquidación registrada (CU-13)
-pendiente --> parcial : aplicarMovimiento(movimiento)\n[importe < saldo]
-parcial --> parcial : aplicarMovimiento(movimiento)\n[importe < saldo]
-pendiente --> saldado : aplicarMovimiento(movimiento)\n[importe = saldo]
-parcial --> saldado : aplicarMovimiento(movimiento)\n[importe = saldo]
-pendiente --> pendiente : registrarRechazo(motivo)\n[pago a subcontratista rechazado]
-saldado --> [*]
-note right of pendiente
-  Un importe mayor al saldo no se registra.
-  Sin comprobante no se puede guardar.
-end note
-note right of saldado
-  El ERP publica el saldo nuevo para el tablero
-  (CU-14) y el portal del subcontratista.
+title CU-15 · Estados de la Versión del presupuesto de adendas
+state "En edición" as en_edicion
+state "Vigente" as vigente
+state "Anterior" as anterior
+state "Descartada" as descartada
+
+[*] --> en_edicion : emitirVersión(actor) / armar(adendas)
+en_edicion --> en_edicion : corregirLínea(línea, descripción, precio, motivo)
+en_edicion --> vigente : guardar(actor) [motivos completos] / activar(versión)
+en_edicion --> descartada : cancelar()
+vigente --> anterior : activar(otra versión) / pasarAAnterior()
+anterior --> [*]
+descartada --> [*]
+
+note right of anterior
+  Sigue consultable y exportable (2a).
 end note
 @enduml

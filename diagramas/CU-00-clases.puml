@@ -1,0 +1,139 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Modelo de dominio · Ctrl+
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide methods
+skinparam nodesep 35
+skinparam ranksep 60
+
+package "ERP" {
+  class "Organización" as Organizacion
+  class Usuario
+  class "Asignación" as Asignacion {
+    rol
+    permisos
+  }
+  class Obra {
+    estado
+    límiteAdendas
+    topeCajaChica
+  }
+  class Cliente
+  class Anticipo
+  class Insumo
+  class Proveedor
+  class Contrato
+  class "Ítem del contrato" as ItemContrato {
+    cantidad
+    precio
+    límite
+  }
+}
+
+package "ECMS" {
+  class "Presupuesto del cliente" as PresupuestoCliente
+  class "Ítem del cliente" as ItemCliente {
+    cantidad
+    precio unitario
+  }
+  class "Versión del presupuesto de costos" as VersionCostos {
+    estado
+  }
+  class Rubro
+  class "Ítem" as Item {
+    código estable
+  }
+  class "Apartado Adendas" as ApartadoAdendas
+  class Adenda
+  class "Versión del presupuesto de adendas" as VersionAdendas
+  class "Medición" as Medicion
+  class "Medición de ajuste" as MedicionAjuste
+  class "Versión del certificado" as VersionCertificado
+  class "Línea del certificado" as LineaCertificado {
+    tipo: cantidad | precio | ajuste
+  }
+}
+
+package "Motor de finanzas" {
+  class Gasto
+  class "Factura interna" as FacturaInterna
+  class "Liquidación" as Liquidacion
+  class Cobro
+  class Pago
+}
+
+Organizacion "1" *-- "0..*" Obra : tiene
+Organizacion "1" o-- "0..*" Usuario : tiene
+Usuario "1" -- "0..*" Asignacion
+Asignacion "0..*" -- "1" Obra
+Obra "0..*" --> "1" Cliente
+Obra "1" *-- "0..1" Anticipo
+
+Obra "1" *-- "0..1" PresupuestoCliente
+Obra "1" *-- "0..*" VersionCostos : una vigente
+Obra "1" *-- "1" ApartadoAdendas
+Obra "1" *-- "0..*" VersionAdendas
+VersionCostos "1" *-- "1..*" Rubro
+Rubro "1" *-- "0..*" Item
+PresupuestoCliente "1" *-- "1..*" ItemCliente
+Item "0..*" --> "0..1" ItemCliente : código estable (RN-02)
+
+Obra "1" -- "0..*" Adenda
+ApartadoAdendas "1" o-- "0..*" Adenda
+Adenda "0..*" --> "0..1" Item : modifica o crea
+VersionAdendas "0..*" o-- "0..*" Adenda : incluye
+
+Medicion "0..*" --> "1" Item : pertenece a
+Medicion "0..*" --> "0..1" Contrato : si es subcontratada
+Medicion <|-- MedicionAjuste
+MedicionAjuste "0..*" --> "1" Medicion : original
+
+VersionCertificado "1" *-- "1..*" LineaCertificado
+LineaCertificado "0..1" --> "0..*" Medicion : certifica
+
+Contrato "0..*" --> "1" Proveedor : subcontratista
+Contrato "1" *-- "1..*" ItemContrato
+ItemContrato "0..*" --> "1" Item
+
+Liquidacion "0..*" --> "1" Contrato
+Liquidacion "0..*" --> "1" VersionCertificado
+Gasto "0..*" --> "1" Rubro : imputado a
+Gasto "0..*" --> "0..1" Insumo : compra de materiales
+FacturaInterna "0..*" --> "0..1" VersionCertificado
+FacturaInterna "0..1" --> "0..1" Anticipo
+Cobro "0..*" --> "1" FacturaInterna : cancela
+Pago "0..*" --> "1" Liquidacion : cancela
+
+note bottom of Liquidacion
+  Única por versión del certificado y contrato (RN-11).
+end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
+@enduml

@@ -32,14 +32,23 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-03 · Estados de la Versión de presupuesto al activarse
-[*] --> disponible : publicada en CU-02
-disponible --> vigente : activar(usuarioId)\n[usuario con permiso y versión validada]
-disponible --> disponible : activar(usuarioId)\n[falla o cancelación] / sin cambios
-vigente --> historica : pasarAHistorica()\n[se activa una versión nueva]
+title CU-03 · Estados de la Versión del presupuesto de costos
+state "Propuesta" as propuesta
+state "Vigente" as vigente
+state "Histórica" as historica
+state "Descartada" as descartada
+
+[*] --> propuesta : crearPrimeraVersión() o crearVersiónCorrectiva(motivo)
+propuesta --> propuesta : completarÍtem(ítem, ejecutor, acu)
+propuesta --> vigente : activar(versión, actor) [datos válidos] / marcarVigente(actor)
+propuesta --> descartada : cancelar()
+vigente --> vigente : completarÍtem(ítem, ejecutor, acu) [ítem no certificado]
+vigente --> historica : activar(otra versión) / pasarAHistórica()
 historica --> [*]
+descartada --> [*]
+
 note right of historica
-  Sigue consultable con su archivo
-  original y sus respaldos (NF-05).
+  Sigue consultable con los certificados
+  que la usaron (NF-05).
 end note
 @enduml

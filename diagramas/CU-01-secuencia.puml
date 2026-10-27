@@ -3,64 +3,85 @@
 skinparam style strictuml
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 16
+skinparam defaultFontSize 15
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 210
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 8
+skinparam BoxPadding 6
 skinparam ParticipantBackgroundColor #F5F8FA
 skinparam ParticipantBorderColor #17324D
 skinparam ActorBorderColor #17324D
 skinparam ActorBackgroundColor #F5F8FA
 skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
 skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
 hide footbox
-title CU-01 · Crear obra y asignar responsables
+title CU-01 · Gestionar obra
 actor "Administrador" as Admin
+box "ERP" #EAF2F6
 participant "organizacion:\nOrganizacion" as Org
 participant "usuario:\nUsuario" as Usr
 participant "membresia:\nMembresia" as Memb
+participant "cliente:\nCliente" as Cli
 participant "obra:\nObra" as Obra
+participant "anticipo:\nAnticipo" as Ant
 participant "asignacion:\nAsignacion" as Asig
+participant "cambio:\nCambioEstado" as Cambio
+end box
 
-Admin -> Org: crearObra(datos, creador)
+Admin -> Org: crearObra(datos, responsables, actor)
 Org -> Usr: obtenerMembresía(organizacion)
-Usr --> Org: membresia [opcional]
+Usr --> Org: membresia [0..1]
 Org -> Memb: obtenerRol()
-Memb --> Org: rol: texto
-break Sin membresía o rol distinto de admin
+Memb --> Org: rol
+break rol distinto de Administrador
   Org --> Admin: operación denegada (NF-01)
 end
 Org -> Org: códigoDisponible(codigo)
-break Código ya en uso
-  Org --> Admin: pide registrar otro código
+break código ya en uso (5a)
+  Org --> Admin: pide otro código (vuelve al paso 2)
 end
+Org -> Cli: estaActivo()
+Cli --> Org: activo: lógico
 create Obra
-Org -> Obra: «create»(datos, creador)
+Org -> Obra: «create»(datos, cliente, actor)
 Org -> Obra: validarDatos()
-Obra --> Org: válidos: lógico
-break Datos inválidos
+Obra --> Org: errores
+break datos obligatorios faltantes o inválidos
   Org --> Admin: muestra los errores; no se crea la obra
 end
-Org --> Admin: obra: Obra
-
-loop Por cada responsable seleccionado
-  Admin -> Obra: asignarResponsable(usuario, registradoPor)
+opt anticipo configurado (RF-32)
+  Org -> Obra: definirAnticipo(modalidad, valor)
+  create Ant
+  Obra -> Ant: «create»(modalidad, valor)
+end
+loop por cada responsable seleccionado
+  Org -> Obra: asignarResponsable(usuario, rol, permisos)
   Obra -> Usr: obtenerMembresía(organizacion)
-  Usr --> Obra: membresia [opcional]
-  alt Responsable ajeno a la organización
-    Obra --> Admin: rechaza la asignación
-  else Miembro de la organización
+  Usr --> Obra: membresia [0..1]
+  alt responsable ajeno a la organización (5b)
+    Obra --> Admin: rechaza la asignación (vuelve al paso 3)
+  else miembro de la organización
     create Asig
-    Obra -> Asig: «create»(usuario, fechaAsignacion)
-    Obra --> Admin: asignacion: Asignacion
+    Obra -> Asig: «create»(usuario, rol, permisos)
   end
 end
-note over Admin, Asig
-  La creación es atómica: si se cancela o falla,
+Org --> Admin: obra registrada en ejecución, con actor y fecha
+
+== *a Avanzar el estado de una obra existente ==
+Admin -> Obra: avanzarEstado(actor)
+break la obra está cerrada
+  Obra --> Admin: no hay estado siguiente; no se vuelve atrás
+end
+create Cambio
+Obra -> Cambio: «create»(desde, hasta, actor, fecha)
+Obra --> Admin: estado nuevo (RF-33, RN-12)
+
+note over Admin, Cambio
+  La creación es atómica (NF-03): si falla o se cancela,
   no se crea la obra ni se asigna ningún responsable.
-  Quedan registrados el creador y la fecha (NF-04).
 end note
 @enduml
