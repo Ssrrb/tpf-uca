@@ -93,12 +93,12 @@ Ing -> V: cerrarCantidades(actor)
 V --> Ing: versión con avance anterior, de la versión\ny acumulado, lista para el cálculo (RF-12, CU-06)
 
 == *a Anular o ajustar una medición ==
-Ing -> Med: estaCertificada()
-Med --> Ing: certificada: lógico
-alt no certificada
+Ing -> Med: puedeAnularse()
+Med --> Ing: registrada o retenida: lógico
+alt registrada o retenida (todavía no está en una versión)
   Ing -> Med: anular(motivo, actor)
   Med -> Saldo: revertirMedición(cantidad)
-else certificada (RF-07)
+else incluida en una versión o certificada (RF-07)
   Ing -> Med: registrarAjuste(cantidad, motivo, actor)
   create Aj
   Med -> Aj: «create»(original, cantidad, motivo)

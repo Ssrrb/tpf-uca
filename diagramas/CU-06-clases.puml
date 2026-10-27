@@ -112,8 +112,8 @@ package "ERP" {
 
   class "Consumo registrado" as ConsumoRegistrado {
     cantidad: decimal
-    precio: guaraníes
-    /importe: guaraníes
+    precio: guaraníes [0..1]
+    /importe: guaraníes [0..1]
     fecha: fecha y hora
   }
 }

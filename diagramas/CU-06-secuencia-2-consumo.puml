@@ -43,7 +43,8 @@ loop por cada medición incluida en la versión
     alt tiene precio vigente
       Calc -> Cons: prepararConsumo(insumo, cantidad, precio, medición)
     else sin precio vigente (4a)
-      Calc --> Ing: señala el insumo; su consumo no se valoriza
+      Calc -> Cons: prepararConsumo(insumo, cantidad, sin precio, medición)
+      Calc --> Ing: señala el insumo; su consumo se registra sin valorizar
     end
   end
 end

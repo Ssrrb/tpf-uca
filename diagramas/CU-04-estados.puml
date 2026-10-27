@@ -50,12 +50,14 @@ registrada --> anulada : anular(motivo, actor)
 retenida --> anulada : anular(motivo, actor)
 registrada --> incluida : incluirEn(versión)
 incluida --> certificada : guardar(actor) [CU-06]
+incluida --> incluida : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
 certificada --> certificada : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
 anulada --> [*]
 certificada --> [*]
 
 note right of certificada
-  No se anula: se corrige con
-  una medición de ajuste (RF-07).
+  Incluida o certificada no se anula:
+  se corrige con una medición de
+  ajuste (RF-07).
 end note
 @enduml
