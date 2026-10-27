@@ -17,6 +17,29 @@ def de_archivo(srcs, archivo):
     return any(s.rsplit(':', 1)[0].endswith(archivo) for s in srcs)
 
 
+def guardas(flujos):
+    """Normaliza las guardas para VP: [sí]/[no] y nunca else.
+
+    El else pasa a [no] si la otra rama de la decisión es [sí]; si la otra
+    rama no es una respuesta sí/no (p. ej. "¿Qué registra?"), pasa a [otro].
+    """
+    def limpia(g):
+        g = g.strip().strip('[]').strip()
+        return {'si': 'sí', 'sí': 'sí', 'no': 'no'}.get(g.lower(), g)
+    salida = []
+    for f in flujos:
+        g = f.get('guarda')
+        if g and g.strip().lower() in ('else', '[else]'):
+            hermanas = [limpia(h['guarda']) for h in flujos
+                        if h is not f and h['from'] == f['from'] and h.get('guarda')
+                        and h['guarda'].strip().lower() not in ('else', '[else]')]
+            g = '[no]' if hermanas and all(h == 'sí' for h in hermanas) else '[otro]'
+        elif g:
+            g = '[' + limpia(g) + ']'
+        salida.append({'de': f['from'], 'a': f['to'], 'guarda': g})
+    return salida
+
+
 def items(lista):
     out = []
     for it in lista:
@@ -63,7 +86,7 @@ def main(argv):
         acts = [{'nombre': a['name'], 'titulo': a.get('titulo'), 'particiones': a['particiones'],
                  'nodos': [{'id': n['id'], 'tipo': n['kind'], 'nombre': n.get('name'), 'particion': n.get('particion')}
                            for n in a['nodos']],
-                 'flujos': [{'de': f['from'], 'a': f['to'], 'guarda': f.get('guarda')} for f in a['flujos']]}
+                 'flujos': guardas(a['flujos'])}
                 for a in d['actividades'] if a['cu'] == cu]
         datos['cus'].append({'cu': cu, 'clases': clases, 'relaciones': rels, 'secuencias': secs,
                              'actividades': acts})
