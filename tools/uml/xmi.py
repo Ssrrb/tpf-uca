@@ -326,8 +326,9 @@ class Generador:
         self.items(e, e, inter['items'], ll_el, base)
         for alias, l in ll_el.items():
             frags = self.cubre.get(alias, [])
-            if frags:
-                l.set('coveredBy', ' '.join(frags))
+            # Como hijos con xmi:idref: así lo exporta VP y así lo lee al importar.
+            for f in frags:
+                ET.SubElement(l, 'coveredBy', {f'{X}idref': f})
         e.set('_inter', inter['name'])
 
     def items(self, inter, contenedor, items, ll_el, base):
