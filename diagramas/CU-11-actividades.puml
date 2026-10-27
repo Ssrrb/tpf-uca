@@ -44,8 +44,8 @@ if (¿Registra una adenda?) then ([no, queda como mayor costo])
   stop
 else ([sí])
 endif
-if (¿Qué registra?) then ([exceso o cambio de un ítem])
-  :Elegir el ítem, el tipo, la cantidad,
+if (¿Qué registra?) then ([exceso de cantidad de un ítem])
+  :Elegir el ítem con exceso y cargar la cantidad,
   el precio de venta y el costo;
 elseif (¿Es un trabajo que no existe?) then ([ítem nuevo])
   :Ingresar rubro, descripción, unidad,
@@ -71,7 +71,7 @@ if (¿Es ampliación de plazo?) then ([sí])
   :Actualizar la fecha de fin vigente de la obra;
 else ([no])
   :Sumar la cantidad al saldo contractual
-  y liberar la cantidad retenida (RN-04);
+  y liberar la cantidad retenida (RF-10);
 endif
 stop
 @enduml

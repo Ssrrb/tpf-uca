@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-02 · Crear y validar el presupuesto del cliente
+title CU-02 · Cargar el presupuesto del cliente
 hide circle
 hide empty methods
 hide empty fields
@@ -31,16 +31,10 @@ package "ECMS" {
     nombre: texto
     --
     + crearPresupuestoCliente(actor): PresupuestoCliente
-    + vincularPresupuestoCliente(presupuesto): vacío
   }
 
   class "Presupuesto del cliente" as PresupuestoCliente {
     estado: EstadoPresupuestoCliente
-    totalDeclarado: guaraníes [0..1]
-    totalRecalculado: guaraníes
-    /diferenciaTotal: guaraníes [0..1]
-    finalizadoPor: Usuario [0..1]
-    fechaFinalización: fecha y hora [0..1]
     --
     + cargarArchivo(archivo): vacío
     + esArchivoRepetido(huella: texto): lógico
@@ -48,10 +42,6 @@ package "ECMS" {
     + agregarRubro(código, descripción): Rubro
     + identificarEstructura(): lógico
     + confirmarEstructura(): vacío
-    + validarDatos(): Informe de importación
-    + recalcularTotales(): guaraníes
-    + compararTotales(): Informe de importación
-    + finalizar(actor): vacío
   }
 
   class "Archivo original" as ArchivoOriginal {
@@ -68,24 +58,19 @@ package "ECMS" {
     origen: detectada | manual
     --
     + definirColumna(índice, campo): Columna
-    + validarFilas(informe): vacío
   }
 
   class Columna {
     encabezado: texto
     campoDestino: texto
     obligatoria: lógico
-    --
-    + validarValor(valor: texto): lógico
   }
 
   class Rubro {
     código: texto
     descripción: texto
-    totalDeclarado: guaraníes [0..1]
     --
     + agregarÍtem(código, descripción, unidad, cantidad, precio): Ítem
-    + recalcularTotal(): guaraníes
   }
 
   class "Ítem" as Item {
@@ -94,18 +79,6 @@ package "ECMS" {
     unidad: texto
     cantidad: decimal
     precioUnitario: guaraníes
-    /total: guaraníes
-    --
-    + recalcularTotal(): guaraníes
-  }
-
-  class "Informe de importación" as InformeImportacion {
-    fecha: fecha y hora
-    diferenciasAceptadas: lógico
-    --
-    + registrarError(hoja, fila, columna, motivo): vacío
-    + registrarDiferencia(rubro, declarado, recalculado): vacío
-    + aceptarDiferencias(): vacío
   }
 
   enum EstadoPresupuestoCliente {
@@ -120,12 +93,11 @@ PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
 Hoja "1" *-- "1..*" Columna : define
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
 Rubro "1" *-- "1..*" Item : agrupa
-PresupuestoCliente "1" *-- "0..*" InformeImportacion : informes de carga
 Item "0..*" --> "0..1" Hoja : fila de origen
 
 note bottom of PresupuestoCliente
-  Finalizado queda inmutable (RN-01): los cambios van
-  por el presupuesto de costos (CU-03) o por adendas (CU-11).
+  Queda en propuesta, lista para validar
+  y finalizar (CU-16).
   Mismo XLSX sin cambios: no se crea otra carga (NF-07).
 end note
 

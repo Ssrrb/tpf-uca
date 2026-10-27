@@ -78,7 +78,7 @@ break la obra está cerrada
 end
 create Cambio
 Obra -> Cambio: «create»(desde, hasta, actor, fecha)
-Obra --> Admin: estado nuevo (RF-33, RN-12)
+Obra --> Admin: estado nuevo (RF-33)
 
 note over Admin, Cambio
   La creación es atómica (NF-03): si falla o se cancela,

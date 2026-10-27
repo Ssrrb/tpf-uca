@@ -1,0 +1,110 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title CU-16 · Validar y finalizar el presupuesto del cliente
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+package "ECMS" {
+  class Obra {
+    código: texto
+    --
+    + vincularPresupuestoCliente(presupuesto): vacío
+  }
+
+  class "Presupuesto del cliente" as PresupuestoCliente {
+    estado: EstadoPresupuestoCliente
+    totalDeclarado: guaraníes [0..1]
+    totalRecalculado: guaraníes
+    /diferenciaTotal: guaraníes [0..1]
+    finalizadoPor: Usuario [0..1]
+    fechaFinalización: fecha y hora [0..1]
+    --
+    + validarDatos(): Informe de importación
+    + recalcularTotales(): guaraníes
+    + compararTotales(): Informe de importación
+    + finalizar(actor): vacío
+  }
+
+  class Hoja {
+    nombre: texto
+    --
+    + validarFilas(informe): vacío
+  }
+
+  class Columna {
+    campoDestino: texto
+    obligatoria: lógico
+    --
+    + validarValor(valor: texto): lógico
+  }
+
+  class Rubro {
+    código: texto
+    totalDeclarado: guaraníes [0..1]
+    --
+    + recalcularTotal(): guaraníes
+  }
+
+  class "Ítem" as Item {
+    código: texto
+    cantidad: decimal
+    precioUnitario: guaraníes
+    /total: guaraníes
+    --
+    + recalcularTotal(): guaraníes
+  }
+
+  class "Informe de importación" as InformeImportacion {
+    fecha: fecha y hora
+    diferenciasAceptadas: lógico
+    --
+    + registrarError(hoja, fila, columna, motivo): vacío
+    + registrarDiferencia(rubro, declarado, recalculado): vacío
+    + aceptarDiferencias(): vacío
+  }
+
+  enum EstadoPresupuestoCliente {
+    propuesta
+    finalizado
+  }
+}
+
+Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
+PresupuestoCliente "1" *-- "0..*" Hoja : estructura
+Hoja "1" *-- "1..*" Columna : define
+PresupuestoCliente "1" *-- "1..*" Rubro : contiene
+Rubro "1" *-- "1..*" Item : agrupa
+PresupuestoCliente "1" *-- "0..*" InformeImportacion : informes
+
+note bottom of PresupuestoCliente
+  Finalizado no se modifica (RF-04): los cambios van
+  por el presupuesto de costos (CU-03) o por adendas (CU-11).
+end note
+
+legend bottom
+  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
+  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
+  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
+endlegend
+@enduml

@@ -78,8 +78,6 @@ package "ECMS" {
 
   enum TipoAdenda {
     ampliación
-    deducción
-    variación_de_precio
     ítem_nuevo
     ampliación_de_plazo
   }
@@ -105,8 +103,8 @@ ApartadoAdendas "0..*" --> "1" Obra : de la obra
 
 note bottom of Adenda
   No modifica la versión vigente del presupuesto
-  de costos (RN-03). Suma al saldo contractual
-  del ítem (RN-04). Sin adenda, el rubro queda
+  de costos (RF-21). Suma al saldo contractual
+  del ítem (RF-10). Sin adenda, el rubro queda
   en negativo como mayor costo.
 end note
 

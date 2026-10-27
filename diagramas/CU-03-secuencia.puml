@@ -60,7 +60,7 @@ else corregir un error o reflejar un retrabajo (3b)
   PC -> V: «create»(estado = propuesta, anterior, motivo)
   note right of V
     Los rubros e ítems conservan su código
-    y lo ya registrado sigue vinculado (RN-02).
+    y lo ya registrado sigue vinculado (RF-05).
   end note
 end
 

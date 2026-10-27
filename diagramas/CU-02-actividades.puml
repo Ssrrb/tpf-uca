@@ -1,0 +1,63 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-02 · Actividades · Cargar el presupuesto del cliente
+|Ingeniero de obra|
+start
+:Seleccionar la obra;
+if (¿Tiene el XLSX del cliente?) then ([sí])
+  :Cargar el archivo XLSX;
+  |ECMS|
+  if (¿Es un XLSX válido y no repetido?) then ([no])
+    :Rechazar la carga e informar el motivo;
+    stop
+  else ([sí])
+  endif
+  :Guardar el archivo sin modificarlo
+  y registrar el presupuesto en propuesta (RF-02);
+  if (¿Identifica la estructura?) then ([sí])
+    :Presentar hojas, columnas, rubros e ítems (RF-03);
+  else ([no])
+    |Ingeniero de obra|
+    :Definir hojas y columnas a mano;
+  endif
+else ([no])
+  :Cargar rubros e ítems en el sistema;
+endif
+|Ingeniero de obra|
+:Confirmar la estructura, los rubros y las unidades;
+|ECMS|
+:Guardar la carga lista para validar (CU-16);
+stop
+@enduml

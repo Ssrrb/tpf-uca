@@ -72,6 +72,6 @@ loop por cada ítem del contrato
 end
 Con --> Admin: contrato guardado y vinculado al alcance (RF-23)
 note over Item, Saldo
-  El saldo es del ítem de costos (código estable, RN-02).
+  El saldo es del ítem de costos (código estable, RF-05).
 end note
 @enduml

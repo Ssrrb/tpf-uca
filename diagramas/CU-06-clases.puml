@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-06 · Generar versión del certificado de avance
+title CU-06 · Calcular el certificado y el consumo de recursos
 hide circle
 hide empty methods
 hide empty fields
@@ -25,29 +25,29 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-package "ECMS" {
-  class "Certificado de avance" as Certificado {
+package "Motor de finanzas" {
+  class "Cálculo del certificado" as CalculoCertificado {
     --
-    + generarVersiónSiguiente(actor): VersiónCertificado
-    + últimaVersión(): VersiónCertificado [0..1]
+    + calcularVersión(versión, actor): vacío
+    + confirmar(versión, actor): vacío
   }
+}
 
+package "ECMS" {
   class "Versión del certificado" as VersionCertificado {
     número: entero
+    estado: cantidades cerradas | valorizada
     bruto: guaraníes
     amortizaciónAnticipo: guaraníes
     fondoReparo: guaraníes
     neto: guaraníes
     iva: guaraníes
     guardadaPor: Usuario [0..1]
-    fecha: fecha y hora [0..1]
     --
+    + estaCerrada(): lógico
     + agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo): vacío
-    + tomarCantidades(): vacío
-    + calcularImportes(): vacío
-    + señalar(): lista de Señalamiento
+    + registrarImportes(bruto, amortización, fondoReparo, neto, iva): vacío
     + guardar(actor): vacío
-    + exportar(formato: XLSX | PDF): archivo
   }
 
   class "Línea del certificado" as LineaCertificado {
@@ -55,9 +55,6 @@ package "ECMS" {
     cantidad: decimal
     precioUnitario: guaraníes
     importe: guaraníes
-    avanceAnterior: decimal
-    /acumulado: decimal
-    motivo: texto [0..1]
     --
     + valorizar(precio: guaraníes): guaraníes
   }
@@ -65,14 +62,13 @@ package "ECMS" {
   class "Medición" as Medicion {
     cantidad: decimal
     --
-    + cantidadNoCertificada(): decimal
+    + insumosConsumidos(): lista de ConsumoInsumo
     + marcarCertificada(versión): vacío
   }
 
   class "Saldo del ítem" as SaldoItem {
-    /saldoContractual: decimal
+    certificada: decimal
     --
-    + saldoContractual(): decimal
     + registrarCertificado(cantidad): vacío
   }
 
@@ -84,11 +80,6 @@ package "ECMS" {
   class "Presupuesto de adendas" as PresupuestoAdendas {
     --
     + precioVigente(ítem, fecha): guaraníes [0..1]
-  }
-
-  class "Señalamiento" as Senalamiento {
-    tipo: exceso | medición faltante | precio sin movimiento\n | diferencia de totales | mayor costo
-    datoOrigen: texto
   }
 }
 
@@ -106,25 +97,48 @@ package "ERP" {
     --
     + amortizar(bruto: guaraníes): guaraníes
   }
+
+  class Insumo {
+    código: texto
+    --
+    + precioVigente(fecha): guaraníes [0..1]
+  }
+
+  class "Consumos de la obra" as ConsumosObra {
+    --
+    + prepararConsumo(insumo, cantidad, precio, medición): ConsumoRegistrado
+    + registrar(versión): vacío
+  }
+
+  class "Consumo registrado" as ConsumoRegistrado {
+    cantidad: decimal
+    precio: guaraníes [0..1]
+    /importe: guaraníes [0..1]
+    fecha: fecha y hora
+  }
 }
 
-Certificado "0..1" --> "1" Obra : de la obra
-Certificado "1" *-- "0..*" VersionCertificado : versiones numeradas
-VersionCertificado "0..1" --> "0..1" VersionCertificado : anterior
+CalculoCertificado ..> VersionCertificado : <<use>>
+CalculoCertificado ..> ConsumosObra : <<use>>
 VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
 LineaCertificado "0..1" --> "0..*" Medicion : certifica
-LineaCertificado "0..*" --> "0..1" VersionCertificado : ajuste de
 LineaCertificado "0..*" --> "1" SaldoItem : ítem
 VersionCertificado "0..*" --> "1" PresupuestoCliente : precios
 VersionCertificado "0..*" --> "0..1" PresupuestoAdendas : precios de adendas
-VersionCertificado "1" *-- "0..*" Senalamiento : señala
 VersionCertificado "0..*" --> "0..1" Anticipo : amortiza
+VersionCertificado "0..*" --> "1" Obra : de la obra
+Obra "1" *-- "1" ConsumosObra : consumos
+ConsumosObra "1" *-- "0..*" ConsumoRegistrado : registra
+ConsumoRegistrado "0..*" --> "1" Insumo : de
+ConsumoRegistrado "0..*" --> "1" Medicion : origen
+ConsumoRegistrado "0..*" --> "1" VersionCertificado : al calcular
 
 note bottom of VersionCertificado
-  Orden de cálculo (RN-08): bruto, amortización del anticipo,
+  Orden de cálculo (RF-13): bruto, amortización del anticipo,
   fondo de reparo, neto e IVA, en guaraníes enteros
-  redondeados por línea (RN-09).
-  Guardada, no se modifica ni se reemplaza (RN-06).
+  redondeados por línea (NF-06).
+  Guardada, no se modifica: se corrige con líneas
+  de ajuste en la versión siguiente (RF-12).
 end note
 
 legend bottom

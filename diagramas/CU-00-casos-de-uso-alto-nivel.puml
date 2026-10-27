@@ -37,16 +37,17 @@ rectangle "Ctrl+" {
     usecase "CU-09 Registrar contrato\nde subcontratista" as CU09
   }
   package "ECMS" {
-    usecase "CU-02 Crear y validar el\npresupuesto del cliente" as CU02
+    usecase "CU-02 Cargar el\npresupuesto del cliente" as CU02
+    usecase "CU-16 Validar y finalizar el\npresupuesto del cliente" as CU16
     usecase "CU-03 Armar y versionar el\npresupuesto de costos" as CU03
-    usecase "CU-04 Gestionar la medición\nde avance e insumos" as CU04
-    usecase "CU-06 Generar versión del\ncertificado de avance" as CU06
+    usecase "CU-04 Medir el avance\ndel certificado" as CU04
     usecase "CU-10 Controlar el costo\nde la obra con el ACU" as CU10
     usecase "CU-11 Registrar adenda" as CU11
     usecase "CU-12 Liquidar subcontratista" as CU12
     usecase "CU-15 Emitir presupuesto\nde adendas" as CU15
   }
   package "Motor de finanzas" {
+    usecase "CU-06 Calcular el certificado\ny el consumo de recursos" as CU06
     usecase "CU-07 Registrar gasto de obra" as CU07
     usecase "CU-08 Generar factura interna\ndel certificado" as CU08
     usecase "CU-13 Consultar tablero\nfinanciero" as CU13
@@ -72,6 +73,7 @@ ING -- CU10
 ING -- CU11
 ING -- CU12
 ING -- CU15
+ING -- CU16
 
 ' Finanzas y tesorería
 FIN -- CU08
@@ -82,6 +84,7 @@ legend bottom
   Línea continua sin flecha = asociación actor - caso de uso (UML 2).
   Los paquetes son los subsistemas de Ctrl+ (ERP, ECMS y Motor de finanzas);
   cada CU está en el subsistema principal que lo resuelve. Los subsistemas no son actores.
+  CU-06: calcula el Motor de finanzas y el ERP registra el consumo de insumos.
   CU-07: el Ingeniero de obra solo registra gastos de caja chica.
   CU-10: también lo inicia el Administrador. CU-13: también lo inicia Finanzas y tesorería.
   El Cliente y los subcontratistas no usan Ctrl+: el sistema es solo interno.

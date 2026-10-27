@@ -112,7 +112,7 @@ VersionCostos "1" *-- "1..*" RubroCostos : contiene
 
 note bottom of Gasto
   Caja chica: no supera el tope de la obra;
-  por encima lo registra el Administrador (RN-13).
+  por encima lo registra el Administrador (RF-31).
   El presupuesto de costos no cambia.
 end note
 
