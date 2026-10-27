@@ -48,7 +48,7 @@ package "ERP" {
     categoría: texto
     --
     + registrarPrecio(valor, vigenteDesde): Precio
-    + obtenerPrecioVigente(fecha): Precio [0..1]
+    + obtenerPrecioVigente(fecha): guaraníes [0..1]
   }
 
   class Material

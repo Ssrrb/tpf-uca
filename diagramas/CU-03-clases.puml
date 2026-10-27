@@ -35,9 +35,16 @@ package "ECMS" {
     + activar(versión, actor): vacío
   }
 
+  enum EstadoVersionCostos {
+    propuesta
+    vigente
+    historica
+    descartada
+  }
+
   class "Versión del presupuesto de costos" as VersionCostos {
     número: entero
-    estado: EstadoVersiónCostos
+    estado: EstadoVersionCostos
     motivo: texto [0..1]
     creadaPor: Usuario
     fecha: fecha y hora
@@ -83,7 +90,7 @@ package "ECMS" {
   }
 
   class "Presupuesto del cliente" as PresupuestoCliente {
-    estado: finalizado
+    estado: EstadoPresupuestoCliente
     --
     + obtenerRubros(): lista de Rubro
   }
@@ -97,7 +104,7 @@ package "ECMS" {
 package "ERP" {
   class Insumo {
     código: texto
-    unidad: texto
+    unidad: Unidad
     --
     + obtenerPrecioVigente(fecha): guaraníes [0..1]
   }

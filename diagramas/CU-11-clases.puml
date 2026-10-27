@@ -85,7 +85,7 @@ package "ECMS" {
 
 package "ERP" {
   class Obra {
-    límiteAdendas: guaraníes
+    límiteAdendas: decimal
     fechaFinVigente: fecha
     --
     + permiteAdendas(): lógico

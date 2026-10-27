@@ -28,10 +28,10 @@ skinparam note {
 package "ECMS" {
   class "Versión del certificado" as VersionCertificado {
     número: entero
-    estado: guardada
+    estado: cantidades cerradas | valorizada
     --
     + líneasSubcontratadasPorContrato(): lista
-    + enviarALiquidar(contrato, actor): número
+    + enviarALiquidar(contrato, actor): texto
   }
 
   class "Línea del certificado" as LineaCertificado {

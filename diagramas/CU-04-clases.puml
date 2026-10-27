@@ -129,7 +129,7 @@ package "ERP" {
 
   class Insumo {
     código: texto
-    unidad: texto
+    unidad: Unidad
   }
 }
 

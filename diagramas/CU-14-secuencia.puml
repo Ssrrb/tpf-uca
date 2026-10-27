@@ -27,7 +27,7 @@ end box
 box "Motor de finanzas" #EAF2F6
 participant "documento:\nDocumentoPendiente" as Doc
 participant "movimiento:\nMovimiento" as Mov
-participant "retencion:\nRetencion" as Ret
+participant "retencion:\nRetencionMovimiento" as Ret
 participant "comprobante:\nComprobante" as Comp
 end box
 

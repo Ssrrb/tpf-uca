@@ -102,7 +102,7 @@ jobs:
 
   xmi:
     name: xmi
-    needs: subconjunto  # TEMPORAL: probar validar-uml antes de corregir el modelo
+    needs: consistencia
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -25,12 +25,15 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-package "ECMS" {
+package "ERP" {
   class Obra {
     código: texto
     --
     + vincularPresupuestoCliente(presupuesto): vacío
   }
+}
+
+package "ECMS" {
 
   class "Presupuesto del cliente" as PresupuestoCliente {
     estado: EstadoPresupuestoCliente

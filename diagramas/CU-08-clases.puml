@@ -33,9 +33,17 @@ package "Motor de finanzas" {
     + generarFacturaAnticipo(anticipo, actor): FacturaInterna
   }
 
+  enum EstadoDocumento {
+    generada
+    pendiente_de_adjuntar
+    a_cobrar
+    cobrada_parcial
+    cobrada
+  }
+
   abstract class "Documento interno" as DocumentoInterno {
     número: entero
-    moneda: PYG
+    moneda: texto = PYG
     neto: guaraníes
     iva: guaraníes
     /total: guaraníes

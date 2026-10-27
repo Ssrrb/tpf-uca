@@ -56,13 +56,13 @@ package "Motor de finanzas" {
   class Cobro
   class Pago
 
-  class "Retención" as Retencion {
+  class "Retención del movimiento" as RetencionMovimiento {
     tipo: IVA | renta
     importe: guaraníes
   }
 
   class Comprobante {
-    tipo: recibo | comprobante | retención
+    tipo: factura | planilla | ticket | recibo | comprobante | retención
     archivo: archivo
   }
 }
@@ -82,7 +82,7 @@ DocumentoPendiente <|-- FondoReparo
 Movimiento <|-- Cobro
 Movimiento <|-- Pago
 DocumentoPendiente "1" *-- "0..*" Movimiento : cancela
-Movimiento "1" *-- "0..*" Retencion : retenciones
+Movimiento "1" *-- "0..*" RetencionMovimiento : retenciones
 Movimiento "1" *-- "1..*" Comprobante : adjuntos
 DocumentoPendiente "0..*" --> "1" Obra : de la obra
 

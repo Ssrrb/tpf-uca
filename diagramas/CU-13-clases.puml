@@ -33,7 +33,7 @@ package "Motor de finanzas" {
     --
     + consultar(alcance, usuario): lista de TotalTablero
     + filtrar(rubro, fecha): vacío
-    + abrirRespaldo(total): respaldo
+    + abrirRespaldo(total): lista de archivo
     + exportar(formato: XLSX | PDF): archivo
   }
 
@@ -42,14 +42,14 @@ package "Motor de finanzas" {
     importe: guaraníes
     fecha: fecha
     unidad: texto
-    moneda: PYG
+    moneda: texto = PYG
     procedencia: ECMS | Motor de finanzas
     disponible: lógico
   }
 
   class "Libro financiero" as LibroFinanciero {
     --
-    + totales(obra, fecha): facturado, cobrado, pagado y saldos
+    + totales(obra, fecha): lista de TotalTablero
     + resultadoEconómico(obra, fecha): guaraníes
     + resultadoFinanciero(obra, fecha): guaraníes
   }
@@ -58,7 +58,7 @@ package "Motor de finanzas" {
 package "ECMS" {
   class "Resumen de obra" as ResumenObra {
     --
-    + presupuestado(obra): a costo y a venta
+    + presupuestado(obra): lista de TotalTablero
     + certificadoPorRubro(obra, fecha): lista
     + avanceFísico(obra, fecha): porcentaje
   }
