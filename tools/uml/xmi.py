@@ -63,7 +63,7 @@ class Generador:
         self.ops = {}          # 'Clase.op' -> xmi:id
         self.no_validado = []
         self.eventos = {}
-        self.raiz = ET.Element(f'{X}XMI', {f'{X}version': '20131001'})
+        self.raiz = ET.Element(f'{X}XMI')  # XMI.xsd 2.5.1 no admite xmi:version
         self.model = self.el(self.raiz, f'{U}Model', 'uml:Model', 'Ctrl', name=nombre)
 
     # ------------------------------------------------------------- utilidades

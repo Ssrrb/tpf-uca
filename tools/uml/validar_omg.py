@@ -300,19 +300,33 @@ def validar_metamodelo(mm, doc_path):
 
 
 def validar_esquema(xsd, doc):
+    """Devuelve (ok, errores, no_cubierto).
+
+    XMI.xsd declara solo el espacio de nombres xmi: y deja el contenido en un
+    comodín estricto. OMG no publica un XSD de UML 2.5.1, así que el error
+    "No matching global element declaration" sobre un elemento uml: no es una
+    falla del documento: ese contenido lo valida la sección 2 contra UML.xmi.
+    """
     try:
         from lxml import etree
     except ImportError:
-        return None, ['lxml no está instalado: no se validó contra XMI.xsd']
+        return None, ['lxml no está instalado: no se validó contra XMI.xsd'], []
     try:
         schema = etree.XMLSchema(etree.parse(str(xsd)))
     except etree.XMLSchemaParseError as e:
-        return None, [f'XMI.xsd no se pudo cargar como esquema: {e}']
+        return None, [f'XMI.xsd no se pudo cargar como esquema: {e}'], []
     try:
-        ok = schema.validate(etree.parse(str(doc)))
+        schema.validate(etree.parse(str(doc)))
     except etree.XMLSyntaxError as e:
-        return False, [f'XML mal formado: {e}']
-    return ok, [f'línea {x.line}: {x.message}' for x in schema.error_log]
+        return False, [f'XML mal formado: {e}'], []
+    errores, no_cubierto = [], []
+    for x in schema.error_log:
+        msg = f'línea {x.line}: {x.message}'
+        if 'demanded by the strict wildcard' in x.message and f'{{{UML_URI}}}' in x.message:
+            no_cubierto.append(msg)
+        else:
+            errores.append(msg)
+    return not errores, errores, no_cubierto
 
 
 def main(argv):
@@ -333,10 +347,14 @@ def main(argv):
     md += [f'| {n} | {i["url"]} | `{i["sha256"]}` | {i["bytes"]} |' for n, i in info.items()]
     md.append('')
 
-    ok_xsd, log_xsd = validar_esquema(cache / 'XMI.xsd', doc)
+    ok_xsd, log_xsd, no_cubierto = validar_esquema(cache / 'XMI.xsd', doc)
     md += ['## 1. Esquema XMI 2.5.1 (XMI.xsd)', '']
-    md.append('Válido.' if ok_xsd else ('No válido.' if ok_xsd is False else 'No validado.'))
+    md.append('Envoltura XMI válida.' if ok_xsd else ('No válido.' if ok_xsd is False else 'No validado.'))
     md += [f'- {x}' for x in log_xsd[:50]] + ['']
+    if no_cubierto:
+        md += ['XMI.xsd no declara elementos de UML (OMG no publica un XSD de UML 2.5.1), '
+               'así que el esquema no cubre el contenido del modelo; lo cubre la sección 2:', '']
+        md += [f'- {x}' for x in no_cubierto[:5]] + ['']
 
     mm = Metamodelo(cache / 'UML.xmi')
     errores, avisos, prims, vistos = validar_metamodelo(mm, doc)
