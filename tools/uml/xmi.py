@@ -455,8 +455,12 @@ class Generador:
                     self.comentario(tr, f'Guarda en la transición inicial: [{t["guarda"]}]',
                                     [self.id_de(tr)])
                 else:
-                    g = self.el(tr, 'guard', 'uml:Constraint', f'{self.id_de(tr)}.guarda')
+                    # Transition::guard subsetea Namespace::ownedRule: la restricción va
+                    # en ownedRule y guard la referencia. VP solo la deja dentro de la
+                    # transición con esta forma (con <guard> anidado la manda a la raíz).
+                    g = self.el(tr, 'ownedRule', 'uml:Constraint', f'{self.id_de(tr)}.guarda')
                     self.opaca(g, 'specification', t['guarda'], f'{self.id_de(g)}.expr')
+                    tr.set('guard', self.id_de(g))
             if t['efecto']:
                 ob = self.el(tr, 'effect', 'uml:OpaqueBehavior', f'{self.id_de(tr)}.efecto',
                              name=t['efecto'])
