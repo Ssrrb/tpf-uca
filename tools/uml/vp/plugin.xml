@@ -4,7 +4,7 @@
 	description="Dibuja los diagramas de cada CU sobre el modelo importado del XMI 2.5.1"
 	provider="tpf-uca"
 	class="tpfuca.vp.Plugin"
-	version="0.3.0">
+	version="0.4.0">
 	<actionSets>
 		<actionSet id="tpfuca.vp.actionset">
 			<action

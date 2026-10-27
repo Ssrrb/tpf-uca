@@ -127,11 +127,13 @@ final class Actividades {
             n.forma = dm.createDiagramElement(d, n.modelo);
             int i = particiones.indexOf(n.particion);
             IShapeUIModel c = compartimentos == null ? null : compartimentos.get(i);
-            if (c != null && c.addChild((IShapeUIModel) n.forma)) {
-                n.forma.setBounds(n.x, n.y, n.ancho, n.alto);
-            } else {
-                n.forma.setBounds(X0 + inicio(anchos, i) + n.x, Y0 + CABECERA + n.y, n.ancho, n.alto);
+            if (c != null) {
+                c.addChild((IShapeUIModel) n.forma);
             }
+            // setBounds va en coordenadas del diagrama aun dentro de un compartimento:
+            // VP guarda la posición relativa restando la del padre.
+            n.forma.setBounds(X0 + inicio(anchos, i) + n.x, Y0 + CABECERA + n.y, n.ancho, n.alto);
+            n.forma.resetCaption();
         }
         int k = 0;
         for (Object o : flujos) {
@@ -146,7 +148,7 @@ final class Actividades {
             cf.setTo(hacia.modelo);
             String guarda = (String) f.get("guarda");
             if (guarda != null) {
-                cf.setGuard(guarda.replaceAll("^\\[|\\]$", ""));
+                guarda = guarda.replaceAll("^\\[|\\]$", "");
             }
             Point[] puntos;
             if (vuelta.contains(de.id + ">" + hacia.id)) {
@@ -161,7 +163,16 @@ final class Actividades {
                 puntos = new Point[] {centro(de, anchos, particiones), centro(hacia, anchos, particiones)};
             }
             try {
-                dm.createConnector(d, cf, de.forma, hacia.forma, puntos);
+                IDiagramElement con = dm.createConnector(d, cf, de.forma, hacia.forma, puntos);
+                // La guarda se pone con el flujo ya dibujado: puesta antes, VP no la guardó (v0.3).
+                if (guarda != null) {
+                    cf.setGuard(guarda);
+                    if (!guarda.equals(cf.getGuard())) {
+                        log.add(nombre + ": VP no tomó la guarda [" + guarda + "]; va como nombre del flujo");
+                        cf.setName("[" + guarda + "]");
+                    }
+                }
+                con.resetCaption();
             } catch (RuntimeException ex) {
                 log.add(nombre + ": no pude dibujar el flujo " + de.id + " → " + hacia.id + ": " + ex);
             }
@@ -206,9 +217,9 @@ final class Actividades {
                 }
             }
             if (orden.size() == parts.size()) {
-                int x = 0, i = 0;
+                int x = X0, i = 0;
                 for (IShapeUIModel c : orden) {
-                    c.setBounds(x, CABECERA, anchos[i], alto);
+                    c.setBounds(x, Y0 + CABECERA, anchos[i], alto);
                     x += anchos[i++];
                 }
                 return orden;
@@ -217,24 +228,34 @@ final class Actividades {
         }
         List<String> idsCab = new ArrayList<>(), idsComp = new ArrayList<>();
         List<IShapeUIModel> out = new ArrayList<>();
-        int x = 0, i = 0;
+        sl.setRequestResetCaption(true);
+        int x = X0, i = 0;
         for (IActivityPartition p : parts.values()) {
             IShapeUIModel h = cabeceras.get(p);
             if (h == null) {
-                h = (IShapeUIModel) dm.createDiagramElement(d, IShapeTypeConstants.SHAPE_TYPE_ACTIVITY_PARTITION_HEADER);
-                h.setMetaModelElement(p);
+                // Como el importador de nbourdi/PlantUML-VP-Plugin: la cabecera es la forma de la partición.
+                IDiagramElement e = dm.createDiagramElement(d, p);
+                if (e instanceof IActivityPartitionHeaderUIModel) {
+                    h = (IShapeUIModel) e;
+                } else {
+                    log.add(nombre + ": la partición se dibujó como " + e.getShapeType() + "; armo la cabecera aparte");
+                    d.removeDiagramElement(e);
+                    h = (IShapeUIModel) dm.createDiagramElement(d,
+                        IShapeTypeConstants.SHAPE_TYPE_ACTIVITY_PARTITION_HEADER);
+                    h.setMetaModelElement(p);
+                }
                 forma.addChild(h);
             }
             if (h instanceof IActivityPartitionHeaderUIModel) {
                 ((IActivityPartitionHeaderUIModel) h).setHorizontal(false);
                 ((IActivityPartitionHeaderUIModel) h).setSwimlane(sl);
             }
-            h.setBounds(x, 0, anchos[i], CABECERA);
+            h.setBounds(x, Y0, anchos[i], CABECERA);
             IShapeUIModel c = (IShapeUIModel) dm.createDiagramElement(d,
                 IShapeTypeConstants.SHAPE_TYPE_ACTIVITY_SWIMLANE2_COMPARTMENT);
             forma.addChild(c);
             ((IActivitySwimlane2CompartmentUIModel) c).setVerticalPartitionId(h.getId());
-            c.setBounds(x, CABECERA, anchos[i], alto);
+            c.setBounds(x, Y0 + CABECERA, anchos[i], alto);
             idsCab.add(h.getId());
             idsComp.add(c.getId());
             out.add(c);

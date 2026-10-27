@@ -14,6 +14,7 @@ import com.vp.plugin.DiagramManager;
 import com.vp.plugin.diagram.IDiagramElement;
 import com.vp.plugin.diagram.IDiagramUIModel;
 import com.vp.plugin.diagram.IInteractionDiagramUIModel;
+import com.vp.plugin.diagram.IShapeUIModel;
 import com.vp.plugin.model.IActivation;
 import com.vp.plugin.model.ICombinedFragment;
 import com.vp.plugin.model.IFrame;
@@ -90,7 +91,12 @@ final class Dibujante {
                 log.add(cu + ": no encontré la clase " + c.get("nombre"));
                 continue;
             }
-            formas.put(e, dm.createDiagramElement(d, e));
+            IDiagramElement f = dm.createDiagramElement(d, e);
+            // Sin fitSize la clase queda de 80x40 y no muestra atributos (v0.3).
+            if (f instanceof IShapeUIModel) {
+                ((IShapeUIModel) f).fitSize();
+            }
+            formas.put(e, f);
         }
         Set<IModelElement> dibujadas = new LinkedHashSet<>();
         for (IModelElement e : formas.keySet()) {
@@ -103,14 +109,14 @@ final class Dibujante {
                     continue;
                 }
                 try {
-                    dm.createConnector(d, r, formas.get(ext[0]), formas.get(ext[1]), null);
+                    dm.createConnector(d, r, formas.get(ext[0]), formas.get(ext[1]), null).resetCaption();
                 } catch (RuntimeException ex) {
                     log.add(cu + ": no pude dibujar la relación " + r.getName() + ": " + ex);
                 }
             }
         }
-        // Jerárquico: las generalizaciones y composiciones quedan de arriba hacia abajo.
-        dm.layout(d, DiagramManager.LAYOUT_HIERARCHIC);
+        // Como el importador de nbourdi/PlantUML-VP-Plugin: tamaño justo y distribución automática.
+        dm.layout(d, DiagramManager.LAYOUT_AUTO);
         log.add(cu + " clases: " + formas.size() + " clases");
     }
 
@@ -174,6 +180,9 @@ final class Dibujante {
     }
 
     private final java.util.ArrayDeque<Marco> pila = new java.util.ArrayDeque<>();
+    /** Formas de fragmento creadas dentro de cada operando abierto, para colgarlas de él. */
+    private final java.util.ArrayDeque<List<IDiagramElement>> recolector = new java.util.ArrayDeque<>();
+    private final Map<IDiagramElement, int[]> limites = new HashMap<>();
     private final List<Marco> marcos = new ArrayList<>();
     /** Mensaje, emisor, receptor y fila: las activaciones se asignan al final, cuando se conocen las barras. */
     private final List<Object[]> extremos = new ArrayList<>();
@@ -195,6 +204,8 @@ final class Dibujante {
         pila.clear();
         marcos.clear();
         extremos.clear();
+        recolector.clear();
+        limites.clear();
         int alto = CABEZA + FILA * (filas(lista(s, "items")) + 2);
         int i = 0;
         for (Object o : lista(s, "lifelines")) {
@@ -244,11 +255,17 @@ final class Dibujante {
                 n += 1;
             } else if ("mensaje".equals(tipo) && it.get("de") != null && it.get("de").equals(it.get("a"))) {
                 n += 2;
+            } else if ("nota".equals(tipo)) {
+                n += 1 + altoNota((String) it.get("texto")) / FILA;
             } else {
                 n += "ref".equals(tipo) ? 2 : 1;
             }
         }
         return n;
+    }
+
+    private static int altoNota(String texto) {
+        return 18 * texto.split("\n").length + 16;
     }
 
     private int centro(IModelElement l) {
@@ -295,10 +312,27 @@ final class Dibujante {
                 y += FILA * 2;
                 usadas.addAll(cub);
             } else if ("nota".equals(tipo)) {
+                // Como en PlantUML: «note over A, B» va sobre esas lifelines en su fila,
+                // y un divisor (== … ==) cruza todo el diagrama.
                 INOTE n = fab.createNOTE();
-                n.setDescription((String) it.get("texto"));
-                dm.createDiagramElement(sd, n).setBounds(X0 + lifelines.size() * ANCHO_COL, y - FILA / 2, 240, FILA);
-                y += FILA;
+                String texto = (String) it.get("texto");
+                n.setName(texto.split("\n")[0]);
+                n.setDescription(texto);
+                List<IModelElement> sobre = new ArrayList<>();
+                for (Object a : lista(it, "anota")) {
+                    if (lifelines.get(a) != null) {
+                        sobre.add(lifelines.get(a));
+                    }
+                }
+                if (sobre.isEmpty() || Boolean.TRUE.equals(it.get("divisor"))) {
+                    sobre.addAll(lifelines.values());
+                }
+                int[] xs = rango(sobre, 3);
+                int alto = altoNota(texto);
+                IDiagramElement fn = dm.createDiagramElement(sd, n);
+                fn.setBounds(xs[0], y - FILA / 2, Math.max(200, xs[1] - xs[0]), alto);
+                fn.resetCaption();
+                y += alto + FILA / 2;
             }
         }
         return usadas;
@@ -353,7 +387,7 @@ final class Dibujante {
         Point[] puntos = de == a
             ? new Point[] {new Point(centro(de), y), new Point(centro(de), y + FILA / 2)}
             : new Point[] {new Point(centro(de), y), new Point(centro(a), y)};
-        dm.createConnector(sd, m, formasLl.get(de), formasLl.get(a), puntos);
+        dm.createConnector(sd, m, formasLl.get(de), formasLl.get(a), puntos).resetCaption();
         y += de == a ? FILA * 2 : FILA;
         return m;
     }
@@ -448,6 +482,9 @@ final class Dibujante {
         int arriba = y - FILA / 2;
         y += FILA / 2;
         Set<IModelElement> usadas = new LinkedHashSet<>();
+        List<IInteractionOperand> operandos = new ArrayList<>();
+        List<Integer> inicios = new ArrayList<>();
+        List<List<IDiagramElement>> anidados = new ArrayList<>();
         for (Object o : lista(it, "operandos")) {
             Map<String, Object> op = mapa(o);
             IInteractionOperand operando = cf.createInteractionOperand();
@@ -456,7 +493,16 @@ final class Dibujante {
                 IInteractionConstraint g = fab.createInteractionConstraint();
                 g.setConstraint(guarda);
                 operando.setGuard(g);
+                // VP muestra el nombre del fragmento junto al operador («loop each day» en sample.vpp).
+                if (operandos.isEmpty()) {
+                    cf.setName(guarda);
+                }
+            } else if (operandos.isEmpty()) {
+                cf.setName("");
             }
+            operandos.add(operando);
+            inicios.add(operandos.size() == 1 ? arriba + 17 : y - FILA / 4);
+            recolector.addLast(new ArrayList<>());
             y += FILA / 2;
             // Cada operando arranca con las llamadas que había al entrar al fragmento:
             // una respuesta dentro de un break o de una rama del alt no termina la
@@ -473,6 +519,7 @@ final class Dibujante {
             for (Marco f : antes) {
                 f.hasta = -1;
             }
+            anidados.add(recolector.removeLast());
         }
         usadas.remove(null);
         for (IModelElement l : usadas) {
@@ -480,7 +527,30 @@ final class Dibujante {
         }
         if (!usadas.isEmpty()) {
             int[] xs = rango(usadas, nivel);
-            dm.createDiagramElement(sd, cf).setBounds(xs[0], arriba, xs[1] - xs[0], y - arriba);
+            IDiagramElement forma = dm.createDiagramElement(sd, cf);
+            forma.setBounds(xs[0], arriba, xs[1] - xs[0], y - arriba);
+            forma.resetCaption();
+            limites.put(forma, new int[] {xs[0], arriba, xs[1] - xs[0], y - arriba});
+            if (!recolector.isEmpty()) {
+                recolector.peekLast().add(forma);
+            }
+            // Una forma por operando, como en sample.vpp: es la que muestra la guarda.
+            // Los fragmentos anidados cuelgan de la forma de su operando.
+            for (int k = 0; k < operandos.size(); k++) {
+                int desde = inicios.get(k), hasta = k + 1 < operandos.size() ? inicios.get(k + 1) : y;
+                try {
+                    IDiagramElement fo = dm.createDiagramElement(sd, operandos.get(k));
+                    fo.setBounds(xs[0], desde, xs[1] - xs[0], hasta - desde);
+                    for (IDiagramElement h : anidados.get(k)) {
+                        if (fo.addChild((IShapeUIModel) h)) {
+                            int[] b = limites.get(h);
+                            h.setBounds(b[0], b[1], b[2], b[3]);
+                        }
+                    }
+                } catch (RuntimeException ex) {
+                    log.add(sd.getName() + ": no pude dibujar un operando de " + cf.getInteractionOperator() + ": " + ex);
+                }
+            }
         }
         y += FILA;
         return usadas;
