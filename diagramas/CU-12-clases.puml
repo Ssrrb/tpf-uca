@@ -28,10 +28,10 @@ skinparam note {
 package "ECMS" {
   class "Versión del certificado" as VersionCertificado {
     número: entero
-    estado: guardada
+    estado: cantidades cerradas | valorizada
     --
     + líneasSubcontratadasPorContrato(): lista
-    + enviarALiquidar(contrato, actor): número
+    + enviarALiquidar(contrato, actor): texto
   }
 
   class "Línea del certificado" as LineaCertificado {
@@ -91,7 +91,7 @@ Liquidacion "0..1" --> "1" VersionCertificado : por
 Contrato "0..*" --> "0..*" Retencion : aplica
 
 note bottom of Liquidacion
-  Única por versión del certificado y contrato (RN-11):
+  Única por versión del certificado y contrato (RF-25):
   un reintento no la duplica (NF-03).
   Solo se liquida lo certificado al cliente.
 end note

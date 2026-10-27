@@ -43,7 +43,7 @@ package "ECMS" {
     /total: guaraníes
     --
     + armar(adendas): vacío
-    + corregirLínea(línea, descripción, precio, motivo): vacío
+    + corregirLínea(línea, descripción, motivo): vacío
     + validarMotivos(): lista de texto
     + guardar(actor): vacío
     + pasarAAnterior(): vacío
@@ -56,7 +56,7 @@ package "ECMS" {
     precioVenta: guaraníes
     motivoCorrección: texto [0..1]
     --
-    + corregir(descripción, precio, motivo): guaraníes
+    + corregir(descripción, motivo): vacío
   }
 
   class "Apartado Adendas" as ApartadoAdendas {
@@ -66,13 +66,6 @@ package "ECMS" {
 
   class Adenda {
     precioVenta: guaraníes
-    --
-    + estaCertificada(): lógico
-  }
-
-  class "Certificado de avance" as Certificado {
-    --
-    + registrarAjustePendiente(adenda, diferencia): vacío
   }
 }
 
@@ -82,12 +75,13 @@ VersionAdendas "1" *-- "1..*" LineaAdenda : líneas
 LineaAdenda "0..*" --> "1" Adenda : de
 ApartadoAdendas "1" *-- "0..*" Adenda : registradas (CU-11)
 PresupuestoAdendas ..> ApartadoAdendas : toma las adendas
-LineaAdenda ..> Certificado : ajuste si ya se certificó
 
 note bottom of VersionAdendas
   Documento contractual con el cliente. A diferencia del
   presupuesto del cliente se puede editar: cada edición
   crea una versión y conserva la anterior (RF-06, NF-05).
+  El precio de venta se acuerda al registrar la adenda (CU-11);
+  acá solo se corrige la descripción.
 end note
 
 legend bottom

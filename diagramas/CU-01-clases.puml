@@ -117,7 +117,7 @@ Obra "1" *-- "0..*" CambioEstado : historial
 
 note bottom of Obra
   Código único por organización (5a).
-  El estado solo avanza (RF-33, RN-12).
+  El estado solo avanza (RF-33).
 end note
 
 legend bottom

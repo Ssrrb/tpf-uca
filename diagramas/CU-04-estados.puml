@@ -37,25 +37,27 @@ state confirmacion <<choice>>
 state "En carga" as en_carga
 state "Registrada" as registrada
 state "Retenida (excede el saldo)" as retenida
-state "Anulada" as anulada
+state "Incluida en una versión" as incluida
 state "Certificada" as certificada
+state "Anulada" as anulada
 
 [*] --> en_carga : crear(ítem, cantidad, ejecutor)
 en_carga --> confirmacion : confirmar(actor) [datos completos y no contada]
-confirmacion --> registrada : [dentro del saldo contractual]
-confirmacion --> retenida : [supera el saldo contractual]
+confirmacion --> registrada : [dentro del saldo contractual] / registrarMedición(cantidad)
+confirmacion --> retenida : [supera el saldo contractual] / retenerExceso(cantidad)
 retenida --> registrada : registrarAdenda(adenda) [CU-11 cubre el exceso]
-registrada --> registrada : enmendar(datos, motivo, actor)
 registrada --> anulada : anular(motivo, actor)
 retenida --> anulada : anular(motivo, actor)
-registrada --> certificada : guardar(versión) [CU-06]
+registrada --> incluida : incluirEn(versión)
+incluida --> certificada : guardar(actor) [CU-06]
+incluida --> incluida : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
 certificada --> certificada : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
 anulada --> [*]
 certificada --> [*]
 
 note right of certificada
-  No se anula ni se enmienda:
-  se corrige con una medición
-  de ajuste (RN-07).
+  Incluida o certificada no se anula:
+  se corrige con una medición de
+  ajuste (RF-07).
 end note
 @enduml

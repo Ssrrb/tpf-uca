@@ -1,0 +1,30 @@
+<plugin
+	id="tpfuca.vp"
+	name="Dibujar CU (tpf-uca)"
+	description="Dibuja los diagramas de cada CU sobre el modelo importado del XMI 2.5.1"
+	provider="tpf-uca"
+	class="tpfuca.vp.Plugin"
+	version="0.7.0">
+	<actionSets>
+		<actionSet id="tpfuca.vp.actionset">
+			<action
+				id="tpfuca.vp.dibujar"
+				actionType="generalAction"
+				label="Dibujar CU..."
+				tooltip="Dibuja los diagramas de un CU (o de todos) desde el modelo importado"
+				style="normal"
+				ribbonPath="Project/Import/XML">
+				<actionController class="tpfuca.vp.DibujarAccion"/>
+			</action>
+			<action
+				id="tpfuca.vp.inspeccionar"
+				actionType="generalAction"
+				label="Inspeccionar diagrama abierto"
+				tooltip="Guarda la estructura del diagrama abierto en tpfuca-inspeccion.txt, junto al proyecto"
+				style="normal"
+				ribbonPath="Project/Import/XML">
+				<actionController class="tpfuca.vp.InspeccionarAccion"/>
+			</action>
+		</actionSet>
+	</actionSets>
+</plugin>

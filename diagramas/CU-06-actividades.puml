@@ -32,47 +32,36 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-06 · Actividades · Generar versión del certificado de avance
+title CU-06 · Actividades · Calcular el certificado y el consumo de recursos
 |Ingeniero de obra|
 start
-:Seleccionar la obra y generar la versión siguiente;
-|ECMS|
-if (¿La obra está en ejecución?) then ([no])
-  :Informar que no se generan versiones;
+:Elegir la versión con las cantidades cerradas (CU-04);
+|Motor de finanzas|
+if (¿La obra está en ejecución y la versión cerrada?) then ([no])
+  :Informar por qué no se puede calcular;
   stop
 else ([sí])
 endif
-|Ingeniero de obra|
-if (¿Hay un error en una versión guardada?) then ([sí])
-  :Agregar líneas de ajuste con motivo,
-  vinculadas a la versión que corrigen (RN-06);
-else ([no])
-endif
-|ECMS|
-:Tomar las cantidades medidas no certificadas,
-los ajustes y lo cubierto por adendas;
-:Excluir lo que supera el saldo contractual sin adenda;
-:Valorizar con el precio del presupuesto
+:Valorizar cada línea con el precio del presupuesto
 del cliente o del de adendas (RF-13);
 if (¿Algún ítem no tiene precio unitario?) then ([sí])
-  :Señalarlo con su dato de origen
-  e impedir confirmar hasta corregirlo;
+  :Señalarlo e impedir confirmar;
   stop
 else ([no])
 endif
 :Calcular bruto, amortización del anticipo,
-fondo de reparo, neto e IVA (RN-08);
-:Señalar excesos, faltantes, precios sin movimiento,
-diferencias y mayores costos (RF-15);
+fondo de reparo, neto e IVA (RF-13);
+|ERP|
+:Calcular el consumo de insumos de las mediciones
+incluidas, al precio vigente (RF-34);
 |Ingeniero de obra|
-:Revisar la versión y los señalamientos;
-:Confirmar;
-|ECMS|
-:Guardar la versión con sus respaldos y vínculos;
-|Ingeniero de obra|
-if (¿Exportar?) then ([sí])
-  :Exportar como XLSX o PDF de uso interno;
-else ([no])
-endif
+:Revisar y confirmar;
+|Motor de finanzas|
+:Guardar la versión valorizada;
+|ERP|
+:Registrar el consumo de insumos;
+note right
+  Se guarda todo junto o nada (NF-03).
+end note
 stop
 @enduml

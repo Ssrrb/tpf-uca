@@ -19,18 +19,19 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-02 · 1/3 · Carga del XLSX o creación en el sistema
+title CU-02 · Cargar el presupuesto del cliente
 actor "Ingeniero de obra" as Ing
 box "ECMS" #EAF2F6
 participant "obra:\nObra" as Obra
 participant "presupuesto:\nPresupuestoCliente" as Pres
 participant "archivo:\nArchivoOriginal" as Arch
+participant "hoja:\nHoja" as Hoja
 participant "rubro:\nRubro" as Rubro
 end box
 
 Ing -> Obra: crearPresupuestoCliente(actor)
 break la obra ya tiene un presupuesto del cliente finalizado
-  Obra --> Ing: operación rechazada (RN-01)
+  Obra --> Ing: operación rechazada (RF-04)
 end
 create Pres
 Obra -> Pres: «create»(estado = propuesta)
@@ -40,22 +41,26 @@ alt carga desde XLSX
   Ing -> Pres: cargarArchivo(archivo)
   Pres -> Arch: validarFormato()
   Arch --> Pres: válido: lógico
-  break no es XLSX, está dañado, tiene contraseña o supera el tamaño (2a)
-    Pres --> Ing: carga rechazada con el motivo; vuelve al paso 1
+  break no es XLSX, está dañado o tiene contraseña (2a)
+    Pres --> Ing: carga rechazada con el motivo
   end
   Pres -> Pres: esArchivoRepetido(huella)
   break el mismo XLSX ya se cargó sin cambios (2b, NF-07)
     Pres --> Ing: lo informa; no se crea otra carga
   end
   Pres -> Arch: guardar()
-  break falla el guardado o se interrumpe la carga (*a)
+  break falla el guardado (NF-03)
     Pres -> Pres: descartarCargaIncompleta()
     Pres --> Ing: carga descartada; se puede reintentar
   end
-  Pres --> Ing: archivo original guardado (RF-02)
-  ref over Ing, Rubro
-    Continúa en 2/3: estructura y validación.
-  end ref
+  Pres -> Pres: identificarEstructura()
+  alt estructura identificada
+    Pres --> Ing: hojas, columnas, rubros e ítems (RF-03)
+  else no se identifica la estructura (3a)
+    loop por cada columna que falta definir
+      Ing -> Hoja: definirColumna(índice, campo)
+    end
+  end
 else creación en el sistema sin XLSX (1a)
   loop por cada rubro
     Ing -> Pres: agregarRubro(código, descripción)
@@ -65,8 +70,10 @@ else creación en el sistema sin XLSX (1a)
       Ing -> Rubro: agregarÍtem(código, descripción, unidad, cantidad, precio)
     end
   end
-  ref over Ing, Rubro
-    Continúa en 2/3 desde la confirmación de la estructura (paso 4).
-  end ref
 end
+Ing -> Pres: confirmarEstructura()
+Pres --> Ing: carga guardada en propuesta, lista para validar
+ref over Ing, Rubro
+  Validar y finalizar el presupuesto del cliente (CU-16).
+end ref
 @enduml

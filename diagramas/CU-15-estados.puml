@@ -39,7 +39,7 @@ state "Anterior" as anterior
 state "Descartada" as descartada
 
 [*] --> en_edicion : emitirVersión(actor) / armar(adendas)
-en_edicion --> en_edicion : corregirLínea(línea, descripción, precio, motivo)
+en_edicion --> en_edicion : corregirLínea(línea, descripción, motivo)
 en_edicion --> vigente : guardar(actor) [motivos completos] / activar(versión)
 en_edicion --> descartada : cancelar()
 vigente --> anterior : activar(otra versión) / pasarAAnterior()

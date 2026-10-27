@@ -32,7 +32,7 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-04 · Actividades · Gestionar la medición de avance e insumos
+title CU-04 · Actividades · Medir el avance del certificado
 |Ingeniero de obra|
 start
 :Seleccionar la obra;
@@ -42,37 +42,31 @@ if (¿La obra está en ejecución?) then ([no])
   stop
 else ([sí])
 endif
-:Mostrar rubros e ítems con cantidad contractual,
-medida y saldo contractual (RN-04);
-|Ingeniero de obra|
+:Mostrar los ítems con su saldo contractual;
 repeat
-  :Seleccionar el ítem e ingresar cantidad y unidad;
-  :Indicar el ejecutor (propio o el contrato del subcontratista);
-  :Cargar los insumos consumidos según el ACU;
-  :Adjuntar la evidencia (fotos, planillas o actas);
+  |Ingeniero de obra|
+  :Ingresar cantidad, ejecutor y evidencia del ítem;
   |ECMS|
-  :Comparar con el saldo contractual y verificar
-  que la cantidad no esté contada (RF-09, RF-10);
-repeat while (¿Ya está contada en otra medición?) is ([sí]) not ([no])
-if (¿Supera el saldo contractual?) then ([sí])
-  :Señalar el exceso como saldo negativo del rubro;
-  note right
-    Queda fuera del certificado hasta
-    que se registre una adenda (CU-11).
-  end note
-else ([no])
-endif
-|Ingeniero de obra|
-repeat
-  :Confirmar el registro;
+  :Proponer los insumos consumidos desde el ACU (RF-07);
+  |Ingeniero de obra|
+  :Corregir los insumos si hace falta;
   |ECMS|
-repeat while (¿Faltan datos obligatorios o evidencia?) is ([sí]) not ([no])
-:Guardar la medición con actor, fecha,
-obra, insumos y evidencia (RF-07);
-if (¿Es subcontratada?) then ([sí])
-  :Descontar la cantidad del saldo del contrato;
-else ([no])
-endif
+  if (¿La cantidad ya está contada?) then ([sí])
+    :Rechazar e indicar dónde figura;
+  elseif (¿Supera el saldo contractual?) then ([sí])
+    :Retener el exceso como saldo negativo
+    hasta una adenda (RF-10);
+  else ([no])
+    :Registrar la medición;
+  endif
+repeat while (¿Mide otro ítem?) is ([sí]) not ([no])
 |Ingeniero de obra|
+:Confirmar y cerrar las cantidades de la versión;
+|ECMS|
+:Guardar la versión con avance anterior,
+de la versión y acumulado (RF-12);
+note right
+  Lista para el cálculo (CU-06).
+end note
 stop
 @enduml

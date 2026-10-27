@@ -19,7 +19,7 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-04 · Gestionar la medición de avance e insumos
+title CU-04 · Medir el avance del certificado
 actor "Ingeniero de obra" as Ing
 box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
@@ -29,8 +29,10 @@ box "ECMS" #EAF2F6
 participant "item:\nItemCostos" as Item
 participant "saldo:\nSaldoItem" as Saldo
 participant "medicion:\nMedicion" as Med
-participant "consumo:\nConsumoInsumo" as Cons
 participant "evidencia:\nEvidencia" as Evi
+participant "certificado:\nCertificado" as Cert
+participant "version:\nVersionCertificado" as V
+participant "linea:\nLineaCertificado" as Lin
 participant "ajuste:\nMedicionAjuste" as Aj
 end box
 
@@ -40,60 +42,68 @@ break la obra no está en ejecución (RF-33)
   Obra --> Ing: no se registran mediciones
 end
 Ing -> Item: obtenerSaldo()
-Item --> Ing: cantidad contractual, medida y saldo (RN-04)
+Item --> Ing: ítems con su saldo contractual
 
-create Med
-Ing -> Med: «create»(ítem, cantidad, unidad, ejecutor)
-opt ejecuta un subcontratista (3a)
-  Med -> Con: saldoDisponible(ítem)
-  Con --> Med: saldo del contrato
+loop por cada ítem medido
+  create Med
+  Ing -> Med: «create»(ítem, cantidad, unidad, ejecutor)
+  Med -> Item: insumosDelACU(cantidad)
+  Item --> Med: insumos propuestos (RF-07)
+  opt el Ingeniero corrige un insumo
+    Ing -> Med: corregirInsumo(insumo, cantidad)
+  end
+  Ing -> Med: adjuntarEvidencia(archivo)
+  create Evi
+  Med -> Evi: «create»(tipo, archivo)
+  Med -> Saldo: estaContada(cantidad, medicion)
+  Saldo --> Med: contada: lógico
+  break ya está contada en otra medición (4b, RF-10)
+    Med --> Ing: rechazada; indica dónde figura
+  end
+  Ing -> Med: confirmar(actor)
+  Med -> Med: validarCompleta()
+  break faltan datos obligatorios o evidencia (5a)
+    Med --> Ing: marca cada campo e impide confirmar
+  end
+  Med -> Saldo: saldoContractual()
+  Saldo --> Med: saldo
+  alt dentro del saldo
+    Med -> Saldo: registrarMedición(cantidad)
+  else supera el saldo (4a)
+    Med -> Saldo: retenerExceso(cantidad)
+    Med --> Ing: exceso retenido como saldo negativo\nhasta una adenda (CU-11)
+  end
+  opt ítem subcontratado (3a)
+    Med -> Con: descontarSaldo(ítem, cantidad)
+  end
 end
-loop por cada insumo consumido
-  Ing -> Med: agregarInsumo(insumo, cantidad)
-  create Cons
-  Med -> Cons: «create»(insumo, cantidad)
-end
-Ing -> Med: adjuntarEvidencia(archivo)
-create Evi
-Med -> Evi: «create»(tipo, archivo)
 
-Med -> Saldo: estaContada(cantidad, medicion)
-Saldo --> Med: contada: lógico
-break ya está contada en otra medición (7b, RF-10)
-  Med --> Ing: rechazada; indica dónde figura (vuelve al paso 3)
+Ing -> Cert: generarVersiónSiguiente(actor)
+create V
+Cert -> V: «create»(número siguiente, anterior)
+V -> V: tomarCantidades()
+loop por cada ítem con mediciones o ajustes sin certificar
+  V -> Saldo: cantidadCertificable()
+  Saldo --> V: cantidad dentro del saldo contractual
+  create Lin
+  V -> Lin: «create»(ítem, avance anterior, cantidad)
+  V -> Med: incluirEn(version)
 end
-Med -> Saldo: saldoContractual()
-Saldo --> Med: saldo
-opt la cantidad supera el saldo (7a, RF-09)
-  Med --> Ing: exceso como saldo negativo del rubro;\nqueda fuera del certificado hasta una adenda (CU-11)
-end
+Ing -> V: cerrarCantidades(actor)
+V --> Ing: versión con avance anterior, de la versión\ny acumulado, lista para el cálculo (RF-12, CU-06)
 
-Ing -> Med: confirmar(actor)
-Med -> Med: validarCompleta()
-break faltan datos obligatorios o evidencia (8a)
-  Med --> Ing: marca cada campo e impide confirmar
-end
-Med -> Saldo: registrarMedición(cantidad)
-opt ejecutor subcontratado
-  Med -> Con: descontarSaldo(ítem, cantidad)
-end
-Med --> Ing: medición registrada con actor, fecha, obra,\ninsumos y evidencia (RF-07)
-
-== *a Anular, enmendar o ajustar una medición registrada ==
-Ing -> Med: estaCertificada()
-Med --> Ing: certificada: lógico
-alt no certificada: anular
+== *a Anular o ajustar una medición ==
+Ing -> Med: puedeAnularse()
+Med --> Ing: registrada o retenida: lógico
+alt registrada o retenida (todavía no está en una versión)
   Ing -> Med: anular(motivo, actor)
   Med -> Saldo: revertirMedición(cantidad)
-else no certificada: enmendar
-  Ing -> Med: enmendar(datos, motivo, actor)
-else certificada (RN-07)
+else incluida en una versión o certificada (RF-07)
   Ing -> Med: registrarAjuste(cantidad, motivo, actor)
   create Aj
   Med -> Aj: «create»(original, cantidad, motivo)
   note right of Aj
-    Entra en la versión siguiente
-    del certificado (CU-06).
+    Entra en la versión siguiente.
   end note
 end
 @enduml

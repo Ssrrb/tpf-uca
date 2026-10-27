@@ -40,9 +40,9 @@ loop por cada ítem con exceso
   PC -> Saldo: cantidadRetenida()
   Saldo --> PC: cantidad medida retenida
 end
-PC --> Ing: ítems con saldo negativo y cantidad retenida (RF-09)
+PC --> Ing: ítems con saldo negativo y cantidad retenida (RF-10)
 
-alt exceso o cambio de un ítem (paso 3; 2a sin exceso medido)
+alt exceso de cantidad de un ítem (paso 3)
   Ing -> Apa: crearAdenda(ítem, tipo, cantidad, precioVenta, costo)
   create Ad
   Apa -> Ad: «create»(ítem, tipo, cantidad, precioVenta, costo)
@@ -85,10 +85,10 @@ critical registro atómico (NF-03)
   Apa -> PA: registrarPrecio(adenda)
   alt ampliación de plazo
     Apa -> Obra: actualizarFechaFin(fecha, motivo)
-  else ampliación, deducción, variación o ítem nuevo
+  else ampliación de cantidad o ítem nuevo
     Apa -> Saldo: sumarAdenda(cantidad)
     Apa -> Saldo: liberarRetenida(cantidad)
   end
 end
-Apa --> Ing: costo en el apartado Adendas y precio en el presupuesto\nde adendas, con actor y fecha (RF-21, RN-04)
+Apa --> Ing: costo en el apartado Adendas y precio en el presupuesto\nde adendas, con actor y fecha (RF-21, RF-10)
 @enduml

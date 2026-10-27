@@ -59,7 +59,7 @@ repeat while (¿Queda importe por repartir?) is ([sí]) not ([no])
 |Motor de finanzas|
 :Validar el importe;
 if (¿Caja chica por encima del tope y la registra el Ingeniero?) then ([sí])
-  :No permitir confirmar: lo registra el Administrador (RN-13);
+  :No permitir confirmar: lo registra el Administrador (RF-31);
   stop
 else ([no])
 endif

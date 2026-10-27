@@ -33,9 +33,17 @@ package "Motor de finanzas" {
     + generarFacturaAnticipo(anticipo, actor): FacturaInterna
   }
 
+  enum EstadoDocumento {
+    generada
+    pendiente_de_adjuntar
+    a_cobrar
+    cobrada_parcial
+    cobrada
+  }
+
   abstract class "Documento interno" as DocumentoInterno {
     número: entero
-    moneda: PYG
+    moneda: texto = PYG
     neto: guaraníes
     iva: guaraníes
     /total: guaraníes
@@ -103,7 +111,7 @@ Obra "0..*" --> "1" Cliente : cliente
 Facturacion ..> DocumentoInterno : genera
 
 note bottom of DocumentoInterno
-  Toma el neto y el IVA de la versión sin recalcularlos (RN-08).
+  Toma el neto y el IVA de la versión sin recalcularlos (RF-14).
   Sin crédito fiscal ni validez ante Marangatu:
   la factura legal se emite fuera de Ctrl+.
 end note

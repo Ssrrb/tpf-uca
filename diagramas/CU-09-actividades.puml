@@ -46,7 +46,7 @@ repeat
   :Seleccionar un ítem del alcance
   e ingresar precio y límite;
   |ERP|
-  :Consultar el saldo del ítem en el ECMS (RN-05);
+  :Consultar el saldo del ítem en el ECMS (RF-10);
   if (¿El límite supera lo presupuestado?) then ([sí])
     :Rechazar el ítem e informar el exceso;
   elseif (¿Ya está asignado a otro contrato?) then ([sí])
