@@ -26,10 +26,11 @@ Uso: validar_omg.py build/model.xmi [--cache DIR] [--out build/validacion-omg.md
 Sale con 1 si hay errores o si no se pudieron obtener los archivos de OMG.
 """
 import hashlib
+import re
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -135,10 +136,20 @@ class Metamodelo:
                 self.nombre[e.get(XID)] = e.get('name')
                 self.primitivos.add(e.get('name'))
             elif t == 'uml:Association':
-                self.asociaciones[e.get(XID)] = (e.get('memberEnd') or '').split()
+                ends = self.asociaciones.setdefault(e.get(XID), set())
+                ends.update((e.get('memberEnd') or '').split())
                 for p in e:
-                    if local(p.tag) == 'ownedEnd':
-                        self.props[p.get(XID)] = self.prop(p)
+                    if local(p.tag) == 'memberEnd' and p.get(XIDREF):
+                        ends.add(p.get(XIDREF))
+                    elif local(p.tag) == 'ownedEnd':
+                        info = self.prop(p)
+                        info['asociacion'] = info['asociacion'] or e.get(XID)
+                        self.props[p.get(XID)] = info
+        # memberEnd puede faltar o venir como hijos: cada extremo también declara
+        # su asociación, así que el mapa se completa desde las propiedades.
+        for pid, info in self.props.items():
+            if info['asociacion']:
+                self.asociaciones.setdefault(info['asociacion'], set()).add(pid)
         for c in self.clases.values():
             c['supers'] = [self.nombre.get(s, s) for s in c['supers']]
         self._todas = {}
@@ -149,7 +160,7 @@ class Metamodelo:
                 'compuesta': p.get('aggregation') == 'composite',
                 'derivada': p.get('isDerived') == 'true' or p.get('isDerivedUnion') == 'true',
                 'lower': valor_literal(p, 'lowerValue', 1), 'upper': valor_literal(p, 'upperValue', 1),
-                'asociacion': p.get('association'),
+                'asociacion': ref_de(p, 'association'),
                 'defecto': any(local(h.tag) == 'defaultValue' for h in p)}
 
     def tipo_nombre(self, prop):
@@ -349,8 +360,11 @@ def main(argv):
     fallo = errores or ok_xsd is False or ok_xsd is None
     print(f'OMG: esquema {"ok" if ok_xsd else "FALLA" if ok_xsd is False else "sin validar"}; '
           f'metamodelo: {len(errores)} errores, {len(avisos)} avisos → {out}')
-    for x in errores[:40]:
-        print(f'  ERROR {x}')
+    for x in log_xsd[:20]:
+        print(f'  XSD {x}')
+    tipos = Counter(re.sub(r'^\[[^]]*\] |"[^"]*"', '', x) for x in errores)
+    for msg, n in tipos.most_common(30):
+        print(f'  ERROR x{n}: {msg}')
     return 1 if fallo else 0
 
 
