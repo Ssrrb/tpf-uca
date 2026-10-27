@@ -159,8 +159,11 @@ class Generador:
             self.clasificador(clases[c['name']], c)
         self.relaciones(clases)
         for com in d['comentarios']:
-            anota = [self.idx[x] for x in com['anota'] if x in self.idx]
-            self.comentario(self.model, com['texto'], anota)
+            # La nota la posee la primera clase que anota (así VP la muestra dentro de
+            # esa clase y no suelta en la raíz); sin clase, el modelo.
+            anota = [x for x in com['anota'] if x in clases]
+            duenio = clases[anota[0]] if anota else self.model
+            self.comentario(duenio, com['texto'], [self.idx[x] for x in anota])
 
         comp = self.el(self.model, 'packagedElement', 'uml:Package', 'Comportamiento',
                        name='Comportamiento')
