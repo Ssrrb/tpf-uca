@@ -117,6 +117,14 @@ final class Dibujante {
         }
         // Como el importador de nbourdi/PlantUML-VP-Plugin: tamaño justo y distribución automática.
         dm.layout(d, DiagramManager.LAYOUT_AUTO);
+        // Las etiquetas (nombre, roles, multiplicidades) se ubican con la flecha ya
+        // en su lugar; puestas antes del layout quedaban corridas (v0.4).
+        for (IDiagramElement e : d.toDiagramElementArray()) {
+            if (e instanceof com.vp.plugin.diagram.IConnectorUIModel) {
+                e.resetCaption();
+                e.resetCaptionSize();
+            }
+        }
         log.add(cu + " clases: " + formas.size() + " clases");
     }
 

@@ -35,7 +35,7 @@ import com.vp.plugin.model.factory.IModelElementFactory;
  * su partición.
  */
 final class Actividades {
-    private static final int X0 = 20, Y0 = 20, CABECERA = 30, MARGEN = 30, SEP_H = 30, SEP_V = 40;
+    private static final int X0 = 20, Y0 = 20, CABECERA = 30, MARGEN = 30, SEP_H = 30, SEP_V = 50;
     private static final int ANCHO_MIN_CARRIL = 240;
 
     private final DiagramManager dm = ApplicationManager.instance().getDiagramManager();
@@ -48,7 +48,7 @@ final class Actividades {
 
     private static final class Nodo {
         String id, tipo, nombre, particion;
-        int ancho, alto, rango, x, y;
+        int ancho, alto, rango, x, y, filaY, filaAlto;
         IModelElement modelo;
         IDiagramElement forma;
         final List<Nodo> salen = new ArrayList<>(), entran = new ArrayList<>();
@@ -150,18 +150,7 @@ final class Actividades {
             if (guarda != null) {
                 guarda = guarda.replaceAll("^\\[|\\]$", "");
             }
-            Point[] puntos;
-            if (vuelta.contains(de.id + ">" + hacia.id)) {
-                // Vuelve por el borde derecho del carril para no cruzar los nodos intermedios.
-                int id = particiones.indexOf(de.particion), ia = particiones.indexOf(hacia.particion);
-                int xd = X0 + inicio(anchos, id) + de.x + de.ancho;
-                int xa = X0 + inicio(anchos, ia) + hacia.x + hacia.ancho;
-                int xr = X0 + inicio(anchos, Math.max(id, ia)) + anchos[Math.max(id, ia)] - 10 - 6 * (k++ % 4);
-                int yd = Y0 + CABECERA + de.y + de.alto / 2, ya = Y0 + CABECERA + hacia.y + hacia.alto / 2;
-                puntos = new Point[] {new Point(xd, yd), new Point(xr, yd), new Point(xr, ya), new Point(xa, ya)};
-            } else {
-                puntos = new Point[] {centro(de, anchos, particiones), centro(hacia, anchos, particiones)};
-            }
+            Point[] puntos = ruta(de, hacia, vuelta.contains(de.id + ">" + hacia.id), anchos, particiones, k++);
             try {
                 IDiagramElement con = dm.createConnector(d, cf, de.forma, hacia.forma, puntos);
                 // La guarda se pone con el flujo ya dibujado: puesta antes, VP no la guardó (v0.3).
@@ -404,6 +393,20 @@ final class Actividades {
         }
         int y = MARGEN;
         for (List<Nodo> fila : filas.values()) {
+            // Cada nodo cerca de sus predecesores: menos cruces de flechas.
+            Map<Nodo, Double> clave = new HashMap<>();
+            for (Nodo n : fila) {
+                double suma = 0;
+                int cuenta = 0;
+                for (Nodo p : n.entran) {
+                    if (p.rango < n.rango) {
+                        suma += inicio(anchos, particiones.indexOf(p.particion)) + p.x + p.ancho / 2.0;
+                        cuenta++;
+                    }
+                }
+                clave.put(n, cuenta == 0 ? Double.MAX_VALUE : suma / cuenta);
+            }
+            fila.sort((p, q) -> Double.compare(clave.get(p), clave.get(q)));
             int alto = 0;
             int[] uso = new int[particiones.size()];
             for (Nodo n : fila) {
@@ -419,11 +422,55 @@ final class Actividades {
                 int i = particiones.indexOf(n.particion);
                 n.x = x[i];
                 n.y = y + (alto - n.alto) / 2;
+                n.filaY = y;
+                n.filaAlto = alto;
                 x[i] += n.ancho + SEP_H;
             }
             y += alto + SEP_V;
         }
         return anchos;
+    }
+
+    /**
+     * Recorrido ortogonal de un flujo, de borde a borde: VP toma los puntos tal
+     * cual, así que pasarle los centros dejaba las flechas dentro de los nodos (v0.4).
+     * Los tramos horizontales van por los huecos entre filas y los verticales
+     * largos por los bordes de los carriles, donde no hay nodos.
+     */
+    private static Point[] ruta(Nodo de, Nodo a, boolean vuelta, int[] anchos, List<String> particiones, int k) {
+        int id = particiones.indexOf(de.particion), ia = particiones.indexOf(a.particion);
+        int dx = X0 + inicio(anchos, id) + de.x, ax = X0 + inicio(anchos, ia) + a.x;
+        int dy = Y0 + CABECERA + de.y, ay = Y0 + CABECERA + a.y;
+        int dc = dx + de.ancho / 2, ac = ax + a.ancho / 2;
+        int off = 6 * (k % 4);
+        if (vuelta) {
+            // Sale por la derecha, sube por el borde derecho del carril y entra por la derecha.
+            int xr = X0 + inicio(anchos, Math.max(id, ia)) + anchos[Math.max(id, ia)] - 8 - off;
+            int yd = dy + de.alto / 2, ya = ay + a.alto / 2;
+            return new Point[] {new Point(dx + de.ancho, yd), new Point(xr, yd), new Point(xr, ya),
+                new Point(ax + a.ancho, ya)};
+        }
+        int sale = dy + de.alto, entra = ay;
+        // Por debajo del texto que VP pone bajo las decisiones y uniones.
+        int bajoOrigen = Y0 + CABECERA + de.filaY + de.filaAlto + SEP_V * 2 / 3 - off / 2;
+        int sobreDestino = Y0 + CABECERA + a.filaY - SEP_V / 2 + off / 2;
+        if (Math.abs(dc - ac) < 4) {
+            if (a.rango == de.rango + 1) {
+                return new Point[] {new Point(dc, sale), new Point(ac, entra)};
+            }
+        } else if (a.rango == de.rango + 1) {
+            return new Point[] {new Point(dc, sale), new Point(dc, bajoOrigen), new Point(ac, bajoOrigen),
+                new Point(ac, entra)};
+        }
+        // Salto de varias filas: baja por el borde del carril para no cruzar nodos.
+        int canal;
+        if (id == ia) {
+            canal = X0 + inicio(anchos, id) + 8 + off;
+        } else {
+            canal = X0 + inicio(anchos, Math.max(id, ia)) + (ia > id ? -8 - off : 8 + off);
+        }
+        return new Point[] {new Point(dc, sale), new Point(dc, bajoOrigen), new Point(canal, bajoOrigen),
+            new Point(canal, sobreDestino), new Point(ac, sobreDestino), new Point(ac, entra)};
     }
 
     private static int inicio(int[] anchos, int i) {
@@ -432,10 +479,5 @@ final class Actividades {
             x += anchos[j];
         }
         return x;
-    }
-
-    private static Point centro(Nodo n, int[] anchos, List<String> particiones) {
-        return new Point(X0 + inicio(anchos, particiones.indexOf(n.particion)) + n.x + n.ancho / 2,
-            Y0 + CABECERA + n.y + n.alto / 2);
     }
 }
