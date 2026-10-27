@@ -86,6 +86,16 @@ para importarlo en Visual Paradigm:
   inexistente, **C4** referencia a algo no definido, **C5** multiplicidades,
   tipos o firmas incompatibles entre diagramas, **C6** convención de nombres.
 
+## Empezar con Visual Paradigm
+
+Visual Paradigm 18.1 es la CASE donde vive el modelo; los `.puml` siguen siendo la fuente.
+
+1. `python3 tools/modelo.py diagramas --xmi && python3 tools/uml/vp_datos.py`
+2. `bash tools/uml/vp/construir.sh /ruta/a/openapi.jar` e instalar el zip en VP (`Help > Install Plugin`).
+3. Importar `build/model.xmi` y usar **Dibujar CU...** con un CU o `todos`.
+
+Detalle en [docs/import-vp.md](docs/import-vp.md).
+
 ## Uso local
 
 Requisitos: Java 17+, Graphviz y `plantuml` en el `PATH`.
