@@ -1,5 +1,6 @@
 package tpfuca.vp;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -13,9 +14,6 @@ import com.vp.plugin.DiagramManager;
 import com.vp.plugin.diagram.IDiagramElement;
 import com.vp.plugin.diagram.IDiagramUIModel;
 import com.vp.plugin.diagram.IInteractionDiagramUIModel;
-import com.vp.plugin.diagram.IShapeUIModel;
-import com.vp.plugin.model.IActionTypeCall;
-import com.vp.plugin.model.IClass;
 import com.vp.plugin.model.ICombinedFragment;
 import com.vp.plugin.model.IFrame;
 import com.vp.plugin.model.IInteractionActor;
@@ -26,7 +24,6 @@ import com.vp.plugin.model.IInteractionOperand;
 import com.vp.plugin.model.IMessage;
 import com.vp.plugin.model.IModelElement;
 import com.vp.plugin.model.INOTE;
-import com.vp.plugin.model.IOperation;
 import com.vp.plugin.model.IProject;
 import com.vp.plugin.model.IRelationship;
 import com.vp.plugin.model.IRelationshipEnd;
@@ -134,22 +131,35 @@ final class Dibujante {
     }
 
     // ------------------------------------------------------------ secuencia
+    //
+    // Geometría propia: el auto-layout de VP apila las lifelines y reordena los
+    // mensajes. Cada lifeline es una columna y cada mensaje una fila; los
+    // fragmentos y las refs se dibujan como recuadros que abarcan sus filas.
+
+    private static final int X0 = 40, ANCHO_COL = 190, ANCHO_LL = 130, Y_LL = 40, CABEZA = 50;
+    private static final int FILA = 34, MARGEN_FRAG = 12;
 
     private IInteractionDiagramUIModel sd;
     private final Map<String, IModelElement> lifelines = new HashMap<>();
+    private final Map<IModelElement, Integer> columna = new HashMap<>();
     private final Map<IModelElement, IDiagramElement> formasLl = new HashMap<>();
     private int numero;
+    private int y;
 
     private void secuencia(IModelElement paquete, Map<String, Object> s) {
         sd = (IInteractionDiagramUIModel) dm.createDiagram(DiagramManager.DIAGRAM_TYPE_INTERACTION_DIAGRAM);
         String nombre = (String) s.get("nombre");
         sd.setName(nombre);
         ubicar(sd, paquete);
-        sd.setAutoExtendActivations(true);
+        sd.setAutoExtendActivations(false);
+        sd.setShowActivations(false);
         IFrame raiz = sd.getRootFrame(true);
         lifelines.clear();
+        columna.clear();
         formasLl.clear();
         numero = 0;
+        int alto = CABEZA + FILA * (filas(lista(s, "items")) + 2);
+        int i = 0;
         for (Object o : lista(s, "lifelines")) {
             Map<String, Object> l = mapa(o);
             IModelElement m;
@@ -171,21 +181,44 @@ final class Dibujante {
                 m = ll;
             }
             lifelines.put((String) l.get("alias"), m);
+            columna.put(m, i);
             IDiagramElement f = dm.createDiagramElement(sd, m);
-            ((IShapeUIModel) f).setY(50);
+            f.setBounds(X0 + i * ANCHO_COL, Y_LL, ANCHO_LL, alto);
             formasLl.put(m, f);
+            i++;
         }
-        items(raiz, null, lista(s, "items"));
+        y = Y_LL + CABEZA + FILA;
+        items(raiz, null, lista(s, "items"), 0);
         dm.openDiagram(sd);
-        dm.layout(sd, DiagramManager.LAYOUT_AUTO);
-        for (IDiagramElement e : sd.toDiagramElementArray()) {
-            e.resetCaption();
-        }
         log.add(nombre + ": " + lifelines.size() + " lifelines, " + numero + " mensajes");
     }
 
+    /** Filas que ocupa una lista de ítems, para dar a las lifelines el largo justo. */
+    private int filas(List<Object> items) {
+        int n = 0;
+        for (Object o : items) {
+            Map<String, Object> it = mapa(o);
+            String tipo = (String) it.get("tipo");
+            if ("fragmento".equals(tipo)) {
+                for (Object op : lista(it, "operandos")) {
+                    n += 1 + filas(lista(mapa(op), "items"));
+                }
+                n += 1;
+            } else if ("mensaje".equals(tipo) && it.get("de") != null && it.get("de").equals(it.get("a"))) {
+                n += 2;
+            } else {
+                n += "ref".equals(tipo) ? 2 : 1;
+            }
+        }
+        return n;
+    }
+
+    private int centro(IModelElement l) {
+        return X0 + columna.get(l) * ANCHO_COL + ANCHO_LL / 2;
+    }
+
     /** Agrega los ítems a `raiz` (nivel superior) o a `operando`; devuelve las lifelines usadas. */
-    private Set<IModelElement> items(IFrame raiz, IInteractionOperand operando, List<Object> items) {
+    private Set<IModelElement> items(IFrame raiz, IInteractionOperand operando, List<Object> items, int nivel) {
         Set<IModelElement> usadas = new LinkedHashSet<>();
         for (Object o : items) {
             Map<String, Object> it = mapa(o);
@@ -200,7 +233,7 @@ final class Dibujante {
                     }
                 }
             } else if ("fragmento".equals(tipo)) {
-                usadas.addAll(fragmento(raiz, operando, it));
+                usadas.addAll(fragmento(raiz, operando, it, nivel));
             } else if ("ref".equals(tipo)) {
                 IInteractionOccurrence ref = fab.createInteractionOccurrence();
                 if (operando != null) {
@@ -217,15 +250,17 @@ final class Dibujante {
                         cub.add(l);
                     }
                 }
-                IDiagramElement f = dm.createDiagramElement(sd, ref);
-                for (IModelElement l : cub) {
-                    ((IShapeUIModel) f).addChild((IShapeUIModel) formasLl.get(l));
+                if (!cub.isEmpty()) {
+                    int[] xs = rango(cub, nivel);
+                    dm.createDiagramElement(sd, ref).setBounds(xs[0], y - FILA / 2, xs[1] - xs[0], FILA * 3 / 2);
                 }
+                y += FILA * 2;
                 usadas.addAll(cub);
             } else if ("nota".equals(tipo)) {
                 INOTE n = fab.createNOTE();
                 n.setDescription((String) it.get("texto"));
-                dm.createDiagramElement(sd, n);
+                dm.createDiagramElement(sd, n).setBounds(X0 + lifelines.size() * ANCHO_COL, y - FILA / 2, 240, FILA);
+                y += FILA;
             }
         }
         return usadas;
@@ -239,6 +274,8 @@ final class Dibujante {
             return null;
         }
         IMessage m = fab.createMessage();
+        // El texto de PlantUML tal cual: con ActionTypeCall VP mostraría la firma
+        // tipada de la operación en lugar del mensaje con sus argumentos.
         m.setName((String) it.get("texto"));
         m.setSequenceNumber(String.valueOf(++numero));
         m.setFrom(de);
@@ -252,25 +289,15 @@ final class Dibujante {
         } else if (de == a) {
             m.setType(IMessage.TYPE_SELF_MESSAGE);
         }
-        String op = (String) it.get("operacion");
-        if (op != null && a instanceof IInteractionLifeLine && !"reply".equals(clase)) {
-            IModelElement base = ((IInteractionLifeLine) a).getBaseClassifierAsModel();
-            if (base instanceof IClass) {
-                for (IOperation o : ((IClass) base).toOperationArray()) {
-                    if (op.equals(o.getName())) {
-                        IActionTypeCall call = fab.createActionTypeCall();
-                        call.setOperation(o);
-                        m.setActionType(call);
-                        break;
-                    }
-                }
-            }
-        }
-        dm.createConnector(sd, m, formasLl.get(de), formasLl.get(a), null);
+        Point[] puntos = de == a
+            ? new Point[] {new Point(centro(de), y), new Point(centro(de), y + FILA / 2)}
+            : new Point[] {new Point(centro(de), y), new Point(centro(a), y)};
+        dm.createConnector(sd, m, formasLl.get(de), formasLl.get(a), puntos);
+        y += de == a ? FILA * 2 : FILA;
         return m;
     }
 
-    private Set<IModelElement> fragmento(IFrame raiz, IInteractionOperand padre, Map<String, Object> it) {
+    private Set<IModelElement> fragmento(IFrame raiz, IInteractionOperand padre, Map<String, Object> it, int nivel) {
         ICombinedFragment cf = fab.createCombinedFragment();
         if (padre != null) {
             padre.addCombinedFragment(cf);
@@ -278,6 +305,8 @@ final class Dibujante {
             raiz.addCombinedFragment(cf);
         }
         cf.setInteractionOperator((String) it.get("operador"));
+        int arriba = y - FILA / 2;
+        y += FILA / 2;
         Set<IModelElement> usadas = new LinkedHashSet<>();
         for (Object o : lista(it, "operandos")) {
             Map<String, Object> op = mapa(o);
@@ -288,17 +317,31 @@ final class Dibujante {
                 g.setConstraint(guarda);
                 operando.setGuard(g);
             }
-            usadas.addAll(items(raiz, operando, lista(op, "items")));
+            y += FILA / 2;
+            usadas.addAll(items(raiz, operando, lista(op, "items"), nivel + 1));
         }
         usadas.remove(null);
         for (IModelElement l : usadas) {
             cf.addCoveredLifeLine(l);
         }
-        IDiagramElement f = dm.createDiagramElement(sd, cf);
-        for (IModelElement l : usadas) {
-            ((IShapeUIModel) f).addChild((IShapeUIModel) formasLl.get(l));
+        if (!usadas.isEmpty()) {
+            int[] xs = rango(usadas, nivel);
+            dm.createDiagramElement(sd, cf).setBounds(xs[0], arriba, xs[1] - xs[0], y - arriba);
         }
+        y += FILA;
         return usadas;
+    }
+
+    /** Extremos horizontales de un recuadro que cubre estas lifelines, con sangría por anidamiento. */
+    private int[] rango(java.util.Collection<IModelElement> ls, int nivel) {
+        int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
+        for (IModelElement l : ls) {
+            min = Math.min(min, columna.get(l));
+            max = Math.max(max, columna.get(l));
+        }
+        int sangria = MARGEN_FRAG * (4 - Math.min(nivel, 3));
+        return new int[] {X0 + min * ANCHO_COL + ANCHO_LL / 2 - 20 - sangria,
+            X0 + max * ANCHO_COL + ANCHO_LL / 2 + 20 + sangria};
     }
 
     // ------------------------------------------------------------ utilidades
