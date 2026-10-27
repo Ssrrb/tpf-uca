@@ -117,12 +117,12 @@ note bottom of VersionCostos
   Solo una versión vigente por obra.
   Corregir cantidad, unidad, precio o ubicación crea
   una versión nueva; completar ejecutor, insumos o ACU
-  de un ítem no certificado, no (RN-03).
+  de un ítem no certificado, no (RF-05).
 end note
 
 note bottom of ItemCostos
   El código se conserva entre versiones y lo vincula
-  con su ítem del presupuesto del cliente (RN-02).
+  con su ítem del presupuesto del cliente (RF-05).
 end note
 
 legend bottom

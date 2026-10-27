@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-04 · Gestionar la medición de avance e insumos
+title CU-04 · Medir el avance del certificado
 hide circle
 hide empty methods
 hide empty fields
@@ -31,6 +31,7 @@ package "ECMS" {
     unidad: texto
     --
     + obtenerSaldo(): SaldoÍtem
+    + insumosDelACU(cantidad): lista de ConsumoInsumo
   }
 
   class "Saldo del ítem" as SaldoItem {
@@ -40,12 +41,15 @@ package "ECMS" {
     medida: decimal
     certificada: decimal
     liquidada: decimal
+    retenida: decimal
     /saldoContractual: decimal
     --
     + saldoContractual(): decimal
     + estaContada(cantidad, medición): lógico
     + registrarMedición(cantidad): vacío
+    + retenerExceso(cantidad): vacío
     + revertirMedición(cantidad): vacío
+    + cantidadCertificable(): decimal
   }
 
   class "Medición" as Medicion {
@@ -53,19 +57,18 @@ package "ECMS" {
     unidad: texto
     ejecutor: propio | subcontratado
     estado: EstadoMedición
-    excedeSaldo: lógico
     motivo: texto [0..1]
     registradaPor: Usuario
     fecha: fecha y hora
     --
-    + agregarInsumo(insumo, cantidad): vacío
+    + corregirInsumo(insumo, cantidad): vacío
     + adjuntarEvidencia(archivo): vacío
     + validarCompleta(): lista de texto
     + confirmar(actor): vacío
     + anular(motivo, actor): vacío
-    + enmendar(datos, motivo, actor): vacío
     + estaCertificada(): lógico
     + registrarAjuste(cantidad, motivo, actor): MediciónAjuste
+    + incluirEn(versión): vacío
   }
 
   class "Medición de ajuste" as MedicionAjuste {
@@ -74,11 +77,40 @@ package "ECMS" {
 
   class "Consumo de insumo" as ConsumoInsumo {
     cantidad: decimal
+    origen: ACU | corregido
   }
 
   class Evidencia {
     tipo: foto | planilla | acta
     archivo: archivo
+  }
+
+  class "Certificado de avance" as Certificado {
+    --
+    + generarVersiónSiguiente(actor): VersiónCertificado
+  }
+
+  class "Versión del certificado" as VersionCertificado {
+    número: entero
+    estado: cantidades cerradas | valorizada
+    --
+    + tomarCantidades(): vacío
+    + cerrarCantidades(actor): vacío
+  }
+
+  class "Línea del certificado" as LineaCertificado {
+    tipo: cantidad | ajuste
+    avanceAnterior: decimal
+    cantidad: decimal
+    /acumulado: decimal
+  }
+
+  enum EstadoMedición {
+    registrada
+    retenida
+    incluida
+    certificada
+    anulada
   }
 }
 
@@ -92,7 +124,6 @@ package "ERP" {
   class Contrato {
     número: texto
     --
-    + saldoDisponible(ítem): decimal
     + descontarSaldo(ítem, cantidad): vacío
   }
 
@@ -111,11 +142,16 @@ Medicion "1" *-- "1..*" Evidencia : respaldo
 ConsumoInsumo "0..*" --> "1" Insumo : de
 Medicion <|-- MedicionAjuste
 MedicionAjuste "0..*" --> "1" Medicion : corrige
+Certificado "0..1" --> "1" Obra : de la obra
+Certificado "1" *-- "0..*" VersionCertificado : versiones numeradas
+VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
+LineaCertificado "0..1" --> "0..*" Medicion : incluye
+LineaCertificado "0..*" --> "1" SaldoItem : ítem
 
 note bottom of SaldoItem
-  saldoContractual = cliente + adendas - certificada (RN-04).
-  Una cantidad se mide, asigna, certifica y liquida
-  una sola vez (RN-05).
+  saldoContractual = cliente + adendas - certificada.
+  Lo que lo supera queda retenido hasta una adenda,
+  y una cantidad se cuenta una sola vez (RF-10).
 end note
 
 legend bottom

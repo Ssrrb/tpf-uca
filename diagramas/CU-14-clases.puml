@@ -88,7 +88,7 @@ DocumentoPendiente "0..*" --> "1" Obra : de la obra
 
 note bottom of Movimiento
   Importe + retenciones <= saldo pendiente;
-  la retención cancela saldo igual que el efectivo (RN-14).
+  la retención cancela saldo igual que el efectivo (RF-30).
   Ctrl+ no ejecuta pagos ni emite recibos oficiales.
 end note
 

@@ -19,7 +19,7 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-02 · 3/3 · Totales y finalización
+title CU-16 · 2/2 · Totales y finalización
 actor "Ingeniero de obra" as Ing
 box "ECMS" #EAF2F6
 participant "presupuesto:\nPresupuestoCliente" as Pres
@@ -42,21 +42,19 @@ Pres -> Pres: compararTotales()
 loop por cada total declarado distinto del recalculado
   Pres -> Inf: registrarDiferencia(rubro, declarado, recalculado)
 end
-Pres --> Ing: resultado de la validación y diferencias,\nsin alterar el archivo original (RF-04)
-opt hay diferencias de totales (7a)
-  alt acepta con las diferencias informadas
+Pres --> Ing: diferencias de totales,\nsin alterar el archivo original (RF-04)
+opt hay diferencias de totales (3a)
+  alt acepta las diferencias informadas
     Ing -> Inf: aceptarDiferencias()
   else corrige el archivo
     ref over Ing, Obra
-      Recarga el XLSX: vuelve a 1/3.
+      Recarga el XLSX en CU-02.
     end ref
   end
 end
-alt finaliza (paso 8)
-  Ing -> Pres: finalizar(actor)
+Ing -> Pres: finalizar(actor)
+critical finalización atómica (NF-03)
   Pres -> Obra: vincularPresupuestoCliente(presupuesto)
-  Pres --> Ing: presupuesto contractual inmutable,\ncon actor y fecha; base del CU-03
-else no lo finaliza todavía (8a)
-  Pres --> Ing: queda en propuesta; se puede recargar o editar
 end
+Pres --> Ing: presupuesto contractual que ya no se modifica,\ncon actor y fecha; base del CU-03
 @enduml

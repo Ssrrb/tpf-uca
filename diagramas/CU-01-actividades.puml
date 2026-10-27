@@ -61,7 +61,7 @@ else ([avanzar estado])
     :Informar que no hay estado siguiente;
   else ([no])
     :Pasar al estado siguiente y registrar
-    actor y fecha (RF-33, RN-12);
+    actor y fecha (RF-33);
   endif
 endif
 |Administrador|

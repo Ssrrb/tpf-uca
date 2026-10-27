@@ -49,6 +49,8 @@ package "Ctrl+ (aplicación web, una base de datos)" as app {
     }
   }
   package "Motor de finanzas" as mf {
+    package "Cálculo del certificado" as calc {
+    }
     package "Gastos" as gas {
     }
     package "Facturación interna" as fac {
@@ -64,6 +66,8 @@ package "Ctrl+ (aplicación web, una base de datos)" as app {
     package "Obras y usuarios" as obr {
     }
     package "Catálogos" as cat {
+    }
+    package "Consumos" as cons {
     }
     package "Contratos" as con {
     }
@@ -86,20 +90,22 @@ cyp ..> liq : <<use>>
 tab ..> cyp : <<use>>
 tab ..> gas : <<use>>
 con ..> cat : <<use>>
+cons ..> cat : <<use>>
 obr ..> cat : <<use>>
 
 note right of itf
   Contratos que publican el ECMS
-  (versiones del certificado, saldos,
-  avance) y el Motor de finanzas
+  (cantidades de cada versión del
+  certificado, saldos y avance) y el Motor de finanzas
   (gastos y liquidaciones). Así el ECMS
   y el Motor no dependen entre sí (PR-05).
 end note
 
 note bottom of erp
   Usuarios, roles y permisos, obras, insumos,
-  personal, proveedores, clientes, retenciones
-  y contratos. No calcula costos ni genera documentos.
+  personal, proveedores, clientes, retenciones,
+  contratos y consumo de insumos registrado al
+  calcular el certificado. No genera documentos.
 end note
 
 legend bottom

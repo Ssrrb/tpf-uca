@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-06 · 2/2 · Consumo de recursos y guardado
+actor "Ingeniero de obra" as Ing
+box "Motor de finanzas" #EAF2F6
+participant "calculo:\nCalculoCertificado" as Calc
+end box
+box "ECMS" #EAF2F6
+participant "version:\nVersionCertificado" as V
+participant "medicion:\nMedicion" as Med
+participant "saldo:\nSaldoItem" as Saldo
+end box
+box "ERP" #EAF2F6
+participant "insumo:\nInsumo" as Ins
+participant "consumos:\nConsumosObra" as Cons
+end box
+
+loop por cada medición incluida en la versión
+  Calc -> Med: insumosConsumidos()
+  Med --> Calc: insumos y cantidades
+  loop por cada insumo
+    Calc -> Ins: precioVigente(fecha)
+    Ins --> Calc: precio [0..1]
+    alt tiene precio vigente
+      Calc -> Cons: prepararConsumo(insumo, cantidad, precio, medición)
+    else sin precio vigente (4a)
+      Calc --> Ing: señala el insumo; su consumo no se valoriza
+    end
+  end
+end
+Calc --> Ing: versión valorizada y consumo de insumos (RF-13, RF-34)
+
+Ing -> Calc: confirmar(version, actor)
+critical guardado atómico (NF-03)
+  Calc -> V: guardar(actor)
+  loop por cada línea de cantidad
+    V -> Med: marcarCertificada(version)
+    V -> Saldo: registrarCertificado(cantidad)
+  end
+  Calc -> Cons: registrar(version)
+end
+Calc --> Ing: versión guardada y consumo registrado en el ERP;\nlista para facturar (CU-08) y liquidar (CU-12)
+@enduml

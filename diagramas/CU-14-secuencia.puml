@@ -54,7 +54,7 @@ create Comp
 Mov -> Comp: «create»(tipo, archivo)
 Mov -> Doc: validarImporte(importe, retenciones)
 Doc --> Mov: válido: lógico
-break importe + retenciones supera el saldo pendiente (5a, RN-14)
+break importe + retenciones supera el saldo pendiente (5a, RF-30)
   Mov --> Fin: lo informa e impide registrar (vuelve al paso 3)
 end
 Fin -> Mov: confirmar(actor)
