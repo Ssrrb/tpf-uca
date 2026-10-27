@@ -46,7 +46,7 @@ def main(argv):
                  {m['cu'] for m in d['maquinas_de_estados']} |
                  {re.search(r'CU-\d+', s).group(0) for c in d['clasificadores'] for s in c['srcs']
                   if re.search(r'CU-\d+-clases', s)})
-    datos = {'formato': 1, 'cus': []}
+    datos = {'formato': 2, 'cus': []}
     for cu in cus:
         archivo = f'{cu}-clases.puml'
         clases = [{'nombre': c['name'], 'tipo': c['kind'], 'paquete': c['package']}
@@ -60,7 +60,13 @@ def main(argv):
                                for l in i['lifelines']],
                  'items': items(i['items'])}
                 for i in d['interacciones'] if i['cu'] == cu]
-        datos['cus'].append({'cu': cu, 'clases': clases, 'relaciones': rels, 'secuencias': secs})
+        acts = [{'nombre': a['name'], 'titulo': a.get('titulo'), 'particiones': a['particiones'],
+                 'nodos': [{'id': n['id'], 'tipo': n['kind'], 'nombre': n.get('name'), 'particion': n.get('particion')}
+                           for n in a['nodos']],
+                 'flujos': [{'de': f['from'], 'a': f['to'], 'guarda': f.get('guarda')} for f in a['flujos']]}
+                for a in d['actividades'] if a['cu'] == cu]
+        datos['cus'].append({'cu': cu, 'clases': clases, 'relaciones': rels, 'secuencias': secs,
+                             'actividades': acts})
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(datos, ensure_ascii=False, indent=1), encoding='utf-8')
     print(f'VP: {len(datos["cus"])} CUs → {out}')

@@ -14,6 +14,7 @@ import com.vp.plugin.DiagramManager;
 import com.vp.plugin.diagram.IDiagramElement;
 import com.vp.plugin.diagram.IDiagramUIModel;
 import com.vp.plugin.diagram.IInteractionDiagramUIModel;
+import com.vp.plugin.model.IActivation;
 import com.vp.plugin.model.ICombinedFragment;
 import com.vp.plugin.model.IFrame;
 import com.vp.plugin.model.IInteractionActor;
@@ -36,7 +37,8 @@ import com.vp.plugin.model.factory.IModelElementFactory;
  * que ya existen entre ellas; no crea elementos de modelo.
  * Secuencia: VP solo dibuja interacciones creadas con su propio editor, así que
  * se arma una nueva con lifelines cuyo clasificador base es la clase importada,
- * y mensajes que llaman a la operación importada cuando existe.
+ * mensajes numerados como los numera VP y barras de activación.
+ * Actividad: ver {@link Actividades}.
  */
 final class Dibujante {
     private final DiagramManager dm = ApplicationManager.instance().getDiagramManager();
@@ -44,6 +46,8 @@ final class Dibujante {
     private final IProject proyecto = ApplicationManager.instance().getProjectManager().getProject();
     private final Map<String, List<IModelElement>> porNombre = new HashMap<>();
     final List<String> log = new ArrayList<>();
+    /** Diagramas armados en esta corrida, para el informe. */
+    static final List<IDiagramUIModel> creados = new ArrayList<>();
 
     Dibujante() {
         for (IModelElement e : proyecto.toAllLevelModelElementArray()) {
@@ -62,6 +66,13 @@ final class Dibujante {
         for (Object s : lista(cu, "secuencias")) {
             secuencia(paquete, mapa(s));
         }
+        for (Object a : lista(cu, "actividades")) {
+            try {
+                new Actividades(log).dibujar(paquete, mapa(a));
+            } catch (RuntimeException ex) {
+                log.add(nombre + ": falló la actividad " + mapa(a).get("nombre") + ": " + ex);
+            }
+        }
     }
 
     // ------------------------------------------------------------ clases
@@ -69,7 +80,7 @@ final class Dibujante {
     private void clases(String cu, IModelElement paquete, Map<String, Object> cu_) {
         IDiagramUIModel d = dm.createDiagram(DiagramManager.DIAGRAM_TYPE_CLASS_DIAGRAM);
         d.setName(cu + " clases");
-        ubicar(d, paquete);
+        ubicar(d, paquete, log);
         Map<IModelElement, IDiagramElement> formas = new LinkedHashMap<>();
         for (Object o : lista(cu_, "clases")) {
             Map<String, Object> c = mapa(o);
@@ -98,7 +109,8 @@ final class Dibujante {
                 }
             }
         }
-        dm.layout(d, DiagramManager.LAYOUT_AUTO);
+        // Jerárquico: las generalizaciones y composiciones quedan de arriba hacia abajo.
+        dm.layout(d, DiagramManager.LAYOUT_HIERARCHIC);
         log.add(cu + " clases: " + formas.size() + " clases");
     }
 
@@ -146,18 +158,43 @@ final class Dibujante {
     private int numero;
     private int y;
 
+    /** Llamada en curso: la lifeline que la atiende, su número, cuántos mensajes salieron de ella y su tramo. */
+    private static final class Marco {
+        final IModelElement ll;
+        final String num;
+        final int desde;
+        int hijos;
+        int hasta = -1;
+
+        Marco(IModelElement ll, String num, int desde) {
+            this.ll = ll;
+            this.num = num;
+            this.desde = desde;
+        }
+    }
+
+    private final java.util.ArrayDeque<Marco> pila = new java.util.ArrayDeque<>();
+    private final List<Marco> marcos = new ArrayList<>();
+    /** Mensaje, emisor, receptor y fila: las activaciones se asignan al final, cuando se conocen las barras. */
+    private final List<Object[]> extremos = new ArrayList<>();
+    private int primeros;
+
     private void secuencia(IModelElement paquete, Map<String, Object> s) {
         sd = (IInteractionDiagramUIModel) dm.createDiagram(DiagramManager.DIAGRAM_TYPE_INTERACTION_DIAGRAM);
         String nombre = (String) s.get("nombre");
         sd.setName(nombre);
-        ubicar(sd, paquete);
+        ubicar(sd, paquete, log);
         sd.setAutoExtendActivations(false);
-        sd.setShowActivations(false);
+        sd.setShowActivations(true);
         IFrame raiz = sd.getRootFrame(true);
         lifelines.clear();
         columna.clear();
         formasLl.clear();
         numero = 0;
+        primeros = 0;
+        pila.clear();
+        marcos.clear();
+        extremos.clear();
         int alto = CABEZA + FILA * (filas(lista(s, "items")) + 2);
         int i = 0;
         for (Object o : lista(s, "lifelines")) {
@@ -189,6 +226,7 @@ final class Dibujante {
         }
         y = Y_LL + CABEZA + FILA;
         items(raiz, null, lista(s, "items"), 0);
+        activaciones(y - FILA / 2);
         dm.openDiagram(sd);
         log.add(nombre + ": " + lifelines.size() + " lifelines, " + numero + " mensajes");
     }
@@ -277,11 +315,34 @@ final class Dibujante {
         // El texto de PlantUML tal cual: con ActionTypeCall VP mostraría la firma
         // tipada de la operación en lugar del mensaje con sus argumentos.
         m.setName((String) it.get("texto"));
-        m.setSequenceNumber(String.valueOf(++numero));
+        numero++;
         m.setFrom(de);
         m.setTo(a);
         String clase = (String) it.get("clase");
-        if ("reply".equals(clase)) {
+        boolean respuesta = "reply".equals(clase);
+        // Numeración anidada como la de VP (1, 1.1, 1.1.1): un mensaje cuelga de la
+        // llamada que está atendiendo quien lo envía, y la respuesta es el último
+        // mensaje de la llamada que responde (así numera VP el return en sample.vpp).
+        // Las llamadas que quien envía ya no atiende se dan por terminadas.
+        while (!pila.isEmpty() && pila.peekLast().ll != de) {
+            pila.removeLast().hasta = y - FILA / 3;
+        }
+        if (pila.isEmpty()) {
+            Marco inicial = new Marco(de, null, y);
+            marcos.add(inicial);
+        }
+        Marco padre = pila.peekLast();
+        String num = padre == null ? String.valueOf(++primeros) : padre.num + "." + (++padre.hijos);
+        m.setSequenceNumber(num);
+        if (respuesta && padre != null) {
+            pila.removeLast().hasta = y;
+        } else if (!respuesta && de != a) {
+            Marco f = new Marco(a, num, y);
+            pila.addLast(f);
+            marcos.add(f);
+        }
+        extremos.add(new Object[] {m, de, a, y});
+        if (respuesta) {
             m.setActionType(fab.createActionTypeReturn());
         } else if ("createMessage".equals(clase)) {
             m.setType(IMessage.TYPE_CREATE_MESSAGE);
@@ -295,6 +356,85 @@ final class Dibujante {
         dm.createConnector(sd, m, formasLl.get(de), formasLl.get(a), puntos);
         y += de == a ? FILA * 2 : FILA;
         return m;
+    }
+
+    /**
+     * Barras de activación: por lifeline, la unión de los tramos de las llamadas
+     * que atendió (y del tramo inicial de quien arranca la interacción). Cada
+     * mensaje sale de la barra del emisor y llega a la del receptor en su fila.
+     */
+    private void activaciones(int fin) {
+        for (Marco f : pila) {
+            f.hasta = fin;
+        }
+        pila.clear();
+        Map<IModelElement, List<int[]>> tramos = new LinkedHashMap<>();
+        Set<IModelElement> iniciales = new java.util.HashSet<>();
+        for (Marco f : marcos) {
+            if (!(f.ll instanceof IInteractionLifeLine)) {
+                continue;
+            }
+            if (f.num == null) {
+                if (!iniciales.add(f.ll)) {
+                    continue;
+                }
+                f.hasta = fin;
+            }
+            int hasta = f.hasta < 0 ? fin : f.hasta;
+            tramos.computeIfAbsent(f.ll, k -> new ArrayList<>()).add(new int[] {f.desde - FILA / 4, hasta});
+        }
+        Map<IModelElement, List<Object[]>> barras = new HashMap<>();
+        for (Map.Entry<IModelElement, List<int[]>> e : tramos.entrySet()) {
+            List<int[]> l = e.getValue();
+            l.sort((p, q) -> Integer.compare(p[0], q[0]));
+            List<int[]> unidos = new ArrayList<>();
+            for (int[] t : l) {
+                int[] u = unidos.isEmpty() ? null : unidos.get(unidos.size() - 1);
+                if (u != null && t[0] <= u[1] + FILA / 2) {
+                    u[1] = Math.max(u[1], t[1]);
+                } else {
+                    unidos.add(new int[] {t[0], t[1]});
+                }
+            }
+            for (int[] u : unidos) {
+                try {
+                    IActivation act = fab.createActivation();
+                    ((IInteractionLifeLine) e.getKey()).addActivation(act);
+                    dm.createDiagramElement(sd, act).setBounds(centro(e.getKey()) - 4, u[0], 8, Math.max(12, u[1] - u[0]));
+                    barras.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(new Object[] {act, u});
+                } catch (RuntimeException ex) {
+                    log.add(sd.getName() + ": no pude dibujar una activación de " + e.getKey().getName() + ": " + ex);
+                }
+            }
+        }
+        for (Object[] x : extremos) {
+            IMessage m = (IMessage) x[0];
+            int fila = (Integer) x[3];
+            try {
+                IActivation de = barraEn(barras.get(x[1]), fila), a = barraEn(barras.get(x[2]), fila);
+                if (de != null) {
+                    m.setFromActivation(de);
+                }
+                if (a != null) {
+                    m.setToActivation(a);
+                }
+            } catch (RuntimeException ex) {
+                log.add(sd.getName() + ": activación del mensaje " + m.getSequenceNumber() + ": " + ex);
+            }
+        }
+    }
+
+    private static IActivation barraEn(List<Object[]> barras, int fila) {
+        if (barras == null) {
+            return null;
+        }
+        for (Object[] b : barras) {
+            int[] u = (int[]) b[1];
+            if (u[0] <= fila && fila <= u[1]) {
+                return (IActivation) b[0];
+            }
+        }
+        return null;
     }
 
     private Set<IModelElement> fragmento(IFrame raiz, IInteractionOperand padre, Map<String, Object> it, int nivel) {
@@ -318,7 +458,21 @@ final class Dibujante {
                 operando.setGuard(g);
             }
             y += FILA / 2;
+            // Cada operando arranca con las llamadas que había al entrar al fragmento:
+            // una respuesta dentro de un break o de una rama del alt no termina la
+            // llamada para lo que sigue después.
+            List<Marco> antes = new ArrayList<>(pila);
             usadas.addAll(items(raiz, operando, lista(op, "items"), nivel + 1));
+            for (Marco f : pila) {
+                if (!antes.contains(f)) {
+                    f.hasta = y - FILA / 3;
+                }
+            }
+            pila.clear();
+            pila.addAll(antes);
+            for (Marco f : antes) {
+                f.hasta = -1;
+            }
         }
         usadas.remove(null);
         for (IModelElement l : usadas) {
@@ -356,7 +510,8 @@ final class Dibujante {
     }
 
     /** Pone el diagrama dentro del paquete del CU: en VP, un diagrama cuelga del elemento que lo tiene como subdiagrama. */
-    private void ubicar(IDiagramUIModel d, IModelElement paquete) {
+    static void ubicar(IDiagramUIModel d, IModelElement paquete, List<String> log) {
+        creados.add(d);
         if (paquete == null) {
             return;
         }

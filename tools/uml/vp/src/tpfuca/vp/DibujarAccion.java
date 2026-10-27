@@ -11,6 +11,7 @@ import com.vp.plugin.ApplicationManager;
 import com.vp.plugin.ViewManager;
 import com.vp.plugin.action.VPAction;
 import com.vp.plugin.action.VPActionController;
+import com.vp.plugin.diagram.IDiagramUIModel;
 
 /** Pide qué CU dibujar (o "todos") y arma sus diagramas. */
 public class DibujarAccion implements VPActionController {
@@ -28,6 +29,7 @@ public class DibujarAccion implements VPActionController {
                 return;
             }
             pedido = pedido.trim().toUpperCase();
+            Dibujante.creados.clear();
             Dibujante d = new Dibujante();
             List<String> hechos = new ArrayList<>();
             for (Object o : cus) {
@@ -42,13 +44,16 @@ public class DibujarAccion implements VPActionController {
                 return;
             }
             String informe = String.join("\n", d.log);
-            Files.write(new File(Plugin.carpeta, "ultimo-dibujo.txt").toPath(),
-                informe.getBytes(StandardCharsets.UTF_8));
+            StringBuilder todo = new StringBuilder(informe).append("\n\n");
+            for (IDiagramUIModel dg : Dibujante.creados) {
+                todo.append(Informe.volcar(dg)).append('\n');
+            }
+            List<File> donde = Informe.escribir("tpfuca-ultimo-dibujo.txt", todo.toString());
             for (String linea : d.log) {
                 vm.showMessage(linea, "tpfuca");
             }
             vm.showMessageDialog(vm.getRootFrame(), "Dibujados: " + String.join(", ", hechos)
-                + "\n\n" + informe);
+                + "\n\n" + informe + "\n\nInforme completo en:\n" + donde);
         } catch (Exception e) {
             vm.showMessageDialog(vm.getRootFrame(), "Error al dibujar: " + e);
             e.printStackTrace();

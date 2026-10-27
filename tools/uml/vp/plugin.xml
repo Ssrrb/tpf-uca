@@ -4,7 +4,7 @@
 	description="Dibuja los diagramas de cada CU sobre el modelo importado del XMI 2.5.1"
 	provider="tpf-uca"
 	class="tpfuca.vp.Plugin"
-	version="0.2.0">
+	version="0.3.0">
 	<actionSets>
 		<actionSet id="tpfuca.vp.actionset">
 			<action
@@ -15,6 +15,15 @@
 				style="normal"
 				ribbonPath="Project/Import/XML">
 				<actionController class="tpfuca.vp.DibujarAccion"/>
+			</action>
+			<action
+				id="tpfuca.vp.inspeccionar"
+				actionType="generalAction"
+				label="Inspeccionar diagrama abierto"
+				tooltip="Guarda la estructura del diagrama abierto en tpfuca-inspeccion.txt, junto al proyecto"
+				style="normal"
+				ribbonPath="Project/Import/XML">
+				<actionController class="tpfuca.vp.InspeccionarAccion"/>
 			</action>
 		</actionSet>
 	</actionSets>
