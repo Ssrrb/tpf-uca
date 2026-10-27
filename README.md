@@ -78,7 +78,8 @@ para importarlo en Visual Paradigm:
 ```
 
 - Cómo se traduce cada construcción: [docs/uml-subset.md](docs/uml-subset.md).
-- Cómo importarlo en VP: [docs/import-vp.md](docs/import-vp.md).
+- Cómo importarlo en VP y dibujar los diagramas con el plugin `tools/uml/vp`:
+  [docs/import-vp.md](docs/import-vp.md). Por qué VP: [docs/herramienta-case.md](docs/herramienta-case.md#decisión-2-visual-paradigm-como-case-real).
 - Checks del modelo único (fallan el build): **P1** construcción sin traducción a
   UML 2.5.1, **C1** nombres duplicados o variantes, **C2** la misma clase con
   tipo o paquete distinto, **C3** lifeline sin clase o mensaje a una operación
@@ -106,4 +107,4 @@ javac -d build/java -cp "$CP" tools/uml/eclipse/ValidarUML.java
 java -cp "build/java:$CP" ValidarUML build/model.xmi
 ```
 
-Por qué PlantUML y no otra herramienta: [docs/herramienta-case.md](docs/herramienta-case.md).
+Por qué PlantUML y Visual Paradigm: [docs/herramienta-case.md](docs/herramienta-case.md).
