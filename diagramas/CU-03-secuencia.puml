@@ -92,7 +92,7 @@ V --> Ing: costo por ítem y rubro, datos faltantes
 
 alt confirma (paso 7)
   Ing -> PC: activar(version, actor)
-  critical activación atómica (NF-03)
+  critical activación atómica (NF-02)
     alt versión nueva
       PC -> Ant: pasarAHistórica()
       PC -> V: marcarVigente(actor)

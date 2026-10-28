@@ -46,9 +46,9 @@ loop por cada ítem con mediciones hasta la fecha
   Med --> Ctrl: insumos consumidos
 end
 Ctrl -> CR: gastosPorRubro(obra, fecha)
-CR --> Ctrl: gastos imputados por rubro (RF-31)
+CR --> Ctrl: gastos imputados por rubro (RF-21)
 Ctrl -> CR: liquidacionesHasta(obra, fecha)
-CR --> Ctrl: liquidaciones de subcontratistas (RF-25)
+CR --> Ctrl: liquidaciones de subcontratistas (RF-16)
 break no hay mediciones ni gastos hasta la fecha (1b)
   Ctrl --> Ing: lo informa; el CU termina
 end
@@ -73,7 +73,7 @@ loop por cada ítem
   create Lin
   Ctrl -> Lin: «create»(presupuestado, consumido, liquidado, comprado)
 end
-Ctrl --> Ing: por rubro e ítem: presupuestado, consumido según ACU,\nliquidado, comprado, acopio, desvío, diferencias y saldo,\nincluidos los rubros en negativo (RF-26)
+Ctrl --> Ing: por rubro e ítem: presupuestado, consumido según ACU,\nliquidado, comprado, acopio, desvío, diferencias y saldo,\nincluidos los rubros en negativo (RF-17)
 
 opt filtra por rubro, ejecutor o tipo de gasto (1a)
   Ing -> Ctrl: filtrar(criterio)
@@ -84,7 +84,7 @@ alt el total sale de mediciones
 else el total sale de gastos
   Ctrl -> G: verComprobante()
 end
-Ctrl --> Ing: respaldo (NF-12)
+Ctrl --> Ing: respaldo (NF-11)
 opt exporta (7a)
   Ing -> Ctrl: exportar(formato)
 end

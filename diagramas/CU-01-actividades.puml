@@ -43,7 +43,7 @@ if (¿Crear una obra o avanzar el estado de una existente?) then ([crear])
     y, si corresponde, anticipo y fondo de reparo;
     :Asignar los responsables y el rol de cada uno;
     :Confirmar la creación;
-    |ERP|
+    |Ctrl+ · ERP|
     if (¿El código ya está en uso?) then ([sí])
       :Pedir otro código;
     elseif (¿Algún responsable no es miembro?) then ([sí])
@@ -56,12 +56,12 @@ if (¿Crear una obra o avanzar el estado de una existente?) then ([crear])
   repeat while (¿Hubo un rechazo?) is ([sí]) not ([no])
 else ([avanzar estado])
   :Elegir una obra existente;
-  |ERP|
+  |Ctrl+ · ERP|
   if (¿La obra está cerrada?) then ([sí])
     :Informar que no hay estado siguiente;
   else ([no])
     :Pasar al estado siguiente y registrar
-    actor y fecha (RF-33);
+    actor y fecha (RF-23);
   endif
 endif
 |Administrador|

@@ -26,8 +26,10 @@ left to right direction
 skinparam nodesep 25
 skinparam ranksep 110
 
-actor "Administrador" as ADM
-actor "Ingeniero de obra" as ING
+actor "Ingeniero de obra\n(1)" as ING
+actor "Administrador\n(1)" as ADM
+actor "Ingeniero de obra\n(2)" as ING2
+actor "Administrador\n(2)" as ADM2
 actor "Finanzas y tesorería" as FIN
 
 rectangle "Ctrl+" {
@@ -37,17 +39,17 @@ rectangle "Ctrl+" {
     usecase "CU-09 Registrar contrato\nde subcontratista" as CU09
   }
   package "ECMS" {
-    usecase "CU-02 Cargar el\npresupuesto del cliente" as CU02
+    usecase "CU-02 Cargar el\npresupuesto del cliente\n--\npuntos de extensión:\ncarga guardada (paso 5)" as CU02
     usecase "CU-16 Validar y finalizar el\npresupuesto del cliente" as CU16
     usecase "CU-03 Armar y versionar el\npresupuesto de costos" as CU03
-    usecase "CU-04 Medir el avance\ndel certificado" as CU04
+    usecase "CU-04 Medir el avance\ndel certificado\n--\npuntos de extensión:\nexceso sobre el saldo (4a)" as CU04
     usecase "CU-10 Controlar el costo\nde la obra con el ACU" as CU10
-    usecase "CU-11 Registrar adenda" as CU11
+    usecase "CU-11 Registrar adenda\n--\npuntos de extensión:\nadenda registrada (paso 6)" as CU11
     usecase "CU-12 Liquidar subcontratista" as CU12
     usecase "CU-15 Emitir presupuesto\nde adendas" as CU15
   }
   package "Motor de finanzas" {
-    usecase "CU-06 Calcular el certificado\ny el consumo de recursos" as CU06
+    usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nversión guardada (paso 6)" as CU06
     usecase "CU-07 Registrar gasto de obra" as CU07
     usecase "CU-08 Generar factura interna\ndel certificado" as CU08
     usecase "CU-13 Consultar tablero\nfinanciero" as CU13
@@ -55,33 +57,52 @@ rectangle "Ctrl+" {
   }
 }
 
-' Administrador
+' Relaciones entre casos de uso (UML 2: del que extiende al caso base)
+CU16 ..> CU02 : <<extend>>\n[valida al terminar la carga]
+CU11 ..> CU04 : <<extend>>\n[la cantidad supera el saldo]
+CU15 ..> CU11 : <<extend>>\n[hay que emitir el presupuesto\nde adendas al cliente]
+CU12 ..> CU06 : <<extend>>\n[la versión tiene ítems\nsubcontratados]
+
+' Los actores (1) quedan a la izquierda y los (2) a la derecha,
+' junto a los CU que usan, para que ninguna asociación cruce el diagrama.
+' Ingeniero de obra (1): CU del ECMS que quedan a la izquierda
+ING -- CU16
+ING -- CU15
+ING -- CU12
+ING -- CU03
+ING -- CU10
+
+' Administrador (1): ERP y control de costos
+ADM -- CU10
 ADM -- CU01
 ADM -- CU05
-ADM -- CU07
 ADM -- CU09
-ADM -- CU10
-ADM -- CU13
 
-' Ingeniero de obra
-ING -- CU02
-ING -- CU03
-ING -- CU04
-ING -- CU06
-ING -- CU07
-ING -- CU10
-ING -- CU11
-ING -- CU12
-ING -- CU15
-ING -- CU16
+' Ingeniero de obra (2), Administrador (2) y Finanzas y tesorería: a la derecha
+CU02 -- ING2
+CU11 -- ING2
+CU04 -- ING2
+CU06 -- ING2
+CU07 -- ING2
+CU07 -- ADM2
+CU13 -- ADM2
+CU13 -- FIN
+CU08 -- FIN
+CU14 -- FIN
 
-' Finanzas y tesorería
-FIN -- CU08
-FIN -- CU13
-FIN -- CU14
+note as ORDEN
+  <b>Orden de trabajo</b> (precondiciones, no son relaciones UML):
+  CU-01 y CU-05 → CU-02 → CU-16 → CU-03 → CU-09
+  → CU-04 → CU-06 → CU-08 y CU-12 → CU-14 → CU-13.
+  CU-07, CU-10, CU-11 y CU-15 se usan durante la obra.
+end note
 
 legend bottom
   Línea continua sin flecha = asociación actor - caso de uso (UML 2).
+  Discontinua con punta abierta y «extend» = el CU de origen agrega comportamiento
+  opcional al CU base en su punto de extensión, si se cumple la condición [ ].
+  No hay «include»: ningún CU tiene un tramo obligatorio que se repita en otro.
+  (1) y (2) = el mismo actor dibujado dos veces, a cada lado, para que sus líneas no crucen el diagrama.
   Los paquetes son los subsistemas de Ctrl+ (ERP, ECMS y Motor de finanzas);
   cada CU está en el subsistema principal que lo resuelve. Los subsistemas no son actores.
   CU-06: calcula el Motor de finanzas y el ERP registra el consumo de insumos.

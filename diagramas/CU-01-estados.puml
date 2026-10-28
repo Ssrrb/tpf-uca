@@ -53,7 +53,7 @@ recepcion_definitiva --> cerrada : avanzarEstado(actor)
 cerrada --> [*]
 
 note right of cerrada
-  Los estados solo avanzan (RF-33).
+  Los estados solo avanzan (RF-23).
   Cada cambio queda con actor y fecha.
 end note
 @enduml

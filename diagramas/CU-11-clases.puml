@@ -34,14 +34,15 @@ package "ECMS" {
   class "Apartado Adendas" as ApartadoAdendas {
     /utilizado: guaraníes
     --
-    + crearAdenda(ítem, tipo, cantidad, precioVenta, costo): Adenda
-    + crearÍtemNuevo(rubro, descripción, unidad): ÍtemCostos
+    + crearAmpliación(ítem, cantidad, precioVenta, costo): Adenda
+    + crearÍtemNuevo(rubro, descripción, unidad, cantidad, precioVenta, costo): Adenda
+    + crearAmpliaciónDePlazo(nuevaFechaFin): Adenda
     + utilizado(): guaraníes
     + registrar(adenda, actor): vacío
   }
 
   class Adenda {
-    tipo: TipoAdenda
+    tipo: texto {ampliación | ítem nuevo | ampliación de plazo}
     cantidad: decimal [0..1]
     precioVenta: guaraníes [0..1]
     costo: guaraníes [0..1]
@@ -76,11 +77,6 @@ package "ECMS" {
     + liberarRetenida(cantidad): vacío
   }
 
-  enum TipoAdenda {
-    ampliación
-    ítem_nuevo
-    ampliación_de_plazo
-  }
 }
 
 package "ERP" {
@@ -103,9 +99,12 @@ ApartadoAdendas "0..*" --> "1" Obra : de la obra
 
 note bottom of Adenda
   No modifica la versión vigente del presupuesto
-  de costos (RF-21). Suma al saldo contractual
-  del ítem (RF-10). Sin adenda, el rubro queda
+  de costos (RF-14). Suma al saldo contractual
+  del ítem (RF-08). Sin adenda, el rubro queda
   en negativo como mayor costo.
+  El tipo lo fija la operación que la crea en el
+  apartado Adendas (crearAmpliación, crearÍtemNuevo
+  o crearAmpliaciónDePlazo); no es una clase aparte.
 end note
 
 legend bottom

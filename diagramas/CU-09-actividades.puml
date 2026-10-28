@@ -39,14 +39,14 @@ start
 repeat
   :Seleccionar el subcontratista e ingresar
   número, fechas y archivo del contrato;
-  |ERP|
+  |Ctrl+ · ERP|
 repeat while (¿Número repetido o archivo faltante o no permitido?) is ([sí]) not ([no])
 |Administrador|
 repeat
   :Seleccionar un ítem del alcance
   e ingresar precio y límite;
-  |ERP|
-  :Consultar el saldo del ítem en el ECMS (RF-10);
+  |Ctrl+ · ERP|
+  :Consultar el saldo del ítem en el ECMS (RF-08);
   if (¿El límite supera lo presupuestado?) then ([sí])
     :Rechazar el ítem e informar el exceso;
   elseif (¿Ya está asignado a otro contrato?) then ([sí])
@@ -58,7 +58,7 @@ repeat
 repeat while (¿Hay más ítems?) is ([sí]) not ([no])
 :Ingresar impuestos, retenciones y fondo de reparo;
 :Confirmar el contrato;
-|ERP|
-:Guardar el contrato y su vínculo con el alcance (RF-23);
+|Ctrl+ · ERP|
+:Guardar el contrato y su vínculo con el alcance (RF-15);
 stop
 @enduml

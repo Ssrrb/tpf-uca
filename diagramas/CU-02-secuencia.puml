@@ -45,11 +45,11 @@ alt carga desde XLSX
     Pres --> Ing: carga rechazada con el motivo
   end
   Pres -> Pres: esArchivoRepetido(huella)
-  break el mismo XLSX ya se cargó sin cambios (2b, NF-07)
+  break el mismo XLSX ya se cargó sin cambios (2b, NF-06)
     Pres --> Ing: lo informa; no se crea otra carga
   end
   Pres -> Arch: guardar()
-  break falla el guardado (NF-03)
+  break falla el guardado (NF-02)
     Pres -> Pres: descartarCargaIncompleta()
     Pres --> Ing: carga descartada; se puede reintentar
   end

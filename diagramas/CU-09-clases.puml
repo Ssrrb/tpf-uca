@@ -91,7 +91,7 @@ Contrato "0..*" --> "0..*" Retencion : aplica
 
 note bottom of SaldoItem
   El ECMS lleva el saldo de cada ítem y el ERP lo consulta:
-  ninguna cantidad se asigna a dos contratos (RF-10).
+  ninguna cantidad se asigna a dos contratos (RF-08).
 end note
 
 legend bottom

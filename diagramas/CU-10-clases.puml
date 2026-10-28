@@ -113,7 +113,7 @@ LineaControl "0..*" --> "1" ItemCostos : de
 
 note bottom of LineaControl
   Materiales: comprado - consumido = acopio, no mayor costo.
-  Mano de obra y equipos: la diferencia es desvío (RF-26).
+  Mano de obra y equipos: la diferencia es desvío (RF-17).
   La consulta no modifica ni cierra nada.
 end note
 

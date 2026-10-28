@@ -87,7 +87,7 @@ LibroFinanciero ..> Obra : de
 
 note bottom of TotalTablero
   Cada total indica fecha, unidad, moneda
-  y procedencia, y abre su respaldo (NF-11, NF-12).
+  y procedencia, y abre su respaldo (NF-10, NF-11).
 end note
 
 legend bottom

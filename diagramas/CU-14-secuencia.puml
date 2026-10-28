@@ -32,7 +32,7 @@ participant "comprobante:\nComprobante" as Comp
 end box
 
 Fin -> Obra: permiteCobrosYPagos()
-Obra --> Fin: permitido hasta la recepción definitiva (RF-33)
+Obra --> Fin: permitido hasta la recepción definitiva (RF-23)
 alt factura a cobrar o liquidación a pagar (paso 1)
   Fin -> Doc: mostrarConOrigen()
 else devolución del fondo de reparo (1a)
@@ -54,7 +54,7 @@ create Comp
 Mov -> Comp: «create»(tipo, archivo)
 Mov -> Doc: validarImporte(importe, retenciones)
 Doc --> Mov: válido: lógico
-break importe + retenciones supera el saldo pendiente (5a, RF-30)
+break importe + retenciones supera el saldo pendiente (5a, RF-20)
   Mov --> Fin: lo informa e impide registrar (vuelve al paso 3)
 end
 Fin -> Mov: confirmar(actor)

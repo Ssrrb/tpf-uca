@@ -39,10 +39,10 @@ V --> Ing: ítems subcontratados sin liquidar, agrupados por contrato
 loop por cada contrato de la versión (3a)
   loop por cada línea del contrato
     Ing -> Con: valorizar(ítem, cantidad)
-    Con --> Ing: importe al precio del contrato (RF-25)
+    Con --> Ing: importe al precio del contrato (RF-16)
     V -> Lin: estaLiquidada()
     Lin --> V: liquidada: lógico
-    opt ya se liquidó en otra versión (4a, RF-10)
+    opt ya se liquidó en otra versión (4a, RF-08)
       V --> Ing: la excluye e informa en cuál
     end
   end
@@ -55,7 +55,7 @@ loop por cada contrato de la versión (3a)
     Ing -> V: enviarALiquidar(contrato, actor)
     V -> Mot: liquidar(version, contrato, cantidades)
     Mot -> Mot: buscar(version, contrato)
-    alt ya existe (reintento, NF-03)
+    alt ya existe (reintento, NF-02)
       Mot --> V: número de la liquidación existente
     else no existe
       create Liq

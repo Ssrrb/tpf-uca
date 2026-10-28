@@ -101,7 +101,7 @@ Item "0..*" --> "0..1" Hoja : fila de origen
 note bottom of PresupuestoCliente
   Queda en propuesta, lista para validar
   y finalizar (CU-16).
-  Mismo XLSX sin cambios: no se crea otra carga (NF-07).
+  Mismo XLSX sin cambios: no se crea otra carga (NF-06).
 end note
 
 legend bottom

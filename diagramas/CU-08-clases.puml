@@ -111,7 +111,7 @@ Obra "0..*" --> "1" Cliente : cliente
 Facturacion ..> DocumentoInterno : genera
 
 note bottom of DocumentoInterno
-  Toma el neto y el IVA de la versión sin recalcularlos (RF-14).
+  Toma el neto y el IVA de la versión sin recalcularlos (RF-11).
   Sin crédito fiscal ni validez ante Marangatu:
   la factura legal se emite fuera de Ctrl+.
 end note

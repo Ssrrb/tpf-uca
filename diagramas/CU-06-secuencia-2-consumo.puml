@@ -48,10 +48,10 @@ loop por cada medición incluida en la versión
     end
   end
 end
-Calc --> Ing: versión valorizada y consumo de insumos (RF-13, RF-34)
+Calc --> Ing: versión valorizada y consumo de insumos (RF-10, RF-24)
 
 Ing -> Calc: confirmar(version, actor)
-critical guardado atómico (NF-03)
+critical guardado atómico (NF-02)
   Calc -> V: guardar(actor)
   loop por cada línea de cantidad
     V -> Med: marcarCertificada(version)

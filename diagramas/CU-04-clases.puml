@@ -151,7 +151,7 @@ LineaCertificado "0..*" --> "1" SaldoItem : ítem
 note bottom of SaldoItem
   saldoContractual = cliente + adendas - certificada.
   Lo que lo supera queda retenido hasta una adenda,
-  y una cantidad se cuenta una sola vez (RF-10).
+  y una cantidad se cuenta una sola vez (RF-08).
 end note
 
 legend bottom

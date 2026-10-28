@@ -134,11 +134,11 @@ ConsumoRegistrado "0..*" --> "1" Medicion : origen
 ConsumoRegistrado "0..*" --> "1" VersionCertificado : al calcular
 
 note bottom of VersionCertificado
-  Orden de cálculo (RF-13): bruto, amortización del anticipo,
+  Orden de cálculo (RF-10): bruto, amortización del anticipo,
   fondo de reparo, neto e IVA, en guaraníes enteros
-  redondeados por línea (NF-06).
+  redondeados por línea (NF-05).
   Guardada, no se modifica: se corrige con líneas
-  de ajuste en la versión siguiente (RF-12).
+  de ajuste en la versión siguiente (RF-09).
 end note
 
 legend bottom

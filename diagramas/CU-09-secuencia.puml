@@ -54,7 +54,7 @@ loop por cada ítem del alcance
   Saldo --> Con: disponible
   alt el límite supera lo presupuestado (5a)
     Con --> Admin: rechaza el ítem e informa el exceso
-  else la cantidad ya está asignada a otro contrato (5d, RF-10)
+  else la cantidad ya está asignada a otro contrato (5d, RF-08)
     Con --> Admin: lo informa para evitar el doble conteo
   else válido
     create IC
@@ -70,7 +70,7 @@ Admin -> Con: confirmar(actor)
 loop por cada ítem del contrato
   Con -> Saldo: reservarParaContrato(cantidad)
 end
-Con --> Admin: contrato guardado y vinculado al alcance (RF-23)
+Con --> Admin: contrato guardado y vinculado al alcance (RF-15)
 note over Item, Saldo
   El saldo es del ítem de costos (código estable, RF-05).
 end note

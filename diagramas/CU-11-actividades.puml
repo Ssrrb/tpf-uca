@@ -36,7 +36,7 @@ title CU-11 · Actividades · Registrar adenda
 |Ingeniero de obra|
 start
 :Seleccionar la obra;
-|ECMS|
+|Ctrl+ · ECMS|
 :Mostrar los ítems con saldo negativo
 y la cantidad retenida de cada uno;
 |Ingeniero de obra|
@@ -54,9 +54,9 @@ else ([ampliación de plazo])
   :Ingresar la nueva fecha de fin;
 endif
 :Ingresar el motivo y adjuntar el respaldo;
-|ECMS|
+|Ctrl+ · ECMS|
 :Calcular precio de venta, costo, límite,
-utilizado y saldo (RF-20);
+utilizado y saldo (RF-13);
 if (¿Supera el límite de la obra?) then ([sí])
   :Informar e impedir confirmar;
   stop
@@ -64,14 +64,14 @@ else ([no])
 endif
 |Ingeniero de obra|
 :Confirmar;
-|ECMS|
+|Ctrl+ · ECMS|
 :Registrar el costo en el apartado Adendas
 y el precio en el presupuesto de adendas;
 if (¿Es ampliación de plazo?) then ([sí])
   :Actualizar la fecha de fin vigente de la obra;
 else ([no])
   :Sumar la cantidad al saldo contractual
-  y liberar la cantidad retenida (RF-10);
+  y liberar la cantidad retenida (RF-08);
 endif
 stop
 @enduml

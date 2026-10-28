@@ -79,7 +79,7 @@ PresupuestoAdendas ..> ApartadoAdendas : toma las adendas
 note bottom of VersionAdendas
   Documento contractual con el cliente. A diferencia del
   presupuesto del cliente se puede editar: cada edición
-  crea una versión y conserva la anterior (RF-06, NF-05).
+  crea una versión y conserva la anterior (RF-06, NF-04).
   El precio de venta se acuerda al registrar la adenda (CU-11);
   acá solo se corrige la descripción.
 end note

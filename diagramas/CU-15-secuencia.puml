@@ -50,7 +50,7 @@ loop por cada adenda registrada
   create Lin
   V -> Lin: «create»(adenda, descripción, precioVenta)
 end
-V --> Ing: versión en edición (RF-21)
+V --> Ing: versión en edición (RF-14)
 
 opt corrige la descripción de una adenda (paso 5)
   Ing -> V: corregirLínea(línea, descripción, motivo)
@@ -65,7 +65,7 @@ alt confirma (paso 6)
   end
   V -> PA: activar(version)
   PA -> Ant: pasarAAnterior()
-  V --> Ing: versión vinculada a la anterior, con actor y fecha (NF-05)
+  V --> Ing: versión vinculada a la anterior, con actor y fecha (NF-04)
   opt exporta para enviarla al cliente (7a, PR-04)
     Ing -> V: exportar(formato)
   end

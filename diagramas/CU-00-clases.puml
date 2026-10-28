@@ -135,7 +135,7 @@ Cobro "0..*" --> "1" FacturaInterna : cancela
 Pago "0..*" --> "1" Liquidacion : cancela
 
 note bottom of Liquidacion
-  Única por versión del certificado y contrato (RF-25).
+  Única por versión del certificado y contrato (RF-16).
 end note
 
 legend bottom

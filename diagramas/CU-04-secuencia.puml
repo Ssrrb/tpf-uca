@@ -38,7 +38,7 @@ end box
 
 Ing -> Obra: permiteMediciones()
 Obra --> Ing: permitido: lógico
-break la obra no está en ejecución (RF-33)
+break la obra no está en ejecución (RF-23)
   Obra --> Ing: no se registran mediciones
 end
 Ing -> Item: obtenerSaldo()
@@ -57,7 +57,7 @@ loop por cada ítem medido
   Med -> Evi: «create»(tipo, archivo)
   Med -> Saldo: estaContada(cantidad, medicion)
   Saldo --> Med: contada: lógico
-  break ya está contada en otra medición (4b, RF-10)
+  break ya está contada en otra medición (4b, RF-08)
     Med --> Ing: rechazada; indica dónde figura
   end
   Ing -> Med: confirmar(actor)
@@ -90,7 +90,7 @@ loop por cada ítem con mediciones o ajustes sin certificar
   V -> Med: incluirEn(version)
 end
 Ing -> V: cerrarCantidades(actor)
-V --> Ing: versión con avance anterior, de la versión\ny acumulado, lista para el cálculo (RF-12, CU-06)
+V --> Ing: versión con avance anterior, de la versión\ny acumulado, lista para el cálculo (RF-09, CU-06)
 
 == *a Anular o ajustar una medición ==
 Ing -> Med: puedeAnularse()

@@ -55,12 +55,12 @@ alt elige una versión del certificado (paso 3)
   else neto negativo por ajustes (3a)
     Fac -> Doc: «create» NotaCreditoInterna(neto, iva de la versión)
   end
-else elige el anticipo (3b, RF-32)
+else elige el anticipo (3b, RF-22)
   Fin -> Fac: generarFacturaAnticipo(anticipo, actor)
   Fac -> Doc: «create» FacturaInterna(importe del anticipo)
   Fac -> Ant: marcarFacturado()
 end
-Fac --> Fin: documento en PYG, sin validez fiscal (RF-14)
+Fac --> Fin: documento en PYG, sin validez fiscal (RF-11)
 
 alt adjunta la factura legal (paso 6)
   Fin -> Doc: adjuntarFacturaLegal(número, fecha, importe, archivo)
