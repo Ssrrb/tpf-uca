@@ -95,6 +95,7 @@ Gasto "0..*" --> "0..1" Persona : pagado a
 Gasto "1" *-- "1..*" Imputacion : se reparte en
 Imputacion "0..*" --> "1" VersionCostos : rubro de la vigente
 Gasto "1" *-- "1" Comprobante : respaldo
+Imputacion "0..*" --> "1" CostoReal : suma al
 
 note bottom of Gasto
   Caja chica: no supera el tope de la obra;

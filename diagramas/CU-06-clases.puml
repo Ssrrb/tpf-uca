@@ -122,6 +122,7 @@ VersionCertificado "0..*" --> "0..1" PresupuestoAdendas : precios de adendas
 VersionCertificado "0..*" --> "0..1" Anticipo : amortiza
 VersionCertificado "0..*" --> "1" Obra : de la obra
 Obra "1" *-- "1" ConsumosObra : consumos
+ConsumosObra "0..*" --> "0..*" Insumo : registra el consumo de
 
 note bottom of VersionCertificado
   Orden de cálculo (RF-10): bruto, amortización del anticipo,
