@@ -43,7 +43,7 @@ state "Cobrada" as cobrada
 
 [*] --> generada : generarFactura(versión, actor)
 generada --> confirmacion : confirmar(actor)
-confirmacion --> pendiente_de_adjuntar : [sin factura legal (6a)]
+confirmacion --> pendiente_de_adjuntar : [sin factura legal (3a)]
 confirmacion --> a_cobrar : [factura legal adjunta]
 pendiente_de_adjuntar --> a_cobrar : adjuntarFacturaLegal(número, fecha, importe, archivo)
 a_cobrar --> cobro : registrarCobro(importe, retenciones) [CU-14]

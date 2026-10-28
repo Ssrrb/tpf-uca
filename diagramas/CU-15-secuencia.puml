@@ -31,14 +31,14 @@ end box
 
 Ing -> PA: versiones()
 PA --> Ing: versión vigente y anteriores (RF-06)
-opt solo quiere una versión anterior (2a)
+opt solo quiere una versión anterior (1a)
   Ing -> Ant: exportar(formato)
   Ant --> Ing: XLSX o PDF; el CU termina
 end
 
 Ing -> PA: emitirVersión(actor)
 PA -> PA: hayCambios()
-break no hay adendas nuevas ni cambios (4a)
+break no hay adendas nuevas ni cambios (2a)
   PA --> Ing: lo informa; no se crea versión
 end
 PA -> Apa: adendasRegistradas()
@@ -52,24 +52,24 @@ loop por cada adenda registrada
 end
 V --> Ing: versión en edición (RF-14)
 
-opt corrige la descripción de una adenda (paso 5)
+opt corrige la descripción de una adenda (paso 3)
   Ing -> V: corregirLínea(línea, descripción, motivo)
   V -> Lin: corregir(descripción, motivo)
 end
 
-alt confirma (paso 6)
+alt confirma (paso 4)
   Ing -> V: guardar(actor)
   V -> V: validarMotivos()
-  break falta el motivo de una corrección (6b)
-    V --> Ing: marca el campo (vuelve al paso 5)
+  break falta el motivo de una corrección (4b)
+    V --> Ing: marca el campo (vuelve al paso 3)
   end
   V -> PA: activar(version)
   PA -> Ant: pasarAAnterior()
   V --> Ing: versión vinculada a la anterior, con actor y fecha (NF-04)
-  opt exporta para enviarla al cliente (7a, PR-04)
+  opt exporta para enviarla al cliente (5a, PR-04)
     Ing -> V: exportar(formato)
   end
-else cancela (6a)
+else cancela (4a)
   Ing -> V: cancelar()
   V --> Ing: no se crea versión; la vigente no cambia
 end

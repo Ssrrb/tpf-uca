@@ -46,7 +46,7 @@ alt exceso de cantidad de un ítem (paso 3)
   Ing -> Apa: crearAmpliación(ítem, cantidad, precioVenta, costo)
   create Ad
   Apa -> Ad: «create»(ampliación, ítem, cantidad, precioVenta, costo)
-else ítem nuevo (2b)
+else ítem nuevo (2a)
   Ing -> Apa: crearÍtemNuevo(rubro, descripción, unidad, cantidad, precioVenta, costo)
   create Item
   Apa -> Item: «create»(rubro, descripción, unidad)
@@ -55,7 +55,7 @@ else ítem nuevo (2b)
     Desde ahora admite mediciones (CU-04)
     que entran en el certificado (CU-06).
   end note
-else ampliación de plazo (2c)
+else ampliación de plazo (2b)
   Ing -> Apa: crearAmpliaciónDePlazo(nuevaFechaFin)
   Apa -> Ad: «create»(ampliación de plazo, nuevaFechaFin)
 else decide no registrar adenda (3a)
@@ -71,14 +71,14 @@ Apa -> Obra: obtenerLímiteAdendas()
 Obra --> Apa: límite
 Apa -> Apa: utilizado()
 Apa --> Ing: precio de venta, costo, límite, utilizado y saldo (RF-13)
-break la adenda supera el límite de la obra (5a)
+break la adenda supera el límite de la obra (4a)
   Apa --> Ing: lo informa e impide confirmar
 end
 
 Ing -> Apa: registrar(adenda, actor)
 Apa -> Ad: validarDatos()
 Ad --> Apa: faltantes
-break faltan motivo, respaldo o importes (6a)
+break faltan motivo, respaldo o importes (5a)
   Apa --> Ing: marca los campos (vuelve al paso 3)
 end
 critical registro atómico (NF-02)

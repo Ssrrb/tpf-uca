@@ -47,6 +47,6 @@ anterior --> [*]
 descartada --> [*]
 
 note right of anterior
-  Sigue consultable y exportable (2a).
+  Sigue consultable y exportable (1a).
 end note
 @enduml

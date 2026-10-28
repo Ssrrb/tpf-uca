@@ -37,14 +37,14 @@ Admin -> Obra: registrarContrato(subcontratista, número, fechas, archivo)
 Obra -> Prov: esSubcontratista()
 Prov --> Obra: sí
 Obra -> Obra: númeroContratoDisponible(número)
-break el número ya existe en la obra (5b)
-  Obra --> Admin: pide otro número (vuelve al paso 2)
+break el número ya existe en la obra (4b)
+  Obra --> Admin: pide otro número (vuelve al paso 1)
 end
 create Con
 Obra -> Con: «create»(subcontratista, número, fechas, archivo)
 Con -> Con: validarArchivo()
-break falta el archivo o el formato no está permitido (5c)
-  Con --> Admin: impide confirmar (vuelve al paso 2)
+break falta el archivo o el formato no está permitido (4b)
+  Con --> Admin: impide confirmar (vuelve al paso 1)
 end
 loop por cada ítem del alcance
   Admin -> Con: agregarÍtem(ítem, precio, límite)
@@ -52,9 +52,9 @@ loop por cada ítem del alcance
   Saldo --> Con: presupuestada
   Con -> Saldo: disponibleParaContratos()
   Saldo --> Con: disponible
-  alt el límite supera lo presupuestado (5a)
+  alt el límite supera lo presupuestado (4a)
     Con --> Admin: rechaza el ítem e informa el exceso
-  else la cantidad ya está asignada a otro contrato (5d, RF-08)
+  else la cantidad ya está asignada a otro contrato (4a, RF-08)
     Con --> Admin: lo informa para evitar el doble conteo
   else válido
     create IC

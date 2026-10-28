@@ -61,7 +61,7 @@ loop por cada rubro al que se imputa (3a: varios rubros)
     G -> VC: rubroGastosGenerales()
     VC --> G: "Gastos generales de obra"
     G -> Imp: «create»(gastos generales, importe)
-  else rubro inexistente en la vigente (3b)
+  else rubro inexistente en la vigente
     G --> Usr: impide imputar
   end
 end
@@ -77,7 +77,7 @@ opt gasto de caja chica (1a, RF-21)
   end
 end
 Usr -> G: confirmar(actor)
-break falta el comprobante (6a)
+break falta el comprobante (5a)
   G --> Usr: marca el campo e impide confirmar (vuelve al paso 4)
 end
 loop por cada imputación

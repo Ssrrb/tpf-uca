@@ -62,7 +62,7 @@ loop por cada ítem
       Acu -> Ins: obtenerPrecioVigente(fecha)
       Ins --> Acu: precio [0..1]
     end
-    break insumo sin precio vigente (3a)
+    break insumo sin precio vigente
       Acu --> Ing: informa el insumo; no calcula ese rubro
     end
   else ítem subcontratado
@@ -85,9 +85,6 @@ else el total sale de gastos
   Ctrl -> G: verComprobante()
 end
 Ctrl --> Ing: respaldo (NF-11)
-opt exporta (7a)
-  Ing -> Ctrl: exportar(formato)
-end
 note over Ing, Lin
   5a: si la diferencia muestra un ACU mal estimado,
   el Ingeniero lo corrige en una versión nueva (CU-03).

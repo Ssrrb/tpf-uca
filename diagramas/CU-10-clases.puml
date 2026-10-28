@@ -33,7 +33,6 @@ package "ECMS" {
     + consultar(obra, fechaConsulta): lista de LíneaControl
     + filtrar(criterio): vacío
     + verRespaldo(total): lista de archivo
-    + exportar(formato: XLSX | PDF): archivo
   }
 
   class "Línea de control" as LineaControl {
