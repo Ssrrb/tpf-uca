@@ -35,7 +35,7 @@ package "ECMS" {
     + activar(versión, actor): vacío
   }
 
-  enum EstadoVersionCostos {
+  enum EstadoVersionCostos <<enumeration>> {
     propuesta
     vigente
     historica
@@ -120,6 +120,7 @@ ItemCostos "1" *-- "0..1" ACU : análisis
 ACU "1" *-- "1..*" LineaACU : insumos
 LineaACU "0..*" --> "1" Insumo : usa
 
+VersionCostos ..> EstadoVersionCostos : estado
 note bottom of VersionCostos
   Solo una versión vigente por obra.
   Corregir cantidad, unidad, precio o ubicación crea

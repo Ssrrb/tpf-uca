@@ -93,7 +93,7 @@ package "ERP" {
     fecha: fecha y hora
   }
 
-  enum EstadoObra {
+  enum EstadoObra <<enumeration>> {
     en_ejecucion
     recepcion_provisoria
     recepcion_definitiva
@@ -110,6 +110,7 @@ Obra "1" *-- "0..*" Asignacion : responsables
 Asignacion "0..*" --> "1" Usuario : asigna a
 Obra "1" *-- "0..*" CambioEstado : historial
 
+Obra ..> EstadoObra : estado
 note bottom of Obra
   Código único por organización (5a).
   El estado solo avanza (RF-23).

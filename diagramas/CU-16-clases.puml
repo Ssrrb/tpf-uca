@@ -87,7 +87,7 @@ package "ECMS" {
     + aceptarDiferencias(): vacío
   }
 
-  enum EstadoPresupuestoCliente {
+  enum EstadoPresupuestoCliente <<enumeration>> {
     propuesta
     finalizado
   }
@@ -100,6 +100,7 @@ PresupuestoCliente "1" *-- "1..*" Rubro : contiene
 Rubro "1" *-- "1..*" Item : agrupa
 PresupuestoCliente "1" *-- "0..*" InformeImportacion : informes
 
+PresupuestoCliente ..> EstadoPresupuestoCliente : estado
 note bottom of PresupuestoCliente
   Finalizado no se modifica (RF-04): los cambios van
   por el presupuesto de costos (CU-03) o por adendas (CU-11).

@@ -72,7 +72,7 @@ package "ECMS" {
     + agregarÍtem(código, descripción, unidad, cantidad, precio): vacío
   }
 
-  enum EstadoPresupuestoCliente {
+  enum EstadoPresupuestoCliente <<enumeration>> {
     propuesta
     finalizado
   }
@@ -83,6 +83,7 @@ PresupuestoCliente "1" *-- "0..1" ArchivoOriginal : conserva sin modificar
 PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
 
+PresupuestoCliente ..> EstadoPresupuestoCliente : estado
 note bottom of PresupuestoCliente
   Queda en propuesta, lista para validar
   y finalizar (CU-16).

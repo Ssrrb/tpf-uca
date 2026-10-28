@@ -101,7 +101,7 @@ package "ECMS" {
     /acumulado: decimal
   }
 
-  enum EstadoMedición {
+  enum EstadoMedición <<enumeration>> {
     registrada
     retenida
     incluida
@@ -138,6 +138,7 @@ VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
 LineaCertificado "0..1" --> "0..*" Medicion : incluye
 LineaCertificado "0..*" --> "1" SaldoItem : ítem
 
+Medicion ..> EstadoMedición : estado
 note bottom of SaldoItem
   saldoContractual = cliente + adendas - certificada.
   Lo que lo supera queda retenido hasta una adenda,

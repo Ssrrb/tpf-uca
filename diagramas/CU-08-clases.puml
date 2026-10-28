@@ -33,7 +33,7 @@ package "Motor de finanzas" {
     + generarFacturaAnticipo(anticipo, actor): FacturaInterna
   }
 
-  enum EstadoDocumento {
+  enum EstadoDocumento <<enumeration>> {
     generada
     pendiente_de_adjuntar
     a_cobrar
@@ -104,6 +104,7 @@ DocumentoInterno "1" *-- "1" CuentaACobrar : registra
 DocumentoInterno "0..*" --> "1" Obra : de la obra
 Facturacion ..> DocumentoInterno : genera
 
+DocumentoInterno ..> EstadoDocumento : estado
 note bottom of DocumentoInterno
   Toma el neto y el IVA de la versión sin recalcularlos (RF-11).
   Sin crédito fiscal ni validez ante Marangatu:
