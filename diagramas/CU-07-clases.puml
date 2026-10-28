@@ -27,10 +27,11 @@ skinparam note {
 }
 package "Motor de finanzas" {
   class Gasto {
-    tipo: TipoGasto
+    tipo: texto {material | mano de obra | caja chica}
     importe: guaraníes
     fecha: fecha
     medioPago: texto
+    insumo: Insumo [0..1]
     cantidad: decimal [0..1]
     registradoPor: Usuario
     fechaRegistro: fecha y hora
@@ -43,6 +44,7 @@ package "Motor de finanzas" {
   }
 
   class "Imputación" as Imputacion {
+    rubro: texto
     importe: guaraníes
   }
 
@@ -52,15 +54,10 @@ package "Motor de finanzas" {
   }
 
   class "Costo real del rubro" as CostoReal {
+    rubro: texto
     total: guaraníes
     --
     + sumar(importe): vacío
-  }
-
-  enum TipoGasto {
-    material
-    mano_de_obra
-    caja_chica
   }
 }
 
@@ -68,12 +65,8 @@ package "ECMS" {
   class "Versión del presupuesto de costos" as VersionCostos {
     estado: EstadoVersionCostos
     --
-    + obtenerRubro(código): RubroCostos [0..1]
-    + rubroGastosGenerales(): RubroCostos
-  }
-
-  class "Rubro de costos" as RubroCostos {
-    código: texto {estable}
+    + obtenerRubro(código): texto [0..1]
+    + rubroGastosGenerales(): texto
   }
 }
 
@@ -94,21 +87,14 @@ package "ERP" {
     --
     + estaActiva(): lógico
   }
-
-  class Insumo {
-    código: texto
-  }
 }
 
 Gasto "0..*" --> "1" Obra : de la obra
 Gasto "0..*" --> "0..1" Proveedor : pagado a
 Gasto "0..*" --> "0..1" Persona : pagado a
-Gasto "0..*" --> "0..1" Insumo : compra de
 Gasto "1" *-- "1..*" Imputacion : se reparte en
-Imputacion "0..*" --> "1" RubroCostos : imputa a
+Imputacion "0..*" --> "1" VersionCostos : rubro de la vigente
 Gasto "1" *-- "1" Comprobante : respaldo
-CostoReal "0..1" --> "1" RubroCostos : de
-VersionCostos "1" *-- "1..*" RubroCostos : contiene
 
 note bottom of Gasto
   Caja chica: no supera el tope de la obra;

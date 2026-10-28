@@ -52,6 +52,7 @@ package "ECMS" {
   }
 
   class "Línea de adenda" as LineaAdenda {
+    adenda: Adenda
     descripción: texto
     precioVenta: guaraníes
     motivoCorrección: texto [0..1]
@@ -63,17 +64,11 @@ package "ECMS" {
     --
     + adendasRegistradas(): lista de Adenda
   }
-
-  class Adenda {
-    precioVenta: guaraníes
-  }
 }
 
 PresupuestoAdendas "1" *-- "0..*" VersionAdendas : versiones
 VersionAdendas "0..1" --> "0..1" VersionAdendas : anterior
 VersionAdendas "1" *-- "1..*" LineaAdenda : líneas
-LineaAdenda "0..*" --> "1" Adenda : de
-ApartadoAdendas "1" *-- "0..*" Adenda : registradas (CU-11)
 PresupuestoAdendas ..> ApartadoAdendas : toma las adendas
 
 note bottom of VersionAdendas

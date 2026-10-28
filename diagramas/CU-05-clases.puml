@@ -27,7 +27,7 @@ skinparam note {
 }
 package "ERP" {
   class "Catálogo" as Catalogo {
-    tipo: TipoRecurso
+    tipo: texto {material | equipo | mano de obra | persona | proveedor | cliente}
     --
     + listar(filtro): lista de Recurso
     + códigoDisponible(código): lógico
@@ -44,7 +44,7 @@ package "ERP" {
   }
 
   abstract class Insumo {
-    unidad: Unidad
+    unidad: texto
     categoría: texto
     --
     + registrarPrecio(valor, vigenteDesde): Precio
@@ -69,10 +69,6 @@ package "ERP" {
     ruc: texto
   }
 
-  class Unidad {
-    símbolo: texto
-  }
-
   class Precio {
     valor: guaraníes
     vigenteDesde: fecha
@@ -80,15 +76,6 @@ package "ERP" {
     --
     + seSuperpone(desde: fecha): lógico
     + cerrarVigencia(hasta: fecha): vacío
-  }
-
-  enum TipoRecurso {
-    material
-    equipo
-    mano_de_obra
-    persona
-    proveedor
-    cliente
   }
 }
 
@@ -100,7 +87,6 @@ Recurso <|-- Persona
 Recurso <|-- Proveedor
 Recurso <|-- Cliente
 Catalogo "1" o-- "0..*" Recurso : contiene
-Insumo "0..*" --> "1" Unidad : se mide en
 Insumo "1" *-- "0..*" Precio : vigencias
 ManoDeObra "0..*" --> "0..*" Persona : la prestan
 

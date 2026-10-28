@@ -23,14 +23,14 @@ title CU-03 · Armar y versionar el presupuesto de costos
 actor "Ingeniero de obra" as Ing
 box "ECMS" #EAF2F6
 participant "costos:\nPresupuestoCostos" as PC
+participant "apartado:\nApartadoAdendas" as Apa
 participant "cliente:\nPresupuestoCliente" as Cli
-participant "version:\nVersionCostos" as V
 participant "anterior:\nVersionCostos" as Ant
+participant "version:\nVersionCostos" as V
 participant "gg:\nRubroCostos" as GG
 participant "item:\nItemCostos" as Item
 participant "acu:\nACU" as Acu
 participant "linea:\nLineaACU" as Lin
-participant "apartado:\nApartadoAdendas" as Apa
 end box
 box "ERP" #EAF2F6
 participant "insumo:\nInsumo" as Ins
@@ -40,26 +40,28 @@ Ing -> PC: consultarVersiones()
 PC -> Apa: costoTotal()
 PC --> Ing: presupuesto del cliente, versiones con su estado,\napartado Adendas y presupuesto de adendas (RF-06)
 
-alt primera versión (paso 1)
-  Ing -> PC: crearPrimeraVersión(cliente, actor)
-  create V
-  PC -> V: «create»(estado = propuesta)
-  PC -> V: copiarRubros(cliente)
-  V -> Cli: obtenerRubros()
-  Cli --> V: rubros e ítems con su código
-  PC -> V: agregarRubroGastosGenerales()
-  create GG
-  V -> GG: «create»("Gastos generales de obra")
-else completar ítems no certificados de la vigente (1a)
+alt completar ítems no certificados de la vigente (1a)
   Ing -> PC: obtenerVigente()
-  PC --> Ing: version vigente
-else corregir un error o reflejar un retrabajo (1b)
-  Ing -> PC: crearVersiónCorrectiva(motivo, actor)
-  PC -> PC: obtenerVigente()
+  PC --> Ing: versión vigente (es la versión que se completa)
+else versión nueva (paso 1 o 1b)
+  alt primera versión (paso 1)
+    Ing -> PC: crearPrimeraVersión(cliente, actor)
+  else corregir un error o reflejar un retrabajo (1b)
+    Ing -> PC: crearVersiónCorrectiva(motivo, actor)
+    PC -> PC: obtenerVigente()
+  end
   create V
-  PC -> V: «create»(estado = propuesta, anterior, motivo)
+  PC -> V: «create»(estado = propuesta, anterior [0..1], motivo [0..1])
+  opt primera versión (paso 2)
+    PC -> V: copiarRubros(cliente)
+    V -> Cli: obtenerRubros()
+    Cli --> V: rubros e ítems con su código
+    PC -> V: agregarRubroGastosGenerales()
+    create GG
+    V -> GG: «create»("Gastos generales de obra")
+  end
   note right of V
-    Los rubros e ítems conservan su código
+    En 1b los rubros e ítems conservan su código
     y lo ya registrado sigue vinculado (RF-05).
   end note
 end
@@ -99,9 +101,9 @@ alt confirma (paso 5)
     else misma versión vigente (1a)
       PC --> Ing: guarda el detalle sin crear otra versión
     end
-  end
-  break falla la activación (NF-02)
-    PC --> Ing: revierte; la vigente anterior no cambia
+    break falla la activación (NF-02)
+      PC --> Ing: revierte; la vigente anterior no cambia
+    end
   end
   PC --> Ing: versión vigente con actor, fecha y motivo
 else cancela (5a)

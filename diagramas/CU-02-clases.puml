@@ -59,29 +59,17 @@ package "ECMS" {
   class Hoja {
     nombre: texto
     origen: detectada | manual
+    columnas: lista de Columna
     --
-    + definirColumna(índice, campo): Columna
-  }
-
-  class Columna {
-    encabezado: texto
-    campoDestino: texto
-    obligatoria: lógico
+    + definirColumna(índice, campo): vacío
   }
 
   class Rubro {
     código: texto
     descripción: texto
+    ítems: lista de Item
     --
-    + agregarÍtem(código, descripción, unidad, cantidad, precio): Ítem
-  }
-
-  class "Ítem" as Item {
-    código: texto
-    descripción: texto
-    unidad: texto
-    cantidad: decimal
-    precioUnitario: guaraníes
+    + agregarÍtem(código, descripción, unidad, cantidad, precio): vacío
   }
 
   enum EstadoPresupuestoCliente {
@@ -93,10 +81,7 @@ package "ECMS" {
 Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
 PresupuestoCliente "1" *-- "0..1" ArchivoOriginal : conserva sin modificar
 PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
-Hoja "1" *-- "1..*" Columna : define
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
-Rubro "1" *-- "1..*" Item : agrupa
-Item "0..*" --> "0..1" Hoja : fila de origen
 
 note bottom of PresupuestoCliente
   Queda en propuesta, lista para validar

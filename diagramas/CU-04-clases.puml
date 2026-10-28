@@ -31,7 +31,7 @@ package "ECMS" {
     unidad: texto
     --
     + obtenerSaldo(): SaldoÍtem
-    + insumosDelACU(cantidad): lista de ConsumoInsumo
+    + insumosDelACU(cantidad): lista de Insumo
   }
 
   class "Saldo del ítem" as SaldoItem {
@@ -58,6 +58,7 @@ package "ECMS" {
     ejecutor: propio | subcontratado
     estado: EstadoMedición
     motivo: texto [0..1]
+    insumosConsumidos: lista de Insumo
     registradaPor: Usuario
     fecha: fecha y hora
     --
@@ -73,11 +74,6 @@ package "ECMS" {
 
   class "Medición de ajuste" as MedicionAjuste {
     signo: positivo | negativo
-  }
-
-  class "Consumo de insumo" as ConsumoInsumo {
-    cantidad: decimal
-    origen: ACU | corregido
   }
 
   class Evidencia {
@@ -127,19 +123,13 @@ package "ERP" {
     + descontarSaldo(ítem, cantidad): vacío
   }
 
-  class Insumo {
-    código: texto
-    unidad: Unidad
-  }
 }
 
 ItemCostos "1" *-- "1" SaldoItem : lleva
 Medicion "0..*" --> "1" ItemCostos : mide
 Medicion "0..*" --> "1" Obra : de la obra
 Medicion "0..*" --> "0..1" Contrato : a nombre de
-Medicion "1" *-- "0..*" ConsumoInsumo : insumos consumidos
 Medicion "1" *-- "1..*" Evidencia : respaldo
-ConsumoInsumo "0..*" --> "1" Insumo : de
 Medicion <|-- MedicionAjuste
 MedicionAjuste "0..*" --> "1" Medicion : corrige
 Certificado "0..1" --> "1" Obra : de la obra

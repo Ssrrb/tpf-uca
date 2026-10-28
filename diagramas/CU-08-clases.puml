@@ -93,11 +93,6 @@ package "ERP" {
     --
     + marcarFacturado(): vacío
   }
-
-  class Cliente {
-    razónSocial: texto
-    ruc: texto
-  }
 }
 
 DocumentoInterno <|-- FacturaInterna
@@ -107,7 +102,6 @@ FacturaInterna "0..1" --> "0..1" Anticipo : factura
 DocumentoInterno "1" *-- "0..1" FacturaLegal : adjunta
 DocumentoInterno "1" *-- "1" CuentaACobrar : registra
 DocumentoInterno "0..*" --> "1" Obra : de la obra
-Obra "0..*" --> "1" Cliente : cliente
 Facturacion ..> DocumentoInterno : genera
 
 note bottom of DocumentoInterno

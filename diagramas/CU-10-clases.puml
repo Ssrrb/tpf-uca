@@ -71,7 +71,7 @@ package "ECMS" {
   class "Medición" as Medicion {
     fechaEjecución: fecha
     --
-    + consumosHasta(fecha): lista de ConsumoInsumo
+    + consumosHasta(fecha): lista de Insumo
     + verEvidencia(): lista de Evidencia
   }
 }

@@ -23,8 +23,8 @@ title CU-05 · Mantener catálogos y banco de insumos
 actor "Administrador" as Admin
 box "ERP" #EAF2F6
 participant "catalogo:\nCatalogo" as Cat
-participant "insumo:\nInsumo" as Ins
 participant "recurso:\nRecurso" as Rec
+participant "insumo:\nInsumo" as Ins
 participant "precioActual:\nPrecio" as PAct
 participant "precioNuevo:\nPrecio" as PNue
 end box
@@ -38,11 +38,8 @@ alt crear un recurso (paso 2)
   break el código ya existe (4a)
     Cat --> Admin: pide otro código (vuelve al paso 2)
   end
-  create Ins
   Cat -> Ins: «create»(código, descripción, unidad, categoría)
   Admin -> Ins: registrarPrecio(valor, vigenteDesde)
-  create PNue
-  Ins -> PNue: «create»(valor, vigenteDesde)
 else modificar un recurso (2a)
   Admin -> Rec: modificar(datos)
 else dar de baja un recurso (2b)
@@ -60,6 +57,8 @@ else actualizar un precio (3a)
     Ins --> Admin: rechaza; indica la vigencia en conflicto
   end
   Ins -> PAct: cerrarVigencia(vigenteDesde - 1 día)
+end
+opt se registra un precio (paso 3 o 3a)
   create PNue
   Ins -> PNue: «create»(valor, vigenteDesde)
 end

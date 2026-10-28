@@ -81,7 +81,7 @@ package "ERP" {
   }
 
   class "Asignación" as Asignacion {
-    rol: RolEnObra
+    rol: texto {Ingeniero de obra | Finanzas y tesorería}
     permisos: lista de texto
     fechaAsignación: fecha y hora
   }
@@ -98,11 +98,6 @@ package "ERP" {
     recepcion_provisoria
     recepcion_definitiva
     cerrada
-  }
-
-  enum RolEnObra {
-    ingeniero_de_obra
-    finanzas_y_tesoreria
   }
 }
 
