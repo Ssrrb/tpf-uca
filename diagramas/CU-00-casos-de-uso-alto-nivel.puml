@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title Diagrama de Casos de Uso (Alto Nivel) · Ctrl+
+title Diagrama de Casos de Uso (Alto Nivel) · 1/2 · Actores y casos de uso
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14
@@ -39,7 +39,7 @@ rectangle "Ctrl+" {
     usecase "CU-09 Registrar contrato\nde subcontratista" as CU09
   }
   package "ECMS" {
-    usecase "CU-02 Cargar el\npresupuesto del cliente\n--\npuntos de extensión:\ncarga guardada (paso 5)" as CU02
+    usecase "CU-02 Cargar el\npresupuesto del cliente" as CU02
     usecase "CU-16 Validar y finalizar el\npresupuesto del cliente" as CU16
     usecase "CU-03 Armar y versionar el\npresupuesto de costos" as CU03
     usecase "CU-04 Medir el avance\ndel certificado" as CU04
@@ -49,7 +49,7 @@ rectangle "Ctrl+" {
     usecase "CU-15 Cargar presupuesto\nde adendas del cliente" as CU15
   }
   package "Motor de finanzas" {
-    usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nítem en exceso (3a)\nversión guardada (paso 7)" as CU06
+    usecase "CU-06 Calcular el certificado\ny el consumo de recursos" as CU06
     usecase "CU-07 Registrar gasto de obra" as CU07
     usecase "CU-08 Generar factura interna\ndel certificado" as CU08
     usecase "CU-13 Consultar tablero\nfinanciero" as CU13
@@ -57,14 +57,11 @@ rectangle "Ctrl+" {
   }
 }
 
-' Relaciones entre casos de uso (UML 2: del que extiende al caso base)
-CU16 ..> CU02 : <<extend>>\n[valida al terminar la carga]
-CU11 ..> CU06 : <<extend>>\n[el cálculo señala\nun ítem en exceso]
-CU12 ..> CU06 : <<extend>>\n[la versión tiene ítems\nsubcontratados]
 
 ' Los actores (1) quedan a la izquierda y los (2) a la derecha,
 ' junto a los CU que usan, para que ninguna asociación cruce el diagrama.
 ' Ingeniero de obra (1): CU del ECMS que quedan a la izquierda
+ING -- CU02
 ING -- CU16
 ING -- CU15
 ING -- CU11
@@ -80,7 +77,7 @@ ADM -- CU05
 ADM -- CU09
 
 ' Ingeniero de obra (2), Administrador (2) y Finanzas y tesorería: a la derecha
-CU02 -- ING2
+
 CU06 -- ING2
 CU07 -- ING2
 CU07 -- ADM2
@@ -89,12 +86,5 @@ CU13 -- FIN
 CU08 -- FIN
 CU14 -- FIN
 
-note as ORDEN
-  <b>Orden de trabajo</b> (precondiciones, no son relaciones UML):
-  CU-01 y CU-05 → CU-02 → CU-16 → CU-03 → CU-09
-  → CU-04 → CU-06 → CU-08 y CU-12 → CU-14 → CU-13.
-  CU-07 y CU-10 se usan durante la obra; CU-15 → CU-11
-  cuando el cliente aprueba un presupuesto de adendas.
-end note
 
 @enduml

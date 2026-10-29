@@ -1,0 +1,45 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Diagrama de Casos de Uso (Alto Nivel) · 2/2 · Relaciones entre casos de uso
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+left to right direction
+skinparam nodesep 30
+skinparam ranksep 120
+
+rectangle "Ctrl+" {
+  package "ECMS" {
+    usecase "CU-16 Validar y finalizar el\npresupuesto del cliente" as CU16
+    usecase "CU-02 Cargar el\npresupuesto del cliente\n--\npuntos de extensión:\ncarga guardada (paso 5)" as CU02
+    usecase "CU-11 Registrar adenda" as CU11
+    usecase "CU-12 Liquidar subcontratista" as CU12
+  }
+  package "Motor de finanzas" {
+    usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nítem en exceso (3a)\nversión guardada (paso 7)" as CU06
+  }
+}
+
+' UML 2: el «extend» va del caso que agrega comportamiento al caso base
+CU16 ..> CU02 : <<extend>>\n[valida al terminar la carga]
+CU11 ..> CU06 : <<extend>>\n[el cálculo señala\nun ítem en exceso]
+CU12 ..> CU06 : <<extend>>\n[la versión tiene ítems\nsubcontratados]
+@enduml
