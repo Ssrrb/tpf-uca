@@ -36,7 +36,7 @@ title CU-04 · Actividades · Medir el avance del certificado
 |Ingeniero de obra|
 start
 :Seleccionar la obra;
-|ECMS|
+|Ctrl+ · ECMS|
 if (¿La obra está en ejecución?) then ([no])
   :Informar que no se registran mediciones;
   stop
@@ -46,25 +46,22 @@ endif
 repeat
   |Ingeniero de obra|
   :Ingresar cantidad, ejecutor y evidencia del ítem;
-  |ECMS|
+  |Ctrl+ · ECMS|
   :Proponer los insumos consumidos desde el ACU (RF-07);
   |Ingeniero de obra|
   :Corregir los insumos si hace falta;
-  |ECMS|
+  |Ctrl+ · ECMS|
   if (¿La cantidad ya está contada?) then ([sí])
     :Rechazar e indicar dónde figura;
-  elseif (¿Supera el saldo contractual?) then ([sí])
-    :Retener el exceso como saldo negativo
-    hasta una adenda (RF-10);
   else ([no])
     :Registrar la medición;
   endif
 repeat while (¿Mide otro ítem?) is ([sí]) not ([no])
 |Ingeniero de obra|
 :Confirmar y cerrar las cantidades de la versión;
-|ECMS|
+|Ctrl+ · ECMS|
 :Guardar la versión con avance anterior,
-de la versión y acumulado (RF-12);
+de la versión y acumulado (RF-09);
 note right
   Lista para el cálculo (CU-06).
 end note

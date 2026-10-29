@@ -1,0 +1,66 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Diagrama de Casos de Uso (Alto Nivel) · 2/2 · Relaciones entre casos de uso
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+left to right direction
+skinparam nodesep 20
+skinparam ranksep 90
+
+rectangle "Ctrl+" {
+  package "ERP" {
+    usecase "CU-05 Mantener catálogos\ny banco de insumos" as CU05
+    usecase "CU-01 Gestionar obra\n--\npuntos de extensión:\ncliente sin cargar (2a)" as CU01
+    usecase "CU-09 Registrar contrato\nde subcontratista\n--\npuntos de extensión:\nsubcontratista sin cargar (1a)" as CU09
+  }
+  package "ECMS" {
+    usecase "CU-16 Validar y finalizar el\npresupuesto del cliente" as CU16
+    usecase "CU-02 Cargar el\npresupuesto del cliente\n--\npuntos de extensión:\ncarga guardada (5a)" as CU02
+    usecase "CU-03 Armar y versionar el\npresupuesto de costos" as CU03
+    usecase "CU-10 Controlar el costo\nde la obra con el ACU\n--\npuntos de extensión:\nACU mal estimado (5a)" as CU10
+    usecase "CU-15 Cargar presupuesto\nde adendas del cliente" as CU15
+    usecase "CU-11 Registrar adenda\n--\npuntos de extensión:\nsin presupuesto de adendas (2c)" as CU11
+    usecase "CU-04 Medir el avance\ndel certificado\n--\npuntos de extensión:\ncantidades cerradas (6a)" as CU04
+    usecase "CU-12 Liquidar subcontratista" as CU12
+  }
+  package "Motor de finanzas" {
+    usecase "CU-07 Registrar gasto de obra\n--\npuntos de extensión:\nproveedor o persona sin cargar (2a)" as CU07
+    usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nítem en exceso (3a)\nversión guardada (7a)" as CU06
+    usecase "CU-08 Generar factura interna\ndel certificado\n--\npuntos de extensión:\nfactura registrada (5a)" as CU08
+    usecase "CU-14 Registrar cobros\ny pagos" as CU14
+    usecase "CU-13 Consultar tablero\nfinanciero\n--\npuntos de extensión:\ndetalle de costos (6b)" as CU13
+  }
+}
+
+' UML 2: el «extend» va del caso que agrega comportamiento al caso base
+CU05 ..> CU01 : <<extend>>
+CU05 ..> CU09 : <<extend>>
+CU05 ..> CU07 : <<extend>>
+CU16 ..> CU02 : <<extend>>
+CU03 ..> CU10 : <<extend>>
+CU15 ..> CU11 : <<extend>>
+CU06 ..> CU04 : <<extend>>
+CU11 ..> CU06 : <<extend>>
+CU12 ..> CU06 : <<extend>>
+CU14 ..> CU08 : <<extend>>
+CU10 ..> CU13 : <<extend>>
+@enduml

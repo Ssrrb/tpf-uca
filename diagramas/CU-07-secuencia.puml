@@ -20,7 +20,7 @@ skinparam note {
 }
 hide footbox
 title CU-07 · Registrar gasto de obra
-actor "Administrador\n(o Ingeniero de obra\nen caja chica, 1a)" as Usr
+actor "Administrador o\nIngeniero de obra" as Usr
 box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
 participant "proveedor:\nProveedor" as Prov
@@ -54,22 +54,21 @@ loop por cada rubro al que se imputa (3a: varios rubros)
   Usr -> G: imputar(rubro, ítem, importe)
   G -> VC: obtenerRubro(código)
   VC --> G: rubro [0..1]
-  alt rubro de la versión vigente
-    create Imp
-    G -> Imp: «create»(rubro, importe)
-  else gasto que no es de un rubro en particular (3b)
+  opt gasto que no es de un rubro en particular (3b)
     G -> VC: rubroGastosGenerales()
     VC --> G: "Gastos generales de obra"
-    G -> Imp: «create»(gastos generales, importe)
-  else rubro inexistente en la vigente (3b)
+  end
+  break el rubro no existe en la vigente
     G --> Usr: impide imputar
   end
+  create Imp
+  G -> Imp: «create»(rubro, importe)
 end
 Usr -> G: adjuntarComprobante(archivo)
 create Comp
 G -> Comp: «create»(tipo, archivo)
 G -> G: validarImporte()
-opt gasto de caja chica (1a, RF-31)
+opt gasto de caja chica (1a, RF-21)
   G -> Obra: obtenerTopeCajaChica()
   Obra --> G: tope
   break el importe supera el tope y lo registra el Ingeniero
@@ -77,11 +76,11 @@ opt gasto de caja chica (1a, RF-31)
   end
 end
 Usr -> G: confirmar(actor)
-break falta el comprobante (6a)
+break falta el comprobante (5a)
   G --> Usr: marca el campo e impide confirmar (vuelve al paso 4)
 end
 loop por cada imputación
   G -> CR: sumar(importe)
 end
-G --> Usr: gasto registrado; suma al costo real del rubro (RF-31)
+G --> Usr: gasto registrado; suma al costo real del rubro (RF-21)
 @enduml

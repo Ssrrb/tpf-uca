@@ -33,7 +33,6 @@ package "ECMS" {
     + consultar(obra, fechaConsulta): lista de LíneaControl
     + filtrar(criterio): vacío
     + verRespaldo(total): lista de archivo
-    + exportar(formato: XLSX | PDF): archivo
   }
 
   class "Línea de control" as LineaControl {
@@ -72,7 +71,7 @@ package "ECMS" {
   class "Medición" as Medicion {
     fechaEjecución: fecha
     --
-    + consumosHasta(fecha): lista de ConsumoInsumo
+    + consumosHasta(fecha): lista de Insumo
     + verEvidencia(): lista de Evidencia
   }
 }
@@ -111,15 +110,4 @@ ACU ..> Insumo : precios
 CostosReales ..> Gasto : consulta
 LineaControl "0..*" --> "1" ItemCostos : de
 
-note bottom of LineaControl
-  Materiales: comprado - consumido = acopio, no mayor costo.
-  Mano de obra y equipos: la diferencia es desvío (RF-26).
-  La consulta no modifica ni cierra nada.
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

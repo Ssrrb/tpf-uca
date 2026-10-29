@@ -93,23 +93,4 @@ con ..> cat : <<use>>
 cons ..> cat : <<use>>
 obr ..> cat : <<use>>
 
-note right of itf
-  Contratos que publican el ECMS
-  (cantidades de cada versión del
-  certificado, saldos y avance) y el Motor de finanzas
-  (gastos y liquidaciones). Así el ECMS
-  y el Motor no dependen entre sí (PR-05).
-end note
-
-note bottom of erp
-  Usuarios, roles y permisos, obras, insumos,
-  personal, proveedores, clientes, retenciones,
-  contratos y consumo de insumos registrado al
-  calcular el certificado. No genera documentos.
-end note
-
-legend bottom
-  Flecha discontinua con punta abierta = dependencia (UML 2): el origen usa al destino.
-  Sin dependencias circulares entre paquetes.
-endlegend
 @enduml

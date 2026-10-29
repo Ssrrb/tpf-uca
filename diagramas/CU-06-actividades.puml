@@ -36,32 +36,44 @@ title CU-06 · Actividades · Calcular el certificado y el consumo de recursos
 |Ingeniero de obra|
 start
 :Elegir la versión con las cantidades cerradas (CU-04);
-|Motor de finanzas|
+|Ctrl+ · Motor de finanzas|
 if (¿La obra está en ejecución y la versión cerrada?) then ([no])
   :Informar por qué no se puede calcular;
   stop
 else ([sí])
 endif
+:Agregar líneas de regularización por las adendas
+registradas desde la versión anterior (RF-08);
 :Valorizar cada línea con el precio del presupuesto
-del cliente o del de adendas (RF-13);
+del cliente o del ítem de adenda (RF-10);
 if (¿Algún ítem no tiene precio unitario?) then ([sí])
   :Señalarlo e impedir confirmar;
   stop
 else ([no])
 endif
+:Comparar por ítem el monto acumulado con el del
+cliente más las adendas registradas (RF-08);
+if (¿Algún ítem supera ese monto?) then ([sí])
+  :Señalar la línea en exceso como saldo negativo,
+  fuera del bruto;
+  note right
+    Se puede registrar una adenda (CU-11).
+  end note
+else ([no])
+endif
 :Calcular bruto, amortización del anticipo,
-fondo de reparo, neto e IVA (RF-13);
-|ERP|
+fondo de reparo, neto e IVA (RF-10);
+|Ctrl+ · ERP|
 :Calcular el consumo de insumos de las mediciones
-incluidas, al precio vigente (RF-34);
+incluidas, al precio vigente (RF-24);
 |Ingeniero de obra|
 :Revisar y confirmar;
-|Motor de finanzas|
+|Ctrl+ · Motor de finanzas|
 :Guardar la versión valorizada;
-|ERP|
+|Ctrl+ · ERP|
 :Registrar el consumo de insumos;
 note right
-  Se guarda todo junto o nada (NF-03).
+  Se guarda todo junto o nada (NF-02).
 end note
 stop
 @enduml

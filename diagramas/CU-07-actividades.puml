@@ -33,7 +33,7 @@ skinparam note {
   BorderColor #17324D
 }
 title CU-07 · Actividades · Registrar gasto de obra
-|Administrador o Ingeniero (caja chica)|
+|Administrador o Ingeniero de obra (caja chica)|
 start
 :Seleccionar la obra y el tipo de gasto
 (material, mano de obra o caja chica);
@@ -45,7 +45,7 @@ else ([no])
 endif
 repeat
   :Imputar el importe a un rubro (y, si corresponde, a un ítem);
-  |Motor de finanzas|
+  |Ctrl+ · Motor de finanzas|
   if (¿El rubro existe en la versión vigente?) then ([sí])
     :Registrar la imputación;
   elseif (¿Es un gasto general de la obra?) then ([sí])
@@ -53,19 +53,19 @@ repeat
   else ([no])
     :Impedir la imputación;
   endif
-  |Administrador o Ingeniero (caja chica)|
+  |Administrador o Ingeniero de obra (caja chica)|
 repeat while (¿Queda importe por repartir?) is ([sí]) not ([no])
 :Adjuntar el comprobante;
-|Motor de finanzas|
+|Ctrl+ · Motor de finanzas|
 :Validar el importe;
 if (¿Caja chica por encima del tope y la registra el Ingeniero?) then ([sí])
-  :No permitir confirmar: lo registra el Administrador (RF-31);
+  :No permitir confirmar: lo registra el Administrador (RF-21);
   stop
 else ([no])
 endif
-|Administrador o Ingeniero (caja chica)|
+|Administrador o Ingeniero de obra (caja chica)|
 :Confirmar;
-|Motor de finanzas|
+|Ctrl+ · Motor de finanzas|
 :Registrar el gasto y sumarlo al costo real del rubro;
 stop
 @enduml

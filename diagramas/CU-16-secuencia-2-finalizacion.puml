@@ -53,7 +53,7 @@ opt hay diferencias de totales (3a)
   end
 end
 Ing -> Pres: finalizar(actor)
-critical finalización atómica (NF-03)
+critical finalización atómica (NF-02)
   Pres -> Obra: vincularPresupuestoCliente(presupuesto)
 end
 Pres --> Ing: presupuesto contractual que ya no se modifica,\ncon actor y fecha; base del CU-03

@@ -27,50 +27,32 @@ skinparam note {
 }
 package "ERP" {
   class "Catálogo" as Catalogo {
-    tipo: TipoRecurso
     --
     + listar(filtro): lista de Recurso
     + códigoDisponible(código): lógico
     + crearRecurso(datos): Recurso
   }
 
-  abstract class Recurso {
+  class Recurso {
+    tipo: texto {persona | proveedor | cliente}
     código: texto
     descripción: texto
     activo: lógico
+    ruc: texto [0..1]
+    documento: texto [0..1]
+    esSubcontratista: lógico [0..1]
     --
     + modificar(datos): vacío
     + darDeBaja(actor): vacío
   }
 
-  abstract class Insumo {
-    unidad: Unidad
+  class Insumo {
+    clase: texto {material | equipo | mano de obra}
+    unidad: texto
     categoría: texto
     --
     + registrarPrecio(valor, vigenteDesde): Precio
     + obtenerPrecioVigente(fecha): guaraníes [0..1]
-  }
-
-  class Material
-  class Equipo
-  class "Mano de obra" as ManoDeObra
-
-  class "Persona (RRHH)" as Persona {
-    documento: texto
-    categoría: texto
-  }
-
-  class Proveedor {
-    ruc: texto
-    esSubcontratista: lógico
-  }
-
-  class Cliente {
-    ruc: texto
-  }
-
-  class Unidad {
-    símbolo: texto
   }
 
   class Precio {
@@ -81,37 +63,10 @@ package "ERP" {
     + seSuperpone(desde: fecha): lógico
     + cerrarVigencia(hasta: fecha): vacío
   }
-
-  enum TipoRecurso {
-    material
-    equipo
-    mano_de_obra
-    persona
-    proveedor
-    cliente
-  }
 }
 
 Recurso <|-- Insumo
-Insumo <|-- Material
-Insumo <|-- Equipo
-Insumo <|-- ManoDeObra
-Recurso <|-- Persona
-Recurso <|-- Proveedor
-Recurso <|-- Cliente
 Catalogo "1" o-- "0..*" Recurso : contiene
-Insumo "0..*" --> "1" Unidad : se mide en
 Insumo "1" *-- "0..*" Precio : vigencias
-ManoDeObra "0..*" --> "0..*" Persona : la prestan
-
-note bottom of Precio
-  Un precio nuevo cierra la vigencia anterior sin borrarla:
-  los cálculos ya hechos no cambian (RF-29).
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
+Insumo "0..*" --> "0..*" Recurso : mano de obra que prestan las personas
 @enduml

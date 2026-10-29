@@ -87,7 +87,7 @@ package "ECMS" {
     + aceptarDiferencias(): vacío
   }
 
-  enum EstadoPresupuestoCliente {
+  enum EstadoPresupuestoCliente <<enumeration>> {
     propuesta
     finalizado
   }
@@ -100,14 +100,10 @@ PresupuestoCliente "1" *-- "1..*" Rubro : contiene
 Rubro "1" *-- "1..*" Item : agrupa
 PresupuestoCliente "1" *-- "0..*" InformeImportacion : informes
 
+PresupuestoCliente ..> EstadoPresupuestoCliente : estado
 note bottom of PresupuestoCliente
   Finalizado no se modifica (RF-04): los cambios van
   por el presupuesto de costos (CU-03) o por adendas (CU-11).
 end note
 
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

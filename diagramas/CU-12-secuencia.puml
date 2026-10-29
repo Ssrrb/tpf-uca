@@ -36,26 +36,26 @@ end box
 
 Ing -> V: líneasSubcontratadasPorContrato()
 V --> Ing: ítems subcontratados sin liquidar, agrupados por contrato
-loop por cada contrato de la versión (3a)
+loop por cada contrato de la versión (1a)
   loop por cada línea del contrato
     Ing -> Con: valorizar(ítem, cantidad)
-    Con --> Ing: importe al precio del contrato (RF-25)
+    Con --> Ing: importe al precio del contrato (RF-16)
     V -> Lin: estaLiquidada()
     Lin --> V: liquidada: lógico
-    opt ya se liquidó en otra versión (4a, RF-10)
+    opt ya se liquidó en otra versión (RF-08)
       V --> Ing: la excluye e informa en cuál
     end
   end
   V -> Con: excedeLímite(importe)
   Con --> V: excede: lógico
-  break supera el límite del contrato (4b)
+  break supera el límite del contrato (2a)
     V --> Ing: impide enviar ese contrato (vuelve al paso 3)
   end
-  alt confirma el envío (paso 5)
+  alt confirma el envío (paso 3)
     Ing -> V: enviarALiquidar(contrato, actor)
     V -> Mot: liquidar(version, contrato, cantidades)
     Mot -> Mot: buscar(version, contrato)
-    alt ya existe (reintento, NF-03)
+    alt ya existe (reintento, NF-02)
       Mot --> V: número de la liquidación existente
     else no existe
       create Liq
@@ -72,14 +72,14 @@ loop por cada contrato de la versión (3a)
       end note
       Mot --> V: número de la liquidación
     end
-    break falla el registro en el Motor de finanzas (7a)
+    break falla el registro en el Motor de finanzas (4a)
       V --> Ing: no se marca ninguna cantidad; el CU termina
     end
     loop por cada línea enviada
       V -> Lin: marcarLiquidada(liquidacion)
     end
     V --> Ing: liquidación pendiente de pago (CU-14)
-  else no confirma (5a)
+  else no confirma
     V --> Ing: no se envía nada; las cantidades quedan sin liquidar
   end
 end

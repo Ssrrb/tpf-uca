@@ -28,37 +28,53 @@ skinparam note {
 package "ECMS" {
   class "Presupuesto de costos" as PresupuestoCostos {
     --
-    + ítemsConSaldoNegativo(): lista de SaldoÍtem
+    + ítemsEnExceso(): lista de SaldoItem
   }
 
   class "Apartado Adendas" as ApartadoAdendas {
     /utilizado: guaraníes
     --
-    + crearAdenda(ítem, tipo, cantidad, precioVenta, costo): Adenda
-    + crearÍtemNuevo(rubro, descripción, unidad): ÍtemCostos
+    + crearAdenda(tipo, motivo, respaldo): Adenda
     + utilizado(): guaraníes
     + registrar(adenda, actor): vacío
   }
 
   class Adenda {
-    tipo: TipoAdenda
-    cantidad: decimal [0..1]
-    precioVenta: guaraníes [0..1]
-    costo: guaraníes [0..1]
+    número: entero
+    tipo: texto {de obra | de plazo}
     nuevaFechaFin: fecha [0..1]
     motivo: texto
     respaldo: archivo
     registradaPor: Usuario
     fecha: fecha y hora
+    /precioVenta: guaraníes
+    /costo: guaraníes
     --
-    + adjuntarRespaldo(motivo, archivo): vacío
+    + agregarÍtem(línea, cantidadAprobada, costo): vacío
+    + fijarNuevaFechaFin(fecha): vacío
     + calcularImportes(): vacío
     + validarDatos(): lista de texto
   }
 
-  class "Presupuesto de adendas" as PresupuestoAdendas {
+  class "Ítem de adenda" as ItemAdenda {
+    cantidadAprobada: decimal
+    precioVenta: guaraníes
+    costo: guaraníes
+  }
+
+  class "Presupuesto de adendas del cliente" as PresupuestoAdendas {
+    número: entero
     --
-    + registrarPrecio(adenda): vacío
+    + líneasPendientes(): lista de LineaPresupuestoAdendas
+  }
+
+  class "Línea del presupuesto de adendas" as LineaPresupuestoAdendas {
+    cantidad: decimal
+    precioVenta: guaraníes
+    /cantidadAprobada: decimal
+    --
+    + cantidadPendiente(): decimal
+    + descontarAprobada(cantidad): vacío
   }
 
   class "Ítem de costos" as ItemCostos {
@@ -68,18 +84,10 @@ package "ECMS" {
 
   class "Saldo del ítem" as SaldoItem {
     cantidadAdendas: decimal
-    retenida: decimal
+    exceso: guaraníes
     /saldoContractual: decimal
     --
-    + cantidadRetenida(): decimal
     + sumarAdenda(cantidad): vacío
-    + liberarRetenida(cantidad): vacío
-  }
-
-  enum TipoAdenda {
-    ampliación
-    ítem_nuevo
-    ampliación_de_plazo
   }
 }
 
@@ -95,22 +103,12 @@ package "ERP" {
 }
 
 PresupuestoCostos "1" *-- "1" ApartadoAdendas : se suma a la vigente
-ApartadoAdendas "1" *-- "0..*" Adenda : costo de las adendas
-Adenda "0..*" --> "0..1" ItemCostos : modifica o crea
+ApartadoAdendas "1" *-- "0..*" Adenda : adendas registradas
+Adenda "1" *-- "0..*" ItemAdenda : ítems aprobados
+ItemAdenda "0..*" --> "1" LineaPresupuestoAdendas : aprueba
+ItemAdenda "0..*" --> "1" ItemCostos : amplía o crea
+PresupuestoAdendas "1" *-- "1..*" LineaPresupuestoAdendas : líneas
 ItemCostos "1" *-- "1" SaldoItem : saldo
-PresupuestoAdendas "0..*" --> "0..*" Adenda : precio de venta
 ApartadoAdendas "0..*" --> "1" Obra : de la obra
 
-note bottom of Adenda
-  No modifica la versión vigente del presupuesto
-  de costos (RF-21). Suma al saldo contractual
-  del ítem (RF-10). Sin adenda, el rubro queda
-  en negativo como mayor costo.
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

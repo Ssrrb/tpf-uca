@@ -46,30 +46,37 @@ package "ECMS" {
     --
     + estaCerrada(): lógico
     + agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo): vacío
+    + agregarLíneaRegularización(ítem, cantidad, precio): vacío
     + registrarImportes(bruto, amortización, fondoReparo, neto, iva): vacío
     + guardar(actor): vacío
   }
 
   class "Línea del certificado" as LineaCertificado {
-    tipo: cantidad | ajuste
+    tipo: cantidad | ajuste | regularización
     cantidad: decimal
     precioUnitario: guaraníes
     importe: guaraníes
+    exceso: guaraníes [0..1]
     --
     + valorizar(precio: guaraníes): guaraníes
+    + señalarExceso(montoContractual: guaraníes): guaraníes [0..1]
   }
 
   class "Medición" as Medicion {
     cantidad: decimal
     --
-    + insumosConsumidos(): lista de ConsumoInsumo
+    + insumosConsumidos(): lista de Insumo
     + marcarCertificada(versión): vacío
   }
 
   class "Saldo del ítem" as SaldoItem {
     certificada: decimal
+    exceso: guaraníes
     --
     + registrarCertificado(cantidad): vacío
+    + montoContractual(): guaraníes
+    + registrarExceso(importe): vacío
+    + regularizarExceso(importe): vacío
   }
 
   class "Presupuesto del cliente" as PresupuestoCliente {
@@ -77,9 +84,10 @@ package "ECMS" {
     + precioUnitario(ítem): guaraníes [0..1]
   }
 
-  class "Presupuesto de adendas" as PresupuestoAdendas {
+  class "Apartado Adendas" as ApartadoAdendas {
     --
-    + precioVigente(ítem, fecha): guaraníes [0..1]
+    + ítemsAprobadosDesde(versión): lista de ItemAdenda
+    + precioAprobado(ítem): guaraníes [0..1]
   }
 }
 
@@ -105,16 +113,10 @@ package "ERP" {
   }
 
   class "Consumos de la obra" as ConsumosObra {
+    consumos: lista de Insumo
     --
-    + prepararConsumo(insumo, cantidad, precio, medición): ConsumoRegistrado
+    + prepararConsumo(insumo, cantidad, precio, medición): vacío
     + registrar(versión): vacío
-  }
-
-  class "Consumo registrado" as ConsumoRegistrado {
-    cantidad: decimal
-    precio: guaraníes [0..1]
-    /importe: guaraníes [0..1]
-    fecha: fecha y hora
   }
 }
 
@@ -124,26 +126,11 @@ VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
 LineaCertificado "0..1" --> "0..*" Medicion : certifica
 LineaCertificado "0..*" --> "1" SaldoItem : ítem
 VersionCertificado "0..*" --> "1" PresupuestoCliente : precios
-VersionCertificado "0..*" --> "0..1" PresupuestoAdendas : precios de adendas
+VersionCertificado "0..*" --> "0..1" ApartadoAdendas : adendas registradas
+ApartadoAdendas ..> SaldoItem : suma al monto contractual
 VersionCertificado "0..*" --> "0..1" Anticipo : amortiza
 VersionCertificado "0..*" --> "1" Obra : de la obra
 Obra "1" *-- "1" ConsumosObra : consumos
-ConsumosObra "1" *-- "0..*" ConsumoRegistrado : registra
-ConsumoRegistrado "0..*" --> "1" Insumo : de
-ConsumoRegistrado "0..*" --> "1" Medicion : origen
-ConsumoRegistrado "0..*" --> "1" VersionCertificado : al calcular
+ConsumosObra "0..*" --> "0..*" Insumo : registra el consumo de
 
-note bottom of VersionCertificado
-  Orden de cálculo (RF-13): bruto, amortización del anticipo,
-  fondo de reparo, neto e IVA, en guaraníes enteros
-  redondeados por línea (NF-06).
-  Guardada, no se modifica: se corrige con líneas
-  de ajuste en la versión siguiente (RF-12).
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

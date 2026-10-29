@@ -54,8 +54,4 @@ note right of en_carga
   finalización, en CU-16.
 end note
 
-note right of finalizado
-  No se modifica (RF-04). Es la base
-  del presupuesto de costos (CU-03).
-end note
 @enduml

@@ -38,7 +38,7 @@ start
 :Seleccionar la obra;
 if (¿Tiene el XLSX del cliente?) then ([sí])
   :Cargar el archivo XLSX;
-  |ECMS|
+  |Ctrl+ · ECMS|
   if (¿Es un XLSX válido y no repetido?) then ([no])
     :Rechazar la carga e informar el motivo;
     stop
@@ -57,7 +57,7 @@ else ([no])
 endif
 |Ingeniero de obra|
 :Confirmar la estructura, los rubros y las unidades;
-|ECMS|
+|Ctrl+ · ECMS|
 :Guardar la carga lista para validar (CU-16);
 stop
 @enduml

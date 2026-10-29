@@ -19,58 +19,58 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-15 · Emitir presupuesto de adendas
+title CU-15 · Cargar presupuesto de adendas del cliente
 actor "Ingeniero de obra" as Ing
+box "ERP" #EAF2F6
+participant "obra:\nObra" as Obra
+end box
 box "ECMS" #EAF2F6
 participant "presupuesto:\nPresupuestoAdendas" as PA
-participant "apartado:\nApartadoAdendas" as Apa
-participant "version:\nVersionAdendas" as V
-participant "anterior:\nVersionAdendas" as Ant
-participant "linea:\nLineaAdenda" as Lin
+participant "linea:\nLineaPresupuestoAdendas" as Lin
+participant "item:\nItemCostos" as Item
 end box
 
-Ing -> PA: versiones()
-PA --> Ing: versión vigente y anteriores (RF-06)
-opt solo quiere una versión anterior (2a)
-  Ing -> Ant: exportar(formato)
-  Ant --> Ing: XLSX o PDF; el CU termina
+Ing -> Obra: presupuestosDeAdendas()
+Obra --> Ing: presupuestos de adendas ya cargados (RF-06)
+Ing -> Obra: siguienteNúmeroAdendas()
+Obra --> Ing: número
+create PA
+Ing -> PA: «create»(número, fecha)
+alt carga desde el XLSX del cliente (paso 2)
+  Ing -> PA: importar(archivo)
+  note right of PA
+    Conserva el archivo original y propone
+    las líneas que lee (como RF-02 y RF-03).
+  end note
+else carga manual (2a)
+  loop por cada línea del documento
+    Ing -> PA: agregarLínea(ítem, descripción, unidad, cantidad, precioVenta)
+  end
 end
-
-Ing -> PA: emitirVersión(actor)
-PA -> PA: hayCambios()
-break no hay adendas nuevas ni cambios (4a)
-  PA --> Ing: lo informa; no se crea versión
-end
-PA -> Apa: adendasRegistradas()
-Apa --> PA: adendas con su precio de venta acordado
-create V
-PA -> V: «create»(número siguiente, anterior)
-PA -> V: armar(adendas)
-loop por cada adenda registrada
+loop por cada línea propuesta o cargada
   create Lin
-  V -> Lin: «create»(adenda, descripción, precioVenta)
-end
-V --> Ing: versión en edición (RF-21)
-
-opt corrige la descripción de una adenda (paso 5)
-  Ing -> V: corregirLínea(línea, descripción, motivo)
-  V -> Lin: corregir(descripción, motivo)
-end
-
-alt confirma (paso 6)
-  Ing -> V: guardar(actor)
-  V -> V: validarMotivos()
-  break falta el motivo de una corrección (6b)
-    V --> Ing: marca el campo (vuelve al paso 5)
+  PA -> Lin: «create»(ítem, descripción, unidad, cantidad, precioVenta)
+  Lin -> Item: buscar(código)
+  Item --> Lin: ítem existente [0..1]
+  opt no existe en el presupuesto de costos (3a)
+    Lin -> Lin: esÍtemNuevo()
+    note right of Lin
+      Ítem nuevo: se crea al registrar
+      la adenda que lo aprueba (CU-11).
+    end note
   end
-  V -> PA: activar(version)
-  PA -> Ant: pasarAAnterior()
-  V --> Ing: versión vinculada a la anterior, con actor y fecha (NF-05)
-  opt exporta para enviarla al cliente (7a, PR-04)
-    Ing -> V: exportar(formato)
+end
+PA --> Ing: líneas con importe y total (paso 3)
+
+alt confirma (paso 4)
+  Ing -> PA: guardar(actor)
+  PA -> PA: validar()
+  break falta un dato obligatorio o el número ya existe (4b)
+    PA --> Ing: marca cada error (vuelve al paso 3)
   end
-else cancela (6a)
-  Ing -> V: cancelar()
-  V --> Ing: no se crea versión; la vigente no cambia
+  PA --> Ing: presupuesto cargado con actor y fecha;\nlisto para registrar adendas (CU-11)
+else cancela (4a)
+  Ing -> PA: cancelar()
+  PA --> Ing: no se guarda; los cargados no cambian
 end
 @enduml

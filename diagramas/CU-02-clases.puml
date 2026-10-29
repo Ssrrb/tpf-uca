@@ -59,32 +59,20 @@ package "ECMS" {
   class Hoja {
     nombre: texto
     origen: detectada | manual
+    columnas: lista de Columna
     --
-    + definirColumna(índice, campo): Columna
-  }
-
-  class Columna {
-    encabezado: texto
-    campoDestino: texto
-    obligatoria: lógico
+    + definirColumna(índice, campo): vacío
   }
 
   class Rubro {
     código: texto
     descripción: texto
+    ítems: lista de Item
     --
-    + agregarÍtem(código, descripción, unidad, cantidad, precio): Ítem
+    + agregarÍtem(código, descripción, unidad, cantidad, precio): vacío
   }
 
-  class "Ítem" as Item {
-    código: texto
-    descripción: texto
-    unidad: texto
-    cantidad: decimal
-    precioUnitario: guaraníes
-  }
-
-  enum EstadoPresupuestoCliente {
+  enum EstadoPresupuestoCliente <<enumeration>> {
     propuesta
     finalizado
   }
@@ -93,20 +81,8 @@ package "ECMS" {
 Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
 PresupuestoCliente "1" *-- "0..1" ArchivoOriginal : conserva sin modificar
 PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
-Hoja "1" *-- "1..*" Columna : define
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
-Rubro "1" *-- "1..*" Item : agrupa
-Item "0..*" --> "0..1" Hoja : fila de origen
 
-note bottom of PresupuestoCliente
-  Queda en propuesta, lista para validar
-  y finalizar (CU-16).
-  Mismo XLSX sin cambios: no se crea otra carga (NF-07).
-end note
+PresupuestoCliente ..> EstadoPresupuestoCliente : estado
 
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

@@ -23,8 +23,10 @@ title CU-05 · Mantener catálogos y banco de insumos
 actor "Administrador" as Admin
 box "ERP" #EAF2F6
 participant "catalogo:\nCatalogo" as Cat
-participant "insumo:\nInsumo" as Ins
+participant "nuevo:\nInsumo" as Nue
 participant "recurso:\nRecurso" as Rec
+participant "insumo:\nInsumo" as Ins
+participant "precioInicial:\nPrecio" as PIni
 participant "precioActual:\nPrecio" as PAct
 participant "precioNuevo:\nPrecio" as PNue
 end box
@@ -32,36 +34,35 @@ end box
 Admin -> Cat: listar(filtro)
 Cat --> Admin: lista paginada por código, nombre y rubro
 
-alt crear un recurso (paso 3)
+alt crear un recurso (paso 2)
   Admin -> Cat: crearRecurso(datos)
   Cat -> Cat: códigoDisponible(código)
-  break el código ya existe (5a)
-    Cat --> Admin: pide otro código (vuelve al paso 3)
+  break el código ya existe (4a)
+    Cat --> Admin: pide otro código (vuelve al paso 2)
   end
-  create Ins
-  Cat -> Ins: «create»(código, descripción, unidad, categoría)
-  Admin -> Ins: registrarPrecio(valor, vigenteDesde)
-  create PNue
-  Ins -> PNue: «create»(valor, vigenteDesde)
-else modificar un recurso (3a)
-  Admin -> Rec: modificar(datos)
-else dar de baja un recurso (3b)
-  Admin -> Rec: darDeBaja(actor)
-  note right of Rec
-    Inactivo: no se ofrece en cargas nuevas
-    y se conserva en lo ya registrado.
+  create Nue
+  Cat -> Nue: «create»(código, descripción, clase, unidad, categoría)
+  note right of Nue
+    Una persona, un proveedor o un cliente se crean igual, sin precio.
   end note
-else actualizar un precio (4a)
+  Admin -> Nue: registrarPrecio(valor, vigenteDesde)
+  create PIni
+  Nue -> PIni: «create»(valor, vigenteDesde)
+else modificar un recurso (2a)
+  Admin -> Rec: modificar(datos)
+else dar de baja un recurso (2b)
+  Admin -> Rec: darDeBaja(actor)
+else actualizar un precio (3a)
   Admin -> Ins: registrarPrecio(valor, vigenteDesde)
   Ins -> Ins: obtenerPrecioVigente(vigenteDesde)
   Ins -> PAct: seSuperpone(vigenteDesde)
   PAct --> Ins: superpone: lógico
-  break la vigencia se superpone con otro precio (5b)
+  break la vigencia se superpone con otro precio (4b)
     Ins --> Admin: rechaza; indica la vigencia en conflicto
   end
   Ins -> PAct: cerrarVigencia(vigenteDesde - 1 día)
   create PNue
   Ins -> PNue: «create»(valor, vigenteDesde)
 end
-Ins --> Admin: recurso y precio vigente guardados con actor y fecha
+Cat --> Admin: recurso y precio vigente guardados con actor y fecha
 @enduml

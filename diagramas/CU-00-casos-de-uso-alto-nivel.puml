@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title Diagrama de Casos de Uso (Alto Nivel) · Ctrl+
+title Diagrama de Casos de Uso (Alto Nivel) · 1/2 · Actores y casos de uso
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14
@@ -26,8 +26,10 @@ left to right direction
 skinparam nodesep 25
 skinparam ranksep 110
 
-actor "Administrador" as ADM
-actor "Ingeniero de obra" as ING
+actor "Ingeniero de obra\n(1)" as ING
+actor "Administrador\n(1)" as ADM
+actor "Ingeniero de obra\n(2)" as ING2
+actor "Administrador\n(2)" as ADM2
 actor "Finanzas y tesorería" as FIN
 
 rectangle "Ctrl+" {
@@ -44,7 +46,7 @@ rectangle "Ctrl+" {
     usecase "CU-10 Controlar el costo\nde la obra con el ACU" as CU10
     usecase "CU-11 Registrar adenda" as CU11
     usecase "CU-12 Liquidar subcontratista" as CU12
-    usecase "CU-15 Emitir presupuesto\nde adendas" as CU15
+    usecase "CU-15 Cargar presupuesto\nde adendas del cliente" as CU15
   }
   package "Motor de finanzas" {
     usecase "CU-06 Calcular el certificado\ny el consumo de recursos" as CU06
@@ -55,38 +57,32 @@ rectangle "Ctrl+" {
   }
 }
 
-' Administrador
+' Los actores (1) quedan a la izquierda y los (2) a la derecha,
+' junto a los CU que usan, para que ninguna asociación cruce el diagrama.
+' Ingeniero de obra (1): CU del ECMS que quedan a la izquierda
+ING -- CU02
+ING -- CU16
+ING -- CU15
+ING -- CU11
+ING -- CU04
+ING -- CU12
+ING -- CU03
+ING -- CU10
+
+' Administrador (1): ERP y control de costos
+ADM -- CU10
 ADM -- CU01
 ADM -- CU05
-ADM -- CU07
 ADM -- CU09
-ADM -- CU10
-ADM -- CU13
 
-' Ingeniero de obra
-ING -- CU02
-ING -- CU03
-ING -- CU04
-ING -- CU06
-ING -- CU07
-ING -- CU10
-ING -- CU11
-ING -- CU12
-ING -- CU15
-ING -- CU16
+' Ingeniero de obra (2), Administrador (2) y Finanzas y tesorería: a la derecha
 
-' Finanzas y tesorería
-FIN -- CU08
-FIN -- CU13
-FIN -- CU14
+CU06 -- ING2
+CU07 -- ING2
+CU07 -- ADM2
+CU13 -- ADM2
+CU13 -- FIN
+CU08 -- FIN
+CU14 -- FIN
 
-legend bottom
-  Línea continua sin flecha = asociación actor - caso de uso (UML 2).
-  Los paquetes son los subsistemas de Ctrl+ (ERP, ECMS y Motor de finanzas);
-  cada CU está en el subsistema principal que lo resuelve. Los subsistemas no son actores.
-  CU-06: calcula el Motor de finanzas y el ERP registra el consumo de insumos.
-  CU-07: el Ingeniero de obra solo registra gastos de caja chica.
-  CU-10: también lo inicia el Administrador. CU-13: también lo inicia Finanzas y tesorería.
-  El Cliente y los subcontratistas no usan Ctrl+: el sistema es solo interno.
-endlegend
 @enduml

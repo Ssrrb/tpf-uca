@@ -35,7 +35,7 @@ package "ECMS" {
     + activar(versión, actor): vacío
   }
 
-  enum EstadoVersionCostos {
+  enum EstadoVersionCostos <<enumeration>> {
     propuesta
     vigente
     historica
@@ -104,7 +104,7 @@ package "ECMS" {
 package "ERP" {
   class Insumo {
     código: texto
-    unidad: Unidad
+    unidad: texto
     --
     + obtenerPrecioVigente(fecha): guaraníes [0..1]
   }
@@ -120,21 +120,11 @@ ItemCostos "1" *-- "0..1" ACU : análisis
 ACU "1" *-- "1..*" LineaACU : insumos
 LineaACU "0..*" --> "1" Insumo : usa
 
-note bottom of VersionCostos
-  Solo una versión vigente por obra.
-  Corregir cantidad, unidad, precio o ubicación crea
-  una versión nueva; completar ejecutor, insumos o ACU
-  de un ítem no certificado, no (RF-05).
-end note
+VersionCostos ..> EstadoVersionCostos : estado
 
 note bottom of ItemCostos
   El código se conserva entre versiones y lo vincula
   con su ítem del presupuesto del cliente (RF-05).
 end note
 
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

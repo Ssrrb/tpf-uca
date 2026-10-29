@@ -26,69 +26,77 @@ participant "obra:\nObra" as Obra
 end box
 box "ECMS" #EAF2F6
 participant "costos:\nPresupuestoCostos" as PC
+participant "presupuestoAdendas:\nPresupuestoAdendas" as PA
 participant "apartado:\nApartadoAdendas" as Apa
 participant "adenda:\nAdenda" as Ad
+participant "linea:\nLineaPresupuestoAdendas" as Lin
+participant "itemAdenda:\nItemAdenda" as IA
 participant "item:\nItemCostos" as Item
 participant "saldo:\nSaldoItem" as Saldo
-participant "adendas:\nPresupuestoAdendas" as PA
 end box
 
 Ing -> Obra: permiteAdendas()
-Obra --> Ing: permitido hasta la recepción definitiva (RF-33)
-Ing -> PC: ítemsConSaldoNegativo()
-loop por cada ítem con exceso
-  PC -> Saldo: cantidadRetenida()
-  Saldo --> PC: cantidad medida retenida
-end
-PC --> Ing: ítems con saldo negativo y cantidad retenida (RF-10)
-
-alt exceso de cantidad de un ítem (paso 3)
-  Ing -> Apa: crearAdenda(ítem, tipo, cantidad, precioVenta, costo)
-  create Ad
-  Apa -> Ad: «create»(ítem, tipo, cantidad, precioVenta, costo)
-else ítem nuevo (2b)
-  Ing -> Apa: crearÍtemNuevo(rubro, descripción, unidad)
-  create Item
-  Apa -> Item: «create»(rubro, descripción, unidad)
-  Apa -> Ad: «create»(ítem nuevo, cantidad, precioVenta, costo)
-  note right of Item
-    Desde ahora admite mediciones (CU-04)
-    que entran en el certificado (CU-06).
-  end note
-else ampliación de plazo (2c)
-  Ing -> Apa: crearAdenda(obra, ampliación de plazo, nuevaFechaFin)
-  Apa -> Ad: «create»(ampliación de plazo, nuevaFechaFin)
-else decide no registrar adenda (3a)
-  note over Ing, PA
-    El rubro queda en negativo como mayor costo
-    y la cantidad sigue en el certificado como saldo negativo.
+Obra --> Ing: permitido hasta la recepción definitiva (RF-23)
+Ing -> PC: ítemsEnExceso()
+PC --> Ing: ítems con saldo negativo e importe en exceso (CU-06)
+Ing -> PA: líneasPendientes()
+PA --> Ing: líneas del presupuesto de adendas del cliente\ncon cantidad pendiente y precio de venta (CU-15)
+break no registra adenda (2b)
+  note over Ing, Saldo
+    El exceso queda no reconocido como mayor costo
+    y sigue señalado en el certificado (RF-08).
   end note
 end
 
-Ing -> Ad: adjuntarRespaldo(motivo, archivo)
+Ing -> Apa: crearAdenda(tipo, motivo, respaldo)
+create Ad
+Apa -> Ad: «create»(número siguiente, tipo, motivo, respaldo)
+alt adenda de obra (paso 3)
+  loop por cada línea que aprueba
+    Ing -> Ad: agregarÍtem(línea, cantidadAprobada, costo)
+    Ad -> Lin: cantidadPendiente()
+    Lin --> Ad: pendiente
+    break la cantidad aprobada supera la pendiente (3c)
+      Ad --> Ing: lo informa y no la acepta
+    end
+    create IA
+    Ad -> IA: «create»(línea, cantidadAprobada, precioVenta, costo)
+    note right of IA
+      Puede aprobar solo una parte (3a).
+    end note
+  end
+else ampliación de plazo (2a)
+  Ing -> Ad: fijarNuevaFechaFin(fecha)
+end
+
 Ad -> Ad: calcularImportes()
 Apa -> Obra: obtenerLímiteAdendas()
 Obra --> Apa: límite
 Apa -> Apa: utilizado()
-Apa --> Ing: precio de venta, costo, límite, utilizado y saldo (RF-20)
-break la adenda supera el límite de la obra (5a)
+Apa --> Ing: precio de venta, costo, límite, utilizado y saldo (RF-13)
+break la adenda supera el límite de la obra (4a)
   Apa --> Ing: lo informa e impide confirmar
 end
 
 Ing -> Apa: registrar(adenda, actor)
 Apa -> Ad: validarDatos()
 Ad --> Apa: faltantes
-break faltan motivo, respaldo o importes (6a)
+break faltan motivo, respaldo o importes (5a)
   Apa --> Ing: marca los campos (vuelve al paso 3)
 end
-critical registro atómico (NF-03)
-  Apa -> PA: registrarPrecio(adenda)
+critical registro atómico (NF-02)
   alt ampliación de plazo
     Apa -> Obra: actualizarFechaFin(fecha, motivo)
-  else ampliación de cantidad o ítem nuevo
-    Apa -> Saldo: sumarAdenda(cantidad)
-    Apa -> Saldo: liberarRetenida(cantidad)
+  else adenda de obra
+    loop por cada ítem de la adenda
+      opt la línea es un ítem nuevo (3b)
+        create Item
+        Apa -> Item: «create»(rubro, descripción, unidad)
+      end
+      Apa -> Saldo: sumarAdenda(cantidadAprobada)
+      Apa -> Lin: descontarAprobada(cantidadAprobada)
+    end
   end
 end
-Apa --> Ing: costo en el apartado Adendas y precio en el presupuesto\nde adendas, con actor y fecha (RF-21, RF-10)
+Apa --> Ing: costo en el apartado Adendas del presupuesto de costos;\nlo aprobado se regulariza en la versión siguiente\ndel certificado (CU-06, RF-14, RF-08)
 @enduml

@@ -32,7 +32,7 @@ participant "comprobante:\nComprobante" as Comp
 end box
 
 Fin -> Obra: permiteCobrosYPagos()
-Obra --> Fin: permitido hasta la recepción definitiva (RF-33)
+Obra --> Fin: permitido hasta la recepción definitiva (RF-23)
 alt factura a cobrar o liquidación a pagar (paso 1)
   Fin -> Doc: mostrarConOrigen()
 else devolución del fondo de reparo (1a)
@@ -43,7 +43,7 @@ end
 Doc --> Fin: documento, versión del certificado de la que deriva y saldo
 
 create Mov
-Fin -> Mov: «create» Cobro o Pago(importe, fecha, medio)
+Fin -> Mov: «create»(tipo, importe, fecha, medio)
 opt el cliente es agente de retención
   Fin -> Mov: agregarRetención(tipo, importe, comprobante)
   create Ret
@@ -54,17 +54,17 @@ create Comp
 Mov -> Comp: «create»(tipo, archivo)
 Mov -> Doc: validarImporte(importe, retenciones)
 Doc --> Mov: válido: lógico
-break importe + retenciones supera el saldo pendiente (5a, RF-30)
-  Mov --> Fin: lo informa e impide registrar (vuelve al paso 3)
+break importe + retenciones supera el saldo pendiente (4a, RF-20)
+  Mov --> Fin: lo informa e impide registrar (vuelve al paso 2)
 end
 Fin -> Mov: confirmar(actor)
-break falta el comprobante (6a)
-  Mov --> Fin: marca el campo e impide confirmar (vuelve al paso 4)
+break falta el comprobante (5a)
+  Mov --> Fin: marca el campo e impide confirmar (vuelve al paso 3)
 end
 Mov -> Doc: actualizarSaldo(movimiento)
 Doc --> Fin: saldo actualizado; lo refleja el tablero (CU-13)
 note over Fin, Comp
-  3a: si el cobro o pago es parcial, el documento queda
+  2a: si el cobro o pago es parcial, el documento queda
   con saldo pendiente y se puede volver a registrar.
 end note
 @enduml

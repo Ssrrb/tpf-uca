@@ -53,7 +53,7 @@ Obra --> Org: errores
 break datos obligatorios faltantes o inválidos
   Org --> Admin: muestra los errores; no se crea la obra
 end
-opt anticipo configurado (RF-32)
+opt anticipo configurado (RF-22)
   Org -> Obra: definirAnticipo(modalidad, valor)
   create Ant
   Obra -> Ant: «create»(modalidad, valor)
@@ -78,10 +78,10 @@ break la obra está cerrada
 end
 create Cambio
 Obra -> Cambio: «create»(desde, hasta, actor, fecha)
-Obra --> Admin: estado nuevo (RF-33)
+Obra --> Admin: estado nuevo (RF-23)
 
 note over Admin, Cambio
-  La creación es atómica (NF-03): si falla o se cancela,
+  La creación es atómica (NF-02): si falla o se cancela,
   no se crea la obra ni se asigna ningún responsable.
 end note
 @enduml

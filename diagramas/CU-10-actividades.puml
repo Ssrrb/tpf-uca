@@ -36,27 +36,27 @@ title CU-10 · Actividades · Controlar el costo de la obra con el ACU
 |Ingeniero de obra o Administrador|
 start
 :Seleccionar la obra y la fecha de consulta;
-|ECMS|
+|Ctrl+ · ECMS|
 :Reunir la versión vigente con su ACU, el apartado Adendas
 y las mediciones con sus insumos hasta la fecha;
-|Motor de finanzas|
+|Ctrl+ · Motor de finanzas|
 :Entregar los gastos imputados por rubro
 y las liquidaciones hasta la fecha;
-|ECMS|
+|Ctrl+ · ECMS|
 if (¿Hay mediciones o gastos hasta la fecha?) then ([no])
   :Informar que no hay datos;
   stop
 else ([sí])
 endif
 :Calcular el costo del avance: propios con el ACU,
-subcontratados con lo liquidado (RF-26);
+subcontratados con lo liquidado (RF-17);
 :Mostrar presupuestado, consumido, liquidado, comprado,
 acopio, desvío, diferencias y saldo por rubro e ítem;
 |Ingeniero de obra o Administrador|
 :Seleccionar un total;
-|ECMS|
+|Ctrl+ · ECMS|
 :Mostrar el respaldo: medición con sus insumos
-o gasto con su comprobante (NF-12);
+o gasto con su comprobante (NF-11);
 |Ingeniero de obra o Administrador|
 if (¿El ACU estaba mal estimado?) then ([sí])
   :Corregirlo en una versión nueva (CU-03);

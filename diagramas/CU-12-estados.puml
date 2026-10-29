@@ -50,6 +50,6 @@ fondo_devuelto --> [*]
 
 note right of pendiente_de_pago
   El pago se hace fuera de Ctrl+
-  y se registra en CU-14 (RF-30).
+  y se registra en CU-14 (RF-20).
 end note
 @enduml

@@ -20,7 +20,7 @@ skinparam note {
 }
 hide footbox
 title CU-13 · Consultar tablero financiero
-actor "Administrador\n(o Finanzas y tesorería)" as Adm
+actor "Administrador o\nFinanzas y tesorería" as Adm
 box "Motor de finanzas" #EAF2F6
 participant "tablero:\nTablero" as Tab
 participant "libro:\nLibroFinanciero" as Lib
@@ -42,7 +42,7 @@ loop por cada obra del alcance
     Tab --> Adm: excluye sus datos y lo indica
   else con acceso
   Tab -> Res: presupuestado(obra)
-  Res --> Tab: a costo (con apartado Adendas) y a venta (cliente + adendas)
+  Res --> Tab: a costo (con apartado Adendas) y a venta (presupuesto contratado + adendas)
   break falla la lectura de los datos de obra (3a)
     Tab --> Adm: los marca no disponibles con la fecha del último dato
   end
@@ -57,13 +57,13 @@ loop por cada obra del alcance
   Tab -> Tot: «create»(concepto, importe, fecha, unidad, PYG, procedencia)
   end
 end
-Tab --> Adm: totales por obra y empresa, avance físico y plazo\ntranscurrido en porcentaje (RF-28, NF-11)
+Tab --> Adm: totales por obra y empresa, avance físico y plazo\ntranscurrido en porcentaje (RF-18, NF-10)
 opt filtra por rubro o fecha (1a)
   Adm -> Tab: filtrar(rubro, fecha)
 end
 Adm -> Tab: abrirRespaldo(total)
-Tab --> Adm: versión del presupuesto o del certificado, factura interna\ncon la legal, recibo o comprobante (NF-12)
-opt exporta (6a, RF-18)
+Tab --> Adm: versión del presupuesto o del certificado, factura interna\ncon la legal, recibo o comprobante (NF-11)
+opt exporta (6a, RF-12)
   Adm -> Tab: exportar(formato)
 end
 @enduml

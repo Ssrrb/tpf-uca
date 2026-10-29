@@ -81,7 +81,7 @@ package "ERP" {
   }
 
   class "Asignación" as Asignacion {
-    rol: RolEnObra
+    rol: texto {Ingeniero de obra | Finanzas y tesorería}
     permisos: lista de texto
     fechaAsignación: fecha y hora
   }
@@ -93,16 +93,11 @@ package "ERP" {
     fecha: fecha y hora
   }
 
-  enum EstadoObra {
+  enum EstadoObra <<enumeration>> {
     en_ejecucion
     recepcion_provisoria
     recepcion_definitiva
     cerrada
-  }
-
-  enum RolEnObra {
-    ingeniero_de_obra
-    finanzas_y_tesoreria
   }
 }
 
@@ -115,14 +110,6 @@ Obra "1" *-- "0..*" Asignacion : responsables
 Asignacion "0..*" --> "1" Usuario : asigna a
 Obra "1" *-- "0..*" CambioEstado : historial
 
-note bottom of Obra
-  Código único por organización (5a).
-  El estado solo avanza (RF-33).
-end note
+Obra ..> EstadoObra : estado
 
-legend bottom
-  Línea con punta abierta = asociación dirigida (navegable hacia la clase apuntada).
-  Rombo relleno = composición: la parte no existe sin el todo.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

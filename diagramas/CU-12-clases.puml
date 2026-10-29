@@ -90,15 +90,4 @@ Liquidacion "0..*" --> "1" Contrato : de
 Liquidacion "0..1" --> "1" VersionCertificado : por
 Contrato "0..*" --> "0..*" Retencion : aplica
 
-note bottom of Liquidacion
-  Única por versión del certificado y contrato (RF-25):
-  un reintento no la duplica (NF-03).
-  Solo se liquida lo certificado al cliente.
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

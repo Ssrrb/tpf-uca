@@ -23,7 +23,7 @@ title CU-08 · Generar factura interna del certificado
 actor "Finanzas y tesorería" as Fin
 box "Motor de finanzas" #EAF2F6
 participant "facturacion:\nFacturacion" as Fac
-participant "factura:\nDocumentoInterno" as Doc
+participant "documento:\nDocumentoInterno" as Doc
 participant "legal:\nFacturaLegal" as Leg
 participant "cuenta:\nCuentaACobrar" as CxC
 end box
@@ -42,36 +42,34 @@ loop por cada versión guardada
 end
 Fac --> Fin: versiones con importe sin facturar y anticipo sin facturar
 
-alt elige una versión del certificado (paso 3)
+alt elige una versión del certificado (paso 1)
   Fin -> Fac: generarFactura(version, actor)
-  Fac -> Obra: datosCliente()
-  Obra --> Fac: cliente [0..1]
-  break faltan datos del cliente (4a)
+  Fac -> Obra: datosDeFacturación()
+  Obra --> Fac: datos [0..1]
+  break faltan datos de facturación (2a)
     Fac --> Fin: informa el dato faltante; no genera la factura
   end
-  alt neto positivo
-    create Doc
-    Fac -> Doc: «create» FacturaInterna(neto, iva de la versión)
-  else neto negativo por ajustes (3a)
-    Fac -> Doc: «create» NotaCreditoInterna(neto, iva de la versión)
-  end
-else elige el anticipo (3b, RF-32)
+else elige el anticipo (1b, RF-22)
   Fin -> Fac: generarFacturaAnticipo(anticipo, actor)
-  Fac -> Doc: «create» FacturaInterna(importe del anticipo)
   Fac -> Ant: marcarFacturado()
 end
-Fac --> Fin: documento en PYG, sin validez fiscal (RF-14)
+create Doc
+Fac -> Doc: «create»(tipo, neto, iva)
+note right of Doc
+  Es nota de crédito interna si la versión tiene neto negativo (1a).
+end note
+Fac --> Fin: documento en PYG, sin validez fiscal (RF-11)
 
-alt adjunta la factura legal (paso 6)
+alt adjunta la factura legal (paso 3)
   Fin -> Doc: adjuntarFacturaLegal(número, fecha, importe, archivo)
   create Leg
   Doc -> Leg: «create»(número, fecha, importe, archivo)
   Doc -> Doc: compararConLegal()
-  opt el importe legal difiere del interno (6b)
+  opt el importe legal difiere del interno (3b)
     Doc --> Fin: señala la diferencia
     Fin -> Doc: registrarMotivoDiferencia(motivo)
   end
-else la legal todavía no se emitió (6a)
+else la legal todavía no se emitió (3a)
   note over Fin, Doc
     Confirma sin adjunto: queda pendiente de adjuntar.
   end note
