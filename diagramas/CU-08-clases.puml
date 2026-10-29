@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-08 · Generar factura interna del certificado
+title CU-08 · Generar factura interna al cliente por el certificado
 hide circle
 hide empty methods
 hide empty fields

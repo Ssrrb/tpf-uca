@@ -19,7 +19,7 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-08 · Generar factura interna del certificado
+title CU-08 · Generar factura interna al cliente por el certificado
 actor "Finanzas y tesorería" as Fin
 box "Motor de finanzas" #EAF2F6
 participant "facturacion:\nFacturacion" as Fac

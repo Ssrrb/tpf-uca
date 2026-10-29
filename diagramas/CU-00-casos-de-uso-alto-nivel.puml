@@ -51,7 +51,7 @@ rectangle "Ctrl+" {
   package "Motor de finanzas" {
     usecase "CU-06 Calcular el certificado\ny el consumo de recursos" as CU06
     usecase "CU-07 Registrar gasto de obra" as CU07
-    usecase "CU-08 Generar factura interna\ndel certificado" as CU08
+    usecase "CU-08 Generar factura interna\nal cliente por el certificado" as CU08
     usecase "CU-13 Consultar tablero\nfinanciero" as CU13
     usecase "CU-14 Registrar cobros\ny pagos" as CU14
   }
