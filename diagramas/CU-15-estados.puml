@@ -32,21 +32,21 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-15 · Estados de la Versión del presupuesto de adendas
-state "En edición" as en_edicion
-state "Vigente" as vigente
-state "Anterior" as anterior
-state "Descartada" as descartada
+title CU-15 · Estados del Presupuesto de adendas del cliente
+state "En carga" as en_carga
+state "Cargado" as cargado
+state "Descartado" as descartado
 
-[*] --> en_edicion : emitirVersión(actor) / armar(adendas)
-en_edicion --> en_edicion : corregirLínea(línea, descripción, motivo)
-en_edicion --> vigente : guardar(actor) [motivos completos] / activar(versión)
-en_edicion --> descartada : cancelar()
-vigente --> anterior : activar(otra versión) / pasarAAnterior()
-anterior --> [*]
-descartada --> [*]
+[*] --> en_carga : crear(número, fecha)
+en_carga --> en_carga : importar(archivo) / agregarLínea(...)
+en_carga --> cargado : guardar(actor) [datos completos y número único]
+en_carga --> descartado : cancelar()
+cargado --> [*]
+descartado --> [*]
 
-note right of anterior
-  Sigue consultable y exportable (1a).
+note right of cargado
+  No se modifica: un cambio del cliente
+  se carga como otro presupuesto (RF-06).
+  Sus líneas se aprueban en CU-11.
 end note
 @enduml

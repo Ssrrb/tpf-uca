@@ -37,19 +37,27 @@ title CU-11 · Actividades · Registrar adenda
 start
 :Seleccionar la obra;
 |Ctrl+ · ECMS|
-:Mostrar los ítems con saldo negativo
-y la cantidad retenida de cada uno;
+:Mostrar los ítems con saldo negativo (CU-06) y las
+líneas pendientes de los presupuestos de adendas
+del cliente (CU-15);
 |Ingeniero de obra|
-if (¿Registra una adenda?) then ([no, queda como mayor costo])
+if (¿Registra una adenda?) then ([no, queda como exceso no reconocido])
   stop
 else ([sí])
 endif
-if (¿Qué registra?) then ([exceso de cantidad de un ítem])
-  :Elegir el ítem con exceso y cargar la cantidad,
-  el precio de venta y el costo;
-elseif (¿Es un trabajo que no existe?) then ([ítem nuevo])
-  :Ingresar rubro, descripción, unidad,
-  cantidad, precio de venta y costo;
+if (¿Qué registra?) then ([adenda de obra])
+  repeat
+    :Elegir una línea del presupuesto de adendas
+    y cargar la cantidad aprobada, total o parcial,
+    y el costo;
+    |Ctrl+ · ECMS|
+    if (¿Supera la cantidad pendiente de la línea?) then ([sí])
+      :Informarlo y no aceptarla;
+    else ([no])
+      :Agregar el ítem a la adenda;
+    endif
+    |Ingeniero de obra|
+  repeat while (¿Aprueba otra línea?) is ([sí]) not ([no])
 else ([ampliación de plazo])
   :Ingresar la nueva fecha de fin;
 endif
@@ -65,13 +73,16 @@ endif
 |Ingeniero de obra|
 :Confirmar;
 |Ctrl+ · ECMS|
-:Registrar el costo en el apartado Adendas
-y el precio en el presupuesto de adendas;
 if (¿Es ampliación de plazo?) then ([sí])
   :Actualizar la fecha de fin vigente de la obra;
 else ([no])
-  :Sumar la cantidad al saldo contractual
-  y liberar la cantidad retenida (RF-08);
+  :Registrar el costo en el apartado Adendas,
+  crear los ítems nuevos y sumar la cantidad
+  aprobada al saldo contractual (RF-14);
+  note right
+    Se regulariza en la versión
+    siguiente del certificado (CU-06).
+  end note
 endif
 stop
 @enduml

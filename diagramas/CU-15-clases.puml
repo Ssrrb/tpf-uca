@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-15 · Emitir presupuesto de adendas
+title CU-15 · Cargar presupuesto de adendas del cliente
 hide circle
 hide empty methods
 hide empty fields
@@ -26,57 +26,64 @@ skinparam note {
   BorderColor #17324D
 }
 package "ECMS" {
-  class "Presupuesto de adendas" as PresupuestoAdendas {
-    --
-    + versiones(): lista de VersiónAdendas
-    + hayCambios(): lógico
-    + emitirVersión(actor): VersiónAdendas
-    + activar(versión): vacío
-  }
-
-  class "Versión del presupuesto de adendas" as VersionAdendas {
+  class "Presupuesto de adendas del cliente" as PresupuestoAdendas {
     número: entero
-    estado: en_edición | vigente | anterior | descartada
-    motivo: texto [0..1]
-    emitidaPor: Usuario
-    fecha: fecha y hora
+    fecha: fecha
+    estado: EstadoPresupuestoAdendas
+    archivo: archivo [0..1]
+    cargadoPor: Usuario
     /total: guaraníes
     --
-    + armar(adendas): vacío
-    + corregirLínea(línea, descripción, motivo): vacío
-    + validarMotivos(): lista de texto
+    + importar(archivo): vacío
+    + agregarLínea(ítem, descripción, unidad, cantidad, precioVenta): vacío
+    + validar(): lista de texto
     + guardar(actor): vacío
-    + pasarAAnterior(): vacío
     + cancelar(): vacío
-    + exportar(formato: XLSX | PDF): archivo
   }
 
-  class "Línea de adenda" as LineaAdenda {
-    adenda: Adenda
+  class "Línea del presupuesto de adendas" as LineaPresupuestoAdendas {
+    rubro: texto [0..1]
     descripción: texto
+    unidad: texto
+    cantidad: decimal
     precioVenta: guaraníes
-    motivoCorrección: texto [0..1]
+    /importe: guaraníes
     --
-    + corregir(descripción, motivo): vacío
+    + esÍtemNuevo(): lógico
   }
 
-  class "Apartado Adendas" as ApartadoAdendas {
+  class "Ítem de costos" as ItemCostos {
+    código: texto {estable}
     --
-    + adendasRegistradas(): lista de Adenda
+    + buscar(código): ItemCostos [0..1]
+  }
+
+  enum EstadoPresupuestoAdendas <<enumeration>> {
+    en carga
+    cargado
+    descartado
   }
 }
 
-PresupuestoAdendas "1" *-- "0..*" VersionAdendas : versiones
-VersionAdendas "0..1" --> "0..1" VersionAdendas : anterior
-VersionAdendas "1" *-- "1..*" LineaAdenda : líneas
-PresupuestoAdendas ..> ApartadoAdendas : toma las adendas
+package "ERP" {
+  class Obra {
+    --
+    + presupuestosDeAdendas(): lista de PresupuestoAdendas
+    + siguienteNúmeroAdendas(): entero
+  }
+}
 
-note bottom of VersionAdendas
-  Documento contractual con el cliente. A diferencia del
-  presupuesto del cliente se puede editar: cada edición
-  crea una versión y conserva la anterior (RF-06, NF-04).
-  El precio de venta se acuerda al registrar la adenda (CU-11);
-  acá solo se corrige la descripción.
+Obra "1" *-- "0..*" PresupuestoAdendas : presupuestos de adendas
+PresupuestoAdendas "1" *-- "1..*" LineaPresupuestoAdendas : líneas
+LineaPresupuestoAdendas "0..*" --> "0..1" ItemCostos : ítem existente
+PresupuestoAdendas ..> EstadoPresupuestoAdendas : estado
+
+note bottom of PresupuestoAdendas
+  Documento oficial que el cliente aprueba y que se carga
+  tal cual (RF-06). Una obra puede tener varios, numerados.
+  Cargado no se modifica: un cambio va en otro presupuesto.
+  Sus líneas se aprueban, total o parcialmente,
+  al registrar la adenda (CU-11).
 end note
 
 legend bottom

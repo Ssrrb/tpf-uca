@@ -42,14 +42,14 @@ rectangle "Ctrl+" {
     usecase "CU-02 Cargar el\npresupuesto del cliente\n--\npuntos de extensión:\ncarga guardada (paso 5)" as CU02
     usecase "CU-16 Validar y finalizar el\npresupuesto del cliente" as CU16
     usecase "CU-03 Armar y versionar el\npresupuesto de costos" as CU03
-    usecase "CU-04 Medir el avance\ndel certificado\n--\npuntos de extensión:\nexceso sobre el saldo (4a)" as CU04
+    usecase "CU-04 Medir el avance\ndel certificado" as CU04
     usecase "CU-10 Controlar el costo\nde la obra con el ACU" as CU10
-    usecase "CU-11 Registrar adenda\n--\npuntos de extensión:\nadenda registrada (paso 6)" as CU11
+    usecase "CU-11 Registrar adenda" as CU11
     usecase "CU-12 Liquidar subcontratista" as CU12
-    usecase "CU-15 Emitir presupuesto\nde adendas" as CU15
+    usecase "CU-15 Cargar presupuesto\nde adendas del cliente" as CU15
   }
   package "Motor de finanzas" {
-    usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nversión guardada (paso 6)" as CU06
+    usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nítem en exceso (3a)\nversión guardada (paso 7)" as CU06
     usecase "CU-07 Registrar gasto de obra" as CU07
     usecase "CU-08 Generar factura interna\ndel certificado" as CU08
     usecase "CU-13 Consultar tablero\nfinanciero" as CU13
@@ -59,8 +59,7 @@ rectangle "Ctrl+" {
 
 ' Relaciones entre casos de uso (UML 2: del que extiende al caso base)
 CU16 ..> CU02 : <<extend>>\n[valida al terminar la carga]
-CU11 ..> CU04 : <<extend>>\n[la cantidad supera el saldo]
-CU15 ..> CU11 : <<extend>>\n[hay que emitir el presupuesto\nde adendas al cliente]
+CU11 ..> CU06 : <<extend>>\n[el cálculo señala\nun ítem en exceso]
 CU12 ..> CU06 : <<extend>>\n[la versión tiene ítems\nsubcontratados]
 
 ' Los actores (1) quedan a la izquierda y los (2) a la derecha,
@@ -68,6 +67,8 @@ CU12 ..> CU06 : <<extend>>\n[la versión tiene ítems\nsubcontratados]
 ' Ingeniero de obra (1): CU del ECMS que quedan a la izquierda
 ING -- CU16
 ING -- CU15
+ING -- CU11
+ING -- CU04
 ING -- CU12
 ING -- CU03
 ING -- CU10
@@ -80,8 +81,6 @@ ADM -- CU09
 
 ' Ingeniero de obra (2), Administrador (2) y Finanzas y tesorería: a la derecha
 CU02 -- ING2
-CU11 -- ING2
-CU04 -- ING2
 CU06 -- ING2
 CU07 -- ING2
 CU07 -- ADM2
@@ -94,7 +93,8 @@ note as ORDEN
   <b>Orden de trabajo</b> (precondiciones, no son relaciones UML):
   CU-01 y CU-05 → CU-02 → CU-16 → CU-03 → CU-09
   → CU-04 → CU-06 → CU-08 y CU-12 → CU-14 → CU-13.
-  CU-07, CU-10, CU-11 y CU-15 se usan durante la obra.
+  CU-07 y CU-10 se usan durante la obra; CU-15 → CU-11
+  cuando el cliente aprueba un presupuesto de adendas.
 end note
 
 legend bottom

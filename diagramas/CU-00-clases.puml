@@ -71,13 +71,25 @@ package "ECMS" {
     código estable
   }
   class "Apartado Adendas" as ApartadoAdendas
-  class Adenda
-  class "Versión del presupuesto de adendas" as VersionAdendas
+  class Adenda {
+    tipo
+  }
+  class "Ítem de adenda" as ItemAdenda {
+    cantidad aprobada
+    costo
+  }
+  class "Presupuesto de adendas del cliente" as PresupuestoAdendas {
+    número
+  }
+  class "Línea del presupuesto de adendas" as LineaPresupuestoAdendas {
+    cantidad
+    precio de venta
+  }
   class "Medición" as Medicion
   class "Medición de ajuste" as MedicionAjuste
   class "Versión del certificado" as VersionCertificado
   class "Línea del certificado" as LineaCertificado {
-    tipo: cantidad | ajuste
+    tipo: cantidad | ajuste | regularización
   }
 }
 
@@ -99,16 +111,17 @@ Obra "1" *-- "0..1" Anticipo
 Obra "1" *-- "0..1" PresupuestoCliente
 Obra "1" *-- "0..*" VersionCostos : una vigente
 Obra "1" *-- "1" ApartadoAdendas
-Obra "1" *-- "0..*" VersionAdendas
+Obra "1" *-- "0..*" PresupuestoAdendas : varios, numerados
 VersionCostos "1" *-- "1..*" Rubro
 Rubro "1" *-- "0..*" Item
 PresupuestoCliente "1" *-- "1..*" ItemCliente
 Item "0..*" --> "0..1" ItemCliente : código estable (RF-05)
 
-Obra "1" -- "0..*" Adenda
-ApartadoAdendas "1" o-- "0..*" Adenda
-Adenda "0..*" --> "0..1" Item : modifica o crea
-VersionAdendas "0..*" o-- "0..*" Adenda : incluye
+ApartadoAdendas "1" *-- "0..*" Adenda
+Adenda "1" *-- "0..*" ItemAdenda : paquete
+PresupuestoAdendas "1" *-- "1..*" LineaPresupuestoAdendas
+ItemAdenda "0..*" --> "1" LineaPresupuestoAdendas : aprueba (total o parcial)
+ItemAdenda "0..*" --> "1" Item : amplía o crea
 
 Medicion "0..*" --> "1" Item : pertenece a
 Medicion "0..*" --> "0..1" Contrato : si es subcontratada

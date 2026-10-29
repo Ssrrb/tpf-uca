@@ -41,13 +41,11 @@ package "ECMS" {
     medida: decimal
     certificada: decimal
     liquidada: decimal
-    retenida: decimal
     /saldoContractual: decimal
     --
     + saldoContractual(): decimal
     + estaContada(cantidad, medición): lógico
     + registrarMedición(cantidad): vacío
-    + retenerExceso(cantidad): vacío
     + revertirMedición(cantidad): vacío
     + cantidadCertificable(): decimal
   }
@@ -95,7 +93,7 @@ package "ECMS" {
   }
 
   class "Línea del certificado" as LineaCertificado {
-    tipo: cantidad | ajuste
+    tipo: cantidad | ajuste | regularización
     avanceAnterior: decimal
     cantidad: decimal
     /acumulado: decimal
@@ -103,7 +101,6 @@ package "ECMS" {
 
   enum EstadoMedición <<enumeration>> {
     registrada
-    retenida
     incluida
     certificada
     anulada
@@ -141,8 +138,9 @@ LineaCertificado "0..*" --> "1" SaldoItem : ítem
 Medicion ..> EstadoMedición : estado
 note bottom of SaldoItem
   saldoContractual = cliente + adendas - certificada.
-  Lo que lo supera queda retenido hasta una adenda,
-  y una cantidad se cuenta una sola vez (RF-08).
+  La medición registra lo ejecutado aunque supere el saldo:
+  el exceso lo señala el cálculo del certificado por monto (CU-06).
+  Una cantidad se cuenta una sola vez (RF-08).
 end note
 
 legend bottom

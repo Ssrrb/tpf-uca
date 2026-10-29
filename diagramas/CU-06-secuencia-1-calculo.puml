@@ -27,8 +27,9 @@ end box
 box "ECMS" #EAF2F6
 participant "version:\nVersionCertificado" as V
 participant "linea:\nLineaCertificado" as Lin
+participant "saldo:\nSaldoItem" as Saldo
 participant "cliente:\nPresupuestoCliente" as Cli
-participant "adendas:\nPresupuestoAdendas" as Ade
+participant "apartado:\nApartadoAdendas" as Apa
 end box
 box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
@@ -50,24 +51,39 @@ opt error en una versión ya guardada (1a, RF-09)
   Ing -> V: agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo)
 end
 
+Calc -> Apa: ítemsAprobadosDesde(versiónAnterior)
+Apa --> Calc: ítems de adenda registrados desde la versión anterior
+loop por cada ítem de adenda que cubre un exceso ya certificado (2b)
+  Calc -> V: agregarLíneaRegularización(ítem, cantidadAprobada, precioVenta)
+  Calc -> Saldo: regularizarExceso(importe)
+end
+
 loop por cada línea de la versión
   Calc -> Cli: precioUnitario(ítem)
   Cli --> Calc: precio [0..1]
-  opt ítem de adenda o sin precio en el presupuesto del cliente
-    Calc -> Ade: precioVigente(ítem, fecha)
-    Ade --> Calc: precio [0..1]
+  opt ítem nuevo de una adenda (sin precio en el presupuesto del cliente)
+    Calc -> Apa: precioAprobado(ítem)
+    Apa --> Calc: precio de venta del ítem de adenda [0..1]
   end
-  break sin precio unitario en ninguno de los dos (2a)
+  break sin precio unitario (2a)
     Calc --> Ing: lo señala e impide confirmar
   end
   Calc -> Lin: valorizar(precio)
   Lin --> Calc: importe redondeado a guaraníes (NF-05)
+  Calc -> Saldo: montoContractual()
+  Saldo --> Calc: monto del cliente más adendas registradas
+  Calc -> Lin: señalarExceso(montoContractual)
+  Lin --> Calc: exceso [0..1]
+  opt el monto acumulado supera el monto contractual (3a)
+    Calc -> Saldo: registrarExceso(exceso)
+    Calc --> Ing: ítem en exceso: saldo negativo fuera del bruto;\nse puede registrar una adenda (CU-11)
+  end
 end
 Calc -> Ant: amortizar(bruto)
 Ant --> Calc: amortización hasta cancelar el anticipo
 note right of Calc
-  bruto - amortización - fondo de reparo = neto;
-  IVA sobre el neto (RF-10).
+  bruto (sin el exceso) - amortización - fondo
+  de reparo = neto; IVA sobre el neto (RF-10).
 end note
 Calc -> V: registrarImportes(bruto, amortización, fondoReparo, neto, iva)
 ref over Ing, Ant

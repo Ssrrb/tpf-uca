@@ -42,11 +42,23 @@ if (¿La obra está en ejecución y la versión cerrada?) then ([no])
   stop
 else ([sí])
 endif
+:Agregar líneas de regularización por las adendas
+registradas desde la versión anterior (RF-08);
 :Valorizar cada línea con el precio del presupuesto
-del cliente o del de adendas (RF-10);
+del cliente o del ítem de adenda (RF-10);
 if (¿Algún ítem no tiene precio unitario?) then ([sí])
   :Señalarlo e impedir confirmar;
   stop
+else ([no])
+endif
+:Comparar por ítem el monto acumulado con el del
+cliente más las adendas registradas (RF-08);
+if (¿Algún ítem supera ese monto?) then ([sí])
+  :Señalar la línea en exceso como saldo negativo,
+  fuera del bruto;
+  note right
+    Se puede registrar una adenda (CU-11).
+  end note
 else ([no])
 endif
 :Calcular bruto, amortización del anticipo,

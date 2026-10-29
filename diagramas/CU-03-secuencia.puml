@@ -38,7 +38,7 @@ end box
 
 Ing -> PC: consultarVersiones()
 PC -> Apa: costoTotal()
-PC --> Ing: presupuesto del cliente, versiones con su estado,\napartado Adendas y presupuesto de adendas (RF-06)
+PC --> Ing: presupuesto del cliente, versiones con su estado,\napartado Adendas y presupuestos de adendas del cliente (RF-06)
 
 alt completar ítems no certificados de la vigente (1a)
   Ing -> PC: obtenerVigente()

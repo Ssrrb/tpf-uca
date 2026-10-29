@@ -28,38 +28,53 @@ skinparam note {
 package "ECMS" {
   class "Presupuesto de costos" as PresupuestoCostos {
     --
-    + ítemsConSaldoNegativo(): lista de SaldoÍtem
+    + ítemsEnExceso(): lista de SaldoItem
   }
 
   class "Apartado Adendas" as ApartadoAdendas {
     /utilizado: guaraníes
     --
-    + crearAmpliación(ítem, cantidad, precioVenta, costo): Adenda
-    + crearÍtemNuevo(rubro, descripción, unidad, cantidad, precioVenta, costo): Adenda
-    + crearAmpliaciónDePlazo(nuevaFechaFin): Adenda
+    + crearAdenda(tipo, motivo, respaldo): Adenda
     + utilizado(): guaraníes
     + registrar(adenda, actor): vacío
   }
 
   class Adenda {
-    tipo: texto {ampliación | ítem nuevo | ampliación de plazo}
-    cantidad: decimal [0..1]
-    precioVenta: guaraníes [0..1]
-    costo: guaraníes [0..1]
+    número: entero
+    tipo: texto {de obra | de plazo}
     nuevaFechaFin: fecha [0..1]
     motivo: texto
     respaldo: archivo
     registradaPor: Usuario
     fecha: fecha y hora
+    /precioVenta: guaraníes
+    /costo: guaraníes
     --
-    + adjuntarRespaldo(motivo, archivo): vacío
+    + agregarÍtem(línea, cantidadAprobada, costo): vacío
+    + fijarNuevaFechaFin(fecha): vacío
     + calcularImportes(): vacío
     + validarDatos(): lista de texto
   }
 
-  class "Presupuesto de adendas" as PresupuestoAdendas {
+  class "Ítem de adenda" as ItemAdenda {
+    cantidadAprobada: decimal
+    precioVenta: guaraníes
+    costo: guaraníes
+  }
+
+  class "Presupuesto de adendas del cliente" as PresupuestoAdendas {
+    número: entero
     --
-    + registrarPrecio(adenda): vacío
+    + líneasPendientes(): lista de LineaPresupuestoAdendas
+  }
+
+  class "Línea del presupuesto de adendas" as LineaPresupuestoAdendas {
+    cantidad: decimal
+    precioVenta: guaraníes
+    /cantidadAprobada: decimal
+    --
+    + cantidadPendiente(): decimal
+    + descontarAprobada(cantidad): vacío
   }
 
   class "Ítem de costos" as ItemCostos {
@@ -69,14 +84,11 @@ package "ECMS" {
 
   class "Saldo del ítem" as SaldoItem {
     cantidadAdendas: decimal
-    retenida: decimal
+    exceso: guaraníes
     /saldoContractual: decimal
     --
-    + cantidadRetenida(): decimal
     + sumarAdenda(cantidad): vacío
-    + liberarRetenida(cantidad): vacío
   }
-
 }
 
 package "ERP" {
@@ -91,20 +103,23 @@ package "ERP" {
 }
 
 PresupuestoCostos "1" *-- "1" ApartadoAdendas : se suma a la vigente
-ApartadoAdendas "1" *-- "0..*" Adenda : costo de las adendas
-Adenda "0..*" --> "0..1" ItemCostos : modifica o crea
+ApartadoAdendas "1" *-- "0..*" Adenda : adendas registradas
+Adenda "1" *-- "0..*" ItemAdenda : ítems aprobados
+ItemAdenda "0..*" --> "1" LineaPresupuestoAdendas : aprueba
+ItemAdenda "0..*" --> "1" ItemCostos : amplía o crea
+PresupuestoAdendas "1" *-- "1..*" LineaPresupuestoAdendas : líneas
 ItemCostos "1" *-- "1" SaldoItem : saldo
-PresupuestoAdendas "0..*" --> "0..*" Adenda : precio de venta
 ApartadoAdendas "0..*" --> "1" Obra : de la obra
 
 note bottom of Adenda
-  No modifica la versión vigente del presupuesto
-  de costos (RF-14). Suma al saldo contractual
-  del ítem (RF-08). Sin adenda, el rubro queda
-  en negativo como mayor costo.
-  El tipo lo fija la operación que la crea en el
-  apartado Adendas (crearAmpliación, crearÍtemNuevo
-  o crearAmpliaciónDePlazo); no es una clase aparte.
+  Una adenda es un paquete: aprueba una o varias líneas
+  de un presupuesto de adendas del cliente (CU-15), cada una
+  con su cantidad aprobada, total o parcial (RF-14).
+  Su costo va al apartado Adendas, que forma parte del
+  presupuesto de costos sin crear una versión (RF-05).
+  Lo aprobado se regulariza en la versión siguiente del
+  certificado; el resto del exceso queda no reconocido (RF-08).
+  Tipo de plazo: solo cambia la fecha de fin vigente.
 end note
 
 legend bottom

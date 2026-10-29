@@ -46,17 +46,20 @@ package "ECMS" {
     --
     + estaCerrada(): lógico
     + agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo): vacío
+    + agregarLíneaRegularización(ítem, cantidad, precio): vacío
     + registrarImportes(bruto, amortización, fondoReparo, neto, iva): vacío
     + guardar(actor): vacío
   }
 
   class "Línea del certificado" as LineaCertificado {
-    tipo: cantidad | ajuste
+    tipo: cantidad | ajuste | regularización
     cantidad: decimal
     precioUnitario: guaraníes
     importe: guaraníes
+    exceso: guaraníes [0..1]
     --
     + valorizar(precio: guaraníes): guaraníes
+    + señalarExceso(montoContractual: guaraníes): guaraníes [0..1]
   }
 
   class "Medición" as Medicion {
@@ -68,8 +71,12 @@ package "ECMS" {
 
   class "Saldo del ítem" as SaldoItem {
     certificada: decimal
+    exceso: guaraníes
     --
     + registrarCertificado(cantidad): vacío
+    + montoContractual(): guaraníes
+    + registrarExceso(importe): vacío
+    + regularizarExceso(importe): vacío
   }
 
   class "Presupuesto del cliente" as PresupuestoCliente {
@@ -77,9 +84,10 @@ package "ECMS" {
     + precioUnitario(ítem): guaraníes [0..1]
   }
 
-  class "Presupuesto de adendas" as PresupuestoAdendas {
+  class "Apartado Adendas" as ApartadoAdendas {
     --
-    + precioVigente(ítem, fecha): guaraníes [0..1]
+    + ítemsAprobadosDesde(versión): lista de ItemAdenda
+    + precioAprobado(ítem): guaraníes [0..1]
   }
 }
 
@@ -118,7 +126,8 @@ VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
 LineaCertificado "0..1" --> "0..*" Medicion : certifica
 LineaCertificado "0..*" --> "1" SaldoItem : ítem
 VersionCertificado "0..*" --> "1" PresupuestoCliente : precios
-VersionCertificado "0..*" --> "0..1" PresupuestoAdendas : precios de adendas
+VersionCertificado "0..*" --> "0..1" ApartadoAdendas : adendas registradas
+ApartadoAdendas ..> SaldoItem : suma al monto contractual
 VersionCertificado "0..*" --> "0..1" Anticipo : amortiza
 VersionCertificado "0..*" --> "1" Obra : de la obra
 Obra "1" *-- "1" ConsumosObra : consumos
@@ -130,6 +139,11 @@ note bottom of VersionCertificado
   redondeados por línea (NF-05).
   Guardada, no se modifica: se corrige con líneas
   de ajuste en la versión siguiente (RF-09).
+  Exceso: el monto acumulado de un ítem supera el del
+  cliente más sus adendas registradas, por la causa que sea.
+  Queda fuera del bruto como saldo negativo; lo que una
+  adenda aprueba entra como línea de regularización en
+  la versión siguiente y el resto es exceso no reconocido (RF-08).
 end note
 
 legend bottom

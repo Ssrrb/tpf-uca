@@ -42,6 +42,8 @@ break la obra no está en ejecución (RF-23)
   Obra --> Ing: no se registran mediciones
 end
 Ing -> Item: obtenerSaldo()
+Item -> Saldo: saldoContractual()
+Saldo --> Item: saldo
 Item --> Ing: ítems con su saldo contractual
 
 loop por cada ítem medido
@@ -57,7 +59,7 @@ loop por cada ítem medido
   Med -> Evi: «create»(tipo, archivo)
   Med -> Saldo: estaContada(cantidad, medicion)
   Saldo --> Med: contada: lógico
-  break ya está contada en otra medición (4b, RF-08)
+  break ya está contada en otra medición (4a, RF-08)
     Med --> Ing: rechazada; indica dónde figura
   end
   Ing -> Med: confirmar(actor)
@@ -65,14 +67,7 @@ loop por cada ítem medido
   break faltan datos obligatorios o evidencia (5a)
     Med --> Ing: marca cada campo e impide confirmar
   end
-  Med -> Saldo: saldoContractual()
-  Saldo --> Med: saldo
-  alt dentro del saldo
-    Med -> Saldo: registrarMedición(cantidad)
-  else supera el saldo (4a)
-    Med -> Saldo: retenerExceso(cantidad)
-    Med --> Ing: exceso retenido como saldo negativo\nhasta una adenda (CU-11)
-  end
+  Med -> Saldo: registrarMedición(cantidad)
   opt ítem subcontratado (3a)
     Med -> Con: descontarSaldo(ítem, cantidad)
   end
@@ -84,18 +79,18 @@ Cert -> V: «create»(número siguiente, anterior)
 V -> V: tomarCantidades()
 loop por cada ítem con mediciones o ajustes sin certificar
   V -> Saldo: cantidadCertificable()
-  Saldo --> V: cantidad dentro del saldo contractual
+  Saldo --> V: cantidad medida sin certificar
   create Lin
   V -> Lin: «create»(ítem, avance anterior, cantidad)
   V -> Med: incluirEn(version)
 end
 Ing -> V: cerrarCantidades(actor)
-V --> Ing: versión con avance anterior, de la versión\ny acumulado, lista para el cálculo (RF-09, CU-06)
+V --> Ing: versión con avance anterior, de la versión\ny acumulado, lista para el cálculo (CU-06)
 
 == *a Anular o ajustar una medición ==
 Ing -> Med: puedeAnularse()
-Med --> Ing: registrada o retenida: lógico
-alt registrada o retenida (todavía no está en una versión)
+Med --> Ing: registrada: lógico
+alt registrada (todavía no está en una versión)
   Ing -> Med: anular(motivo, actor)
   Med -> Saldo: revertirMedición(cantidad)
 else incluida en una versión o certificada (RF-07)

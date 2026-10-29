@@ -53,9 +53,6 @@ repeat
   |Ctrl+ · ECMS|
   if (¿La cantidad ya está contada?) then ([sí])
     :Rechazar e indicar dónde figura;
-  elseif (¿Supera el saldo contractual?) then ([sí])
-    :Retener el exceso como saldo negativo
-    hasta una adenda (RF-08);
   else ([no])
     :Registrar la medición;
   endif

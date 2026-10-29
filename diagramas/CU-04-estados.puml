@@ -33,21 +33,15 @@ skinparam note {
   BorderColor #17324D
 }
 title CU-04 · Estados de la Medición
-state confirmacion <<choice>>
 state "En carga" as en_carga
 state "Registrada" as registrada
-state "Retenida (excede el saldo)" as retenida
 state "Incluida en una versión" as incluida
 state "Certificada" as certificada
 state "Anulada" as anulada
 
 [*] --> en_carga : crear(ítem, cantidad, ejecutor)
-en_carga --> confirmacion : confirmar(actor) [datos completos y no contada]
-confirmacion --> registrada : [dentro del saldo contractual] / registrarMedición(cantidad)
-confirmacion --> retenida : [supera el saldo contractual] / retenerExceso(cantidad)
-retenida --> registrada : registrarAdenda(adenda) [CU-11 cubre el exceso]
+en_carga --> registrada : confirmar(actor) [datos completos y no contada] / registrarMedición(cantidad)
 registrada --> anulada : anular(motivo, actor)
-retenida --> anulada : anular(motivo, actor)
 registrada --> incluida : incluirEn(versión)
 incluida --> certificada : guardar(actor) [CU-06]
 incluida --> incluida : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
