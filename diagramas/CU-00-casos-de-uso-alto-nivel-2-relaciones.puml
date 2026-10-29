@@ -52,15 +52,15 @@ rectangle "Ctrl+" {
 }
 
 ' UML 2: el «extend» va del caso que agrega comportamiento al caso base
-CU05 ..> CU01 : <<extend>>\n[el cliente no está\nen el catálogo]
-CU05 ..> CU09 : <<extend>>\n[el subcontratista\nno está cargado]
-CU05 ..> CU07 : <<extend>>\n[el proveedor o la persona\nno están cargados]
-CU16 ..> CU02 : <<extend>>\n[valida al terminar la carga]
-CU03 ..> CU10 : <<extend>>\n[un ACU está mal estimado]
-CU15 ..> CU11 : <<extend>>\n[no hay presupuesto de\nadendas del cliente cargado]
-CU06 ..> CU04 : <<extend>>\n[calcula la versión\nen el momento]
-CU11 ..> CU06 : <<extend>>\n[el cálculo señala\nun ítem en exceso]
-CU12 ..> CU06 : <<extend>>\n[la versión tiene ítems\nsubcontratados]
-CU14 ..> CU08 : <<extend>>\n[el cobro ya se recibió]
-CU10 ..> CU13 : <<extend>>\n[elige el costo de una obra]
+CU05 ..> CU01 : <<extend>>
+CU05 ..> CU09 : <<extend>>
+CU05 ..> CU07 : <<extend>>
+CU16 ..> CU02 : <<extend>>
+CU03 ..> CU10 : <<extend>>
+CU15 ..> CU11 : <<extend>>
+CU06 ..> CU04 : <<extend>>
+CU11 ..> CU06 : <<extend>>
+CU12 ..> CU06 : <<extend>>
+CU14 ..> CU08 : <<extend>>
+CU10 ..> CU13 : <<extend>>
 @enduml
