@@ -97,17 +97,4 @@ note as ORDEN
   cuando el cliente aprueba un presupuesto de adendas.
 end note
 
-legend bottom
-  Línea continua sin flecha = asociación actor - caso de uso (UML 2).
-  Discontinua con punta abierta y «extend» = el CU de origen agrega comportamiento
-  opcional al CU base en su punto de extensión, si se cumple la condición [ ].
-  No hay «include»: ningún CU tiene un tramo obligatorio que se repita en otro.
-  (1) y (2) = el mismo actor dibujado dos veces, a cada lado, para que sus líneas no crucen el diagrama.
-  Los paquetes son los subsistemas de Ctrl+ (ERP, ECMS y Motor de finanzas);
-  cada CU está en el subsistema principal que lo resuelve. Los subsistemas no son actores.
-  CU-06: calcula el Motor de finanzas y el ERP registra el consumo de insumos.
-  CU-07: el Ingeniero de obra solo registra gastos de caja chica.
-  CU-10: también lo inicia el Administrador. CU-13: también lo inicia Finanzas y tesorería.
-  El Cliente y los subcontratistas no usan Ctrl+: el sistema es solo interno.
-endlegend
 @enduml
