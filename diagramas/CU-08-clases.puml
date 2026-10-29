@@ -30,7 +30,7 @@ package "Motor de finanzas" {
     --
     + listarPendientes(obra): lista
     + generarFactura(versión, actor): DocumentoInterno
-    + generarFacturaAnticipo(anticipo, actor): FacturaInterna
+    + generarFacturaAnticipo(anticipo, actor): DocumentoInterno
   }
 
   enum EstadoDocumento <<enumeration>> {
@@ -41,7 +41,8 @@ package "Motor de finanzas" {
     cobrada
   }
 
-  abstract class "Documento interno" as DocumentoInterno {
+  class "Documento interno" as DocumentoInterno {
+    tipo: texto {factura interna | nota de crédito interna}
     número: entero
     moneda: texto = PYG
     neto: guaraníes
@@ -57,8 +58,6 @@ package "Motor de finanzas" {
     + confirmar(actor): vacío
   }
 
-  class "Factura interna" as FacturaInterna
-  class "Nota de crédito interna" as NotaCreditoInterna
 
   class "Factura legal" as FacturaLegal {
     número: texto
@@ -95,10 +94,8 @@ package "ERP" {
   }
 }
 
-DocumentoInterno <|-- FacturaInterna
-DocumentoInterno <|-- NotaCreditoInterna
 DocumentoInterno "0..*" --> "0..1" VersionCertificado : corresponde a
-FacturaInterna "0..1" --> "0..1" Anticipo : factura
+DocumentoInterno "0..1" --> "0..1" Anticipo : factura
 DocumentoInterno "1" *-- "0..1" FacturaLegal : adjunta
 DocumentoInterno "1" *-- "1" CuentaACobrar : registra
 DocumentoInterno "0..*" --> "1" Obra : de la obra

@@ -20,7 +20,7 @@ skinparam note {
 }
 hide footbox
 title CU-10 · Controlar el costo de la obra con el ACU
-actor "Ingeniero de obra\n(o Administrador)" as Ing
+actor "Ingeniero de obra o\nAdministrador" as Ing
 box "ECMS" #EAF2F6
 participant "control:\nControlCostos" as Ctrl
 participant "vigente:\nVersionCostos" as VC

@@ -23,7 +23,7 @@ title CU-08 · Generar factura interna al cliente por el certificado
 actor "Finanzas y tesorería" as Fin
 box "Motor de finanzas" #EAF2F6
 participant "facturacion:\nFacturacion" as Fac
-participant "factura:\nDocumentoInterno" as Doc
+participant "documento:\nDocumentoInterno" as Doc
 participant "legal:\nFacturaLegal" as Leg
 participant "cuenta:\nCuentaACobrar" as CxC
 end box
@@ -49,17 +49,15 @@ alt elige una versión del certificado (paso 1)
   break faltan datos del cliente (2a)
     Fac --> Fin: informa el dato faltante; no genera la factura
   end
-  alt neto positivo
-    create Doc
-    Fac -> Doc: «create» FacturaInterna(neto, iva de la versión)
-  else neto negativo por ajustes (1a)
-    Fac -> Doc: «create» NotaCreditoInterna(neto, iva de la versión)
-  end
 else elige el anticipo (1b, RF-22)
   Fin -> Fac: generarFacturaAnticipo(anticipo, actor)
-  Fac -> Doc: «create» FacturaInterna(importe del anticipo)
   Fac -> Ant: marcarFacturado()
 end
+create Doc
+Fac -> Doc: «create»(tipo, neto, iva)
+note right of Doc
+  Es nota de crédito interna si la versión tiene neto negativo (1a).
+end note
 Fac --> Fin: documento en PYG, sin validez fiscal (RF-11)
 
 alt adjunta la factura legal (paso 3)

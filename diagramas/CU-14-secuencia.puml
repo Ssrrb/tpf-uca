@@ -43,7 +43,7 @@ end
 Doc --> Fin: documento, versión del certificado de la que deriva y saldo
 
 create Mov
-Fin -> Mov: «create» Cobro o Pago(importe, fecha, medio)
+Fin -> Mov: «create»(tipo, importe, fecha, medio)
 opt el cliente es agente de retención
   Fin -> Mov: agregarRetención(tipo, importe, comprobante)
   create Ret

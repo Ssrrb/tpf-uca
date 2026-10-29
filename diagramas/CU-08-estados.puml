@@ -32,7 +32,7 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-08 · Estados de la Factura interna
+title CU-08 · Estados del Documento interno (factura o nota de crédito)
 state confirmacion <<choice>>
 state cobro <<choice>>
 state "Generada" as generada

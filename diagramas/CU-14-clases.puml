@@ -26,7 +26,9 @@ skinparam note {
   BorderColor #17324D
 }
 package "Motor de finanzas" {
-  abstract class "Documento pendiente" as DocumentoPendiente {
+  class "Documento pendiente" as DocumentoPendiente {
+    tipo: texto {factura interna | liquidación | fondo de reparo}
+    contraparte: texto {cliente | subcontratista}
     número: entero
     total: guaraníes
     saldoPendiente: guaraníes
@@ -36,13 +38,9 @@ package "Motor de finanzas" {
     + actualizarSaldo(movimiento): vacío
   }
 
-  class "Factura interna" as FacturaInterna
-  class "Liquidación" as Liquidacion
-  class "Fondo de reparo retenido" as FondoReparo {
-    contraparte: cliente | subcontratista
-  }
 
-  abstract class Movimiento {
+  class Movimiento {
+    tipo: texto {cobro | pago}
     importe: guaraníes
     fecha: fecha
     medio: texto
@@ -53,8 +51,6 @@ package "Motor de finanzas" {
     + confirmar(actor): vacío
   }
 
-  class Cobro
-  class Pago
 
   class "Retención del movimiento" as RetencionMovimiento {
     tipo: IVA | renta
@@ -76,11 +72,6 @@ package "ERP" {
   }
 }
 
-DocumentoPendiente <|-- FacturaInterna
-DocumentoPendiente <|-- Liquidacion
-DocumentoPendiente <|-- FondoReparo
-Movimiento <|-- Cobro
-Movimiento <|-- Pago
 DocumentoPendiente "1" *-- "0..*" Movimiento : cancela
 Movimiento "1" *-- "0..*" RetencionMovimiento : retenciones
 Movimiento "1" *-- "1..*" Comprobante : adjuntos

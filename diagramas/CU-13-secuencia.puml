@@ -20,7 +20,7 @@ skinparam note {
 }
 hide footbox
 title CU-13 · Consultar tablero financiero
-actor "Administrador\n(o Finanzas y tesorería)" as Adm
+actor "Administrador o\nFinanzas y tesorería" as Adm
 box "Motor de finanzas" #EAF2F6
 participant "tablero:\nTablero" as Tab
 participant "libro:\nLibroFinanciero" as Lib
