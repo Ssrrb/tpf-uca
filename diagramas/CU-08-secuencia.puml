@@ -19,7 +19,7 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-08 · Generar factura interna al cliente por el certificado
+title CU-08 · Generar factura interna del certificado
 actor "Finanzas y tesorería" as Fin
 box "Motor de finanzas" #EAF2F6
 participant "facturacion:\nFacturacion" as Fac
@@ -44,9 +44,9 @@ Fac --> Fin: versiones con importe sin facturar y anticipo sin facturar
 
 alt elige una versión del certificado (paso 1)
   Fin -> Fac: generarFactura(version, actor)
-  Fac -> Obra: datosCliente()
-  Obra --> Fac: cliente [0..1]
-  break faltan datos del cliente (2a)
+  Fac -> Obra: datosDeFacturación()
+  Obra --> Fac: datos [0..1]
+  break faltan datos de facturación (2a)
     Fac --> Fin: informa el dato faltante; no genera la factura
   end
 else elige el anticipo (1b, RF-22)

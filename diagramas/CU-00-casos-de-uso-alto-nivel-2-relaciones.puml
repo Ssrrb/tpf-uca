@@ -45,7 +45,7 @@ rectangle "Ctrl+" {
   package "Motor de finanzas" {
     usecase "CU-07 Registrar gasto de obra\n--\npuntos de extensión:\nproveedor o persona sin cargar (2a)" as CU07
     usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nítem en exceso (3a)\nversión guardada (7a)" as CU06
-    usecase "CU-08 Generar factura interna\nal cliente por el certificado\n--\npuntos de extensión:\nfactura registrada (5a)" as CU08
+    usecase "CU-08 Generar factura interna\ndel certificado\n--\npuntos de extensión:\nfactura registrada (5a)" as CU08
     usecase "CU-14 Registrar cobros\ny pagos" as CU14
     usecase "CU-13 Consultar tablero\nfinanciero\n--\npuntos de extensión:\ndetalle de costos (6b)" as CU13
   }

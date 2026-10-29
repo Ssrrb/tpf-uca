@@ -71,7 +71,7 @@ loop por cada línea de la versión
   Calc -> Lin: valorizar(precio)
   Lin --> Calc: importe redondeado a guaraníes (NF-05)
   Calc -> Saldo: montoContractual()
-  Saldo --> Calc: monto del cliente más adendas registradas
+  Saldo --> Calc: monto contractual (con adendas registradas)
   Calc -> Lin: señalarExceso(montoContractual)
   Lin --> Calc: exceso [0..1]
   opt el monto acumulado supera el monto contractual (3a)

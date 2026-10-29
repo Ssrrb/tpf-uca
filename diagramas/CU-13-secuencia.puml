@@ -42,7 +42,7 @@ loop por cada obra del alcance
     Tab --> Adm: excluye sus datos y lo indica
   else con acceso
   Tab -> Res: presupuestado(obra)
-  Res --> Tab: a costo (con apartado Adendas) y a venta (cliente + adendas)
+  Res --> Tab: a costo (con apartado Adendas) y a venta (presupuesto contratado + adendas)
   break falla la lectura de los datos de obra (3a)
     Tab --> Adm: los marca no disponibles con la fecha del último dato
   end
