@@ -23,23 +23,44 @@ skinparam package {
   BorderColor #17324D
 }
 left to right direction
-skinparam nodesep 30
-skinparam ranksep 120
+skinparam nodesep 20
+skinparam ranksep 90
 
 rectangle "Ctrl+" {
+  package "ERP" {
+    usecase "CU-05 Mantener catálogos\ny banco de insumos" as CU05
+    usecase "CU-01 Gestionar obra\n--\npuntos de extensión:\ncliente sin cargar (2a)" as CU01
+    usecase "CU-09 Registrar contrato\nde subcontratista\n--\npuntos de extensión:\nsubcontratista sin cargar (1a)" as CU09
+  }
   package "ECMS" {
     usecase "CU-16 Validar y finalizar el\npresupuesto del cliente" as CU16
-    usecase "CU-02 Cargar el\npresupuesto del cliente\n--\npuntos de extensión:\ncarga guardada (paso 5)" as CU02
-    usecase "CU-11 Registrar adenda" as CU11
+    usecase "CU-02 Cargar el\npresupuesto del cliente\n--\npuntos de extensión:\ncarga guardada (5a)" as CU02
+    usecase "CU-03 Armar y versionar el\npresupuesto de costos" as CU03
+    usecase "CU-10 Controlar el costo\nde la obra con el ACU\n--\npuntos de extensión:\nACU mal estimado (5a)" as CU10
+    usecase "CU-15 Cargar presupuesto\nde adendas del cliente" as CU15
+    usecase "CU-11 Registrar adenda\n--\npuntos de extensión:\nsin presupuesto de adendas (2c)" as CU11
+    usecase "CU-04 Medir el avance\ndel certificado\n--\npuntos de extensión:\ncantidades cerradas (6a)" as CU04
     usecase "CU-12 Liquidar subcontratista" as CU12
   }
   package "Motor de finanzas" {
-    usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nítem en exceso (3a)\nversión guardada (paso 7)" as CU06
+    usecase "CU-07 Registrar gasto de obra\n--\npuntos de extensión:\nproveedor o persona sin cargar (2a)" as CU07
+    usecase "CU-06 Calcular el certificado\ny el consumo de recursos\n--\npuntos de extensión:\nítem en exceso (3a)\nversión guardada (7a)" as CU06
+    usecase "CU-08 Generar factura interna\nal cliente por el certificado\n--\npuntos de extensión:\nfactura registrada (5a)" as CU08
+    usecase "CU-14 Registrar cobros\ny pagos" as CU14
+    usecase "CU-13 Consultar tablero\nfinanciero\n--\npuntos de extensión:\ndetalle de costos (6b)" as CU13
   }
 }
 
 ' UML 2: el «extend» va del caso que agrega comportamiento al caso base
+CU05 ..> CU01 : <<extend>>\n[el cliente no está\nen el catálogo]
+CU05 ..> CU09 : <<extend>>\n[el subcontratista\nno está cargado]
+CU05 ..> CU07 : <<extend>>\n[el proveedor o la persona\nno están cargados]
 CU16 ..> CU02 : <<extend>>\n[valida al terminar la carga]
+CU03 ..> CU10 : <<extend>>\n[un ACU está mal estimado]
+CU15 ..> CU11 : <<extend>>\n[no hay presupuesto de\nadendas del cliente cargado]
+CU06 ..> CU04 : <<extend>>\n[calcula la versión\nen el momento]
 CU11 ..> CU06 : <<extend>>\n[el cálculo señala\nun ítem en exceso]
 CU12 ..> CU06 : <<extend>>\n[la versión tiene ítems\nsubcontratados]
+CU14 ..> CU08 : <<extend>>\n[el cobro ya se recibió]
+CU10 ..> CU13 : <<extend>>\n[elige el costo de una obra]
 @enduml
