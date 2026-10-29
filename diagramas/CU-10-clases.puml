@@ -110,15 +110,4 @@ ACU ..> Insumo : precios
 CostosReales ..> Gasto : consulta
 LineaControl "0..*" --> "1" ItemCostos : de
 
-note bottom of LineaControl
-  Materiales: comprado - consumido = acopio, no mayor costo.
-  Mano de obra y equipos: la diferencia es desvío (RF-17).
-  La consulta no modifica ni cierra nada.
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

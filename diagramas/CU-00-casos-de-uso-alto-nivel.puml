@@ -57,7 +57,6 @@ rectangle "Ctrl+" {
   }
 }
 
-
 ' Los actores (1) quedan a la izquierda y los (2) a la derecha,
 ' junto a los CU que usan, para que ninguna asociación cruce el diagrama.
 ' Ingeniero de obra (1): CU del ECMS que quedan a la izquierda
@@ -85,6 +84,5 @@ CU13 -- ADM2
 CU13 -- FIN
 CU08 -- FIN
 CU14 -- FIN
-
 
 @enduml

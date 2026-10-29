@@ -106,9 +106,4 @@ note bottom of PresupuestoCliente
   por el presupuesto de costos (CU-03) o por adendas (CU-11).
 end note
 
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

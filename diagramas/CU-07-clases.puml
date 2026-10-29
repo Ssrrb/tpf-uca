@@ -97,15 +97,4 @@ Imputacion "0..*" --> "1" VersionCostos : rubro de la vigente
 Gasto "1" *-- "1" Comprobante : respaldo
 Imputacion "0..*" --> "1" CostoReal : suma al
 
-note bottom of Gasto
-  Caja chica: no supera el tope de la obra;
-  por encima lo registra el Administrador (RF-21).
-  El presupuesto de costos no cambia.
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

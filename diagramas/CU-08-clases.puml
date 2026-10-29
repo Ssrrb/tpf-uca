@@ -105,15 +105,5 @@ DocumentoInterno "0..*" --> "1" Obra : de la obra
 Facturacion ..> DocumentoInterno : genera
 
 DocumentoInterno ..> EstadoDocumento : estado
-note bottom of DocumentoInterno
-  Toma el neto y el IVA de la versión sin recalcularlos (RF-11).
-  Sin crédito fiscal ni validez ante Marangatu:
-  la factura legal se emite fuera de Ctrl+.
-end note
 
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

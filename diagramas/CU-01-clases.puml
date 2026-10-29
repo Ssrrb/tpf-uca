@@ -111,14 +111,5 @@ Asignacion "0..*" --> "1" Usuario : asigna a
 Obra "1" *-- "0..*" CambioEstado : historial
 
 Obra ..> EstadoObra : estado
-note bottom of Obra
-  Código único por organización (5a).
-  El estado solo avanza (RF-23).
-end note
 
-legend bottom
-  Línea con punta abierta = asociación dirigida (navegable hacia la clase apuntada).
-  Rombo relleno = composición: la parte no existe sin el todo.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

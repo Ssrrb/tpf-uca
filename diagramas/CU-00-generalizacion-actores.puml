@@ -34,22 +34,9 @@ USR <|-- ADM
 USR <|-- ING
 USR <|-- FIN
 
-note bottom of USR
-  Todo usuario pertenece a una organización.
-  Los roles y permisos se mantienen en el ERP
-  y se asignan por obra en CU-01 (RF-01).
-end note
-
 note bottom of ING
   Mide en terreno también lo que ejecuta
   un subcontratista (CU-04, 3a).
 end note
 
-legend bottom
-  Flecha con punta triangular hueca = generalización (UML 2):
-  el actor hijo hereda las asociaciones del actor padre.
-  Nombre en cursiva {abstract} = actor abstracto, no se instancia.
-  Administrador y Finanzas y tesorería son roles, no puestos.
-  El Cliente y el Subcontratista no son actores: no ingresan a Ctrl+.
-endlegend
 @enduml

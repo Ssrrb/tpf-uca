@@ -86,15 +86,4 @@ Movimiento "1" *-- "0..*" RetencionMovimiento : retenciones
 Movimiento "1" *-- "1..*" Comprobante : adjuntos
 DocumentoPendiente "0..*" --> "1" Obra : de la obra
 
-note bottom of Movimiento
-  Importe + retenciones <= saldo pendiente;
-  la retención cancela saldo igual que el efectivo (RF-20).
-  Ctrl+ no ejecuta pagos ni emite recibos oficiales.
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

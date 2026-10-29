@@ -111,20 +111,4 @@ PresupuestoAdendas "1" *-- "1..*" LineaPresupuestoAdendas : líneas
 ItemCostos "1" *-- "1" SaldoItem : saldo
 ApartadoAdendas "0..*" --> "1" Obra : de la obra
 
-note bottom of Adenda
-  Una adenda es un paquete: aprueba una o varias líneas
-  de un presupuesto de adendas del cliente (CU-15), cada una
-  con su cantidad aprobada, total o parcial (RF-14).
-  Su costo va al apartado Adendas, que forma parte del
-  presupuesto de costos sin crear una versión (RF-05).
-  Lo aprobado se regulariza en la versión siguiente del
-  certificado; el resto del exceso queda no reconocido (RF-08).
-  Tipo de plazo: solo cambia la fecha de fin vigente.
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

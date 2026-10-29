@@ -78,17 +78,4 @@ PresupuestoAdendas "1" *-- "1..*" LineaPresupuestoAdendas : líneas
 LineaPresupuestoAdendas "0..*" --> "0..1" ItemCostos : ítem existente
 PresupuestoAdendas ..> EstadoPresupuestoAdendas : estado
 
-note bottom of PresupuestoAdendas
-  Documento oficial que el cliente aprueba y que se carga
-  tal cual (RF-06). Una obra puede tener varios, numerados.
-  Cargado no se modifica: un cambio va en otro presupuesto.
-  Sus líneas se aprueban, total o parcialmente,
-  al registrar la adenda (CU-11).
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

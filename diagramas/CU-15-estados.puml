@@ -44,9 +44,4 @@ en_carga --> descartado : cancelar()
 cargado --> [*]
 descartado --> [*]
 
-note right of cargado
-  No se modifica: un cambio del cliente
-  se carga como otro presupuesto (RF-06).
-  Sus líneas se aprueban en CU-11.
-end note
 @enduml

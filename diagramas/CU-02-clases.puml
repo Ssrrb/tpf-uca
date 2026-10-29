@@ -84,15 +84,5 @@ PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
 
 PresupuestoCliente ..> EstadoPresupuestoCliente : estado
-note bottom of PresupuestoCliente
-  Queda en propuesta, lista para validar
-  y finalizar (CU-16).
-  Mismo XLSX sin cambios: no se crea otra carga (NF-06).
-end note
 
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml

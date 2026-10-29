@@ -133,22 +133,4 @@ VersionCertificado "0..*" --> "1" Obra : de la obra
 Obra "1" *-- "1" ConsumosObra : consumos
 ConsumosObra "0..*" --> "0..*" Insumo : registra el consumo de
 
-note bottom of VersionCertificado
-  Orden de cálculo (RF-10): bruto, amortización del anticipo,
-  fondo de reparo, neto e IVA, en guaraníes enteros
-  redondeados por línea (NF-05).
-  Guardada, no se modifica: se corrige con líneas
-  de ajuste en la versión siguiente (RF-09).
-  Exceso: el monto acumulado de un ítem supera el del
-  cliente más sus adendas registradas, por la causa que sea.
-  Queda fuera del bruto como saldo negativo; lo que una
-  adenda aprueba entra como línea de regularización en
-  la versión siguiente y el resto es exceso no reconocido (RF-08).
-end note
-
-legend bottom
-  Línea con punta abierta = asociación dirigida. Rombo relleno = composición.
-  Triángulo hueco = generalización. Discontinua con punta abierta = dependencia.
-  1 = exactamente uno; 0..1 = opcional; 0..* = cero o muchos.
-endlegend
 @enduml
