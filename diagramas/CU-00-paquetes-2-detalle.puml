@@ -32,133 +32,132 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title Diagrama de Subsistemas de Ctrl+ (detalle de clases)
-skinparam nodesep 50
-skinparam ranksep 70
-skinparam package {
-  BackgroundColor #EAF2F6
-  BorderColor #17324D
-}
-
-
-skinparam classBackgroundColor #FFF9DB
-skinparam classBorderColor #17324D
-
+title Ctrl+ – Subsistemas (detalle de clases)
 hide circle
 hide empty members
 skinparam classAttributeIconSize 0
-skinparam classBackgroundColor #FFF9DB
-skinparam classBorderColor #17324D
-skinparam nodesep 60
-skinparam ranksep 70
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #F1F1F1
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+package "Ctrl+" {
 
 package "Motor de finanzas" {
-  class "Cálculo del certificado" as CalculoCertificado {
-    + calcularVersión(versión, actor): vacío
-    + confirmar(versión, actor): vacío
+  class "Cálculo del certificado" as CalculoCertificado <<control>> {
+    +calcularVersión(versión :VersionCertificado, actor :Usuario) :void
+    +confirmar(versión :VersionCertificado, actor :Usuario) :void
   }
-  class "Certificado" as Certificado {
-    + generarVersiónSiguiente(actor): VersionCertificado
+  class "Certificado" as Certificado <<Entity>> {
+    +generarVersiónSiguiente(actor :Usuario) :VersionCertificado
   }
-  class "Versión del certificado" as VersionCertificado {
-    número: entero
-    estado: EstadoVersionCertificado
-    + tomarCantidades(): vacío
-    + cerrarCantidades(actor): vacío
+  class "Versión del certificado" as VersionCertificado <<Entity>> {
+    -número :entero {unique}
+    -estado :EstadoVersionCertificado
+    +tomarCantidades() :void
+    +cerrarCantidades(actor :Usuario) :void
   }
-  class "Retención" as Retencion {
-    tipo: IVA | renta
-    porcentaje: decimal
+  class "Retención" as Retencion <<Entity>> {
+    -tipo :TipoRetención {required}
+    -porcentaje :decimal {value >= 0}
   }
-  class "Registro de liquidaciones" as RegistroLiquidacion {
-    + liquidar(versión, contrato, mediciones, alcance, condiciones): Liquidacion
-    + buscar(versión, contrato): Liquidacion [0..1]
+  class "Registro de liquidaciones" as RegistroLiquidacion <<control>> {
+    +liquidar(versión :VersionCertificado, mediciones :Medicion[*]) :Liquidacion
+    +buscar(versión :VersionCertificado) :Liquidacion [0..1]
   }
 }
 
 package "ECMS" {
-  class "Medición" as Medicion {
-    cantidad: decimal
-    unidad: texto
-    estado: EstadoMedicion
-    fecha: fecha y hora
-    + confirmar(actor): vacío
-    + anular(motivo, actor): vacío
-    + registrarAjuste(cantidad, motivo, actor): MedicionAjuste
+  class "Medición" as Medicion <<Entity>> {
+    -cantidad :decimal {required}
+    -unidad :texto
+    -estado :EstadoMedicion
+    -fecha :fecha y hora {readonly}
+    +confirmar(actor :Usuario) :void
+    +anular(motivo :texto, actor :Usuario) :void
+    +registrarAjuste(cantidad :decimal, motivo :texto) :MedicionAjuste
   }
-  class "Liquidación" as Liquidacion {
-    número: entero
-    bruto: guaraníes
-    neto: guaraníes
-    /aPagar: guaraníes
-    + calcular(alcance, condiciones): vacío
-    + aplicarDeducciones(condiciones): vacío
+  class "Presupuesto de costos" as PresupuestoCostos <<Entity>> {
+    +obtenerVigente() :VersionPresupuestoCostos [0..1]
+    +guardarVersión(cambios :texto, motivo :texto) :VersionPresupuestoCostos
   }
-  class "Detalle de la liquidación" as DetalleLiquidacion {
-    cantidadCertificada: decimal
-    importe: guaraníes
-    + calcularImporte(): guaraníes
+  class "Liquidación" as Liquidacion <<Entity>> {
+    -número :entero {unique}
+    -bruto :guaraníes
+    -neto :guaraníes
+    -/aPagar :guaraníes
+    +calcular(alcance :texto, condiciones :texto) :void
+    +aplicarDeducciones(condiciones :texto) :void
   }
-  class "Presupuesto de costos" as PresupuestoCostos {
-    + obtenerVigente(): VersionPresupuestoCostos [0..1]
-    + guardarVersión(cambios, motivo, actor): VersionPresupuestoCostos
+  class "Detalle de la liquidación" as DetalleLiquidacion <<Entity>> {
+    -cantidadCertificada :decimal
+    -importe :guaraníes
+    +calcularImporte() :guaraníes
   }
-  class "Incidencia" as Incidencia {
-    número: entero
-    estado: EstadoIncidencia
-    + marcarCambio(globalIds, versión)
+  class "BIM" as Modelo <<Entity>> {
+    -nombre :texto {required}
+    +agregarVersion(archivo :Archivo, origen :texto, actor :Usuario) :VersionModelo
+    +fijarVersionVigente(versión :VersionModelo) :void
   }
-  class "BIM" as Modelo {
-    nombre: texto
-    + agregarVersion(archivo, origen, actor): VersionModelo
-    + fijarVersionVigente(versión)
+  class "Versión de modelo" as VersionModelo <<Entity>> {
+    -número :entero {unique}
+    -hash :texto
+    -estado :EstadoVersion
+    +publicar(actor :Usuario) :void
+    +archivar(actor :Usuario) :void
   }
-  class "Versión de modelo" as VersionModelo {
-    número: entero
-    estado: EstadoVersion
-    + publicar(actor)
-    + archivar(actor)
+  class "Incidencia" as Incidencia <<Entity>> {
+    -número :entero {unique}
+    -estado :EstadoIncidencia
+    +marcarCambio(globalIds :texto[*], versión :VersionModelo) :void
   }
 }
 
 package "ERP" {
-  class "Presupuesto del cliente" as PresupuestoCliente {
-    estado: EstadoPresupuestoCliente
-    + cargarArchivo(archivo): vacío
-    + confirmarEstructura(): vacío
+  class "Presupuesto del cliente" as PresupuestoCliente <<Entity>> {
+    -estado :EstadoPresupuestoCliente
+    +cargarArchivo(archivo :Archivo) :void
+    +confirmarEstructura() :void
   }
-  class "Usuario" as Usuario {
-    nombre: texto
-    correo: texto
-    + perteneceA(organización): lógico
+  class "Documentos" as Documento <<Entity>> {
+    -nombre :texto {required}
+    -estado :EstadoDocumento
+    +abrirParaEditar(actor :Usuario) :Archivo
+    +agregarVersión(archivo :Archivo, actor :Usuario) :VersionDocumento
   }
-  class "Documentos" as Documento {
-    nombre: texto
-    estado: EstadoDocumento
-    + abrirParaEditar(actor): Archivo
-    + agregarVersión(archivo, actor, rutaOriginal): VersionDocumento
+  class "Versión del documento" as VersionDocumento <<Entity>> {
+    -número :entero {unique}
+    -fecha :fecha y hora {readonly}
   }
-  class "Versión del documento" as VersionDocumento {
-    número: entero
-    fecha: fecha y hora
+  class "Usuario" as Usuario <<Entity>> {
+    -nombre :texto {required}
+    -correo :texto {unique}
+    +perteneceA(organización :Organización) :lógico
   }
 }
 
+}
+
+CalculoCertificado "1" -- "*" Certificado : calcula
+CalculoCertificado "1" -- "*" Retencion : aplica
 Certificado "1" *-- "1..*" VersionCertificado
-CalculoCertificado "1" -- "*" Certificado : calcula >
-CalculoCertificado "1" -- "*" Retencion : aplica >
-Certificado "1" -- "*" RegistroLiquidacion : se liquida en >
-RegistroLiquidacion "1" -- "*" Liquidacion : registra >
-CalculoCertificado "*" -- "*" Medicion : toma >
-
+Certificado "1" -- "*" RegistroLiquidacion : se liquida en
+RegistroLiquidacion "1" -- "*" Liquidacion : registra
+CalculoCertificado "*" -- "*" Medicion : lee
 Liquidacion "1" *-- "*" DetalleLiquidacion
-Medicion "*" -- "1" PresupuestoCostos : mide >
-Incidencia "*" -- "1" Modelo : sobre >
+Medicion "*" -- "1" PresupuestoCostos : mide
+Incidencia "*" -- "1" Modelo : sobre
 Modelo "1" *-- "1..*" VersionModelo
-
-PresupuestoCostos "*" -- "1" PresupuestoCliente : parte de >
-Modelo "*" -- "1" Documento : parte de >
-Usuario "1" -- "*" Documento : sube >
+PresupuestoCostos "*" -- "1" PresupuestoCliente : parte de
+Modelo "*" -- "1" Documento : parte de
+Usuario "1" -- "*" Documento : sube
 Documento "1" *-- "1..*" VersionDocumento
 
 @enduml
