@@ -62,7 +62,6 @@ package "ECMS" {
 
 package "ERP" {
   class "Presupuesto del cliente" as Contrato
-  class "Obra" as Obra
   class "Usuario" as Usuario
   class "Documento" as Documento
 }
@@ -73,15 +72,12 @@ Certificado -- RegistroLiquidacion
 Medicion -- Liquidacion
 Medicion -- PresupuestoCostos
 Incidencia -- Modelo
-Contrato -- Obra
-Obra -- Usuario
-Obra -- Documento
 
 CalculoCertificado -- Medicion
 RegistroLiquidacion -- Liquidacion
 Liquidacion -- Contrato
-PresupuestoCostos -- Obra
-Incidencia -- Usuario
+PresupuestoCostos -- Contrato
+Usuario -- Documento
 Modelo -- Documento
 
 @enduml
