@@ -1,0 +1,59 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-15 · Estados de la Incidencia
+state "Abierta" as abierta
+state "En curso" as en_curso
+state "Resuelta" as resuelta
+state "Cerrada" as cerrada
+state "Descartada" as descartada
+
+abierta : lista de pendientes del responsable
+en_curso : el responsable trabaja la incidencia
+resuelta : lista de pendientes de quien la abrió
+cerrada : no se modifica ni se borra
+descartada : no se modifica ni se borra
+
+note right of abierta : precondición: la obra no está cerrada
+[*] --> abierta : abrirIncidencia(datos, ancla, actor) / validar los obligatorios y el ancla; guardar número, autor y fecha
+abierta --> en_curso : tomar(actor) [actor es el responsable] / guardar actor y fecha
+en_curso --> resuelta : resolver(actor, comentario, evidencia) [actor es el responsable y hay comentario o evidencia] / guardar la solución en el historial
+resuelta --> cerrada : cerrar(actor) [actor la abrió o es Administrador] / guardar actor y fecha
+resuelta --> en_curso : reabrir(actor, comentario) [actor la abrió] / guardar el comentario
+abierta --> descartada : descartar(actor, motivo) [motivo indicado] / guardar el motivo
+en_curso --> descartada : descartar(actor, motivo) [motivo indicado] / guardar el motivo
+cerrada --> [*]
+descartada --> [*]
+
+@enduml

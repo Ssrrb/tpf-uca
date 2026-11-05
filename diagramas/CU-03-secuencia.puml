@@ -21,12 +21,15 @@ skinparam note {
 hide footbox
 title CU-03 · Cargar el presupuesto del cliente
 actor "Ingeniero de obra" as Ing
-box "ECMS" #EAF2F6
+box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
+end box
+box "ECMS" #EAF2F6
 participant "presupuesto:\nPresupuestoCliente" as Pres
 participant "archivo:\nArchivoOriginal" as Arch
 participant "hoja:\nHoja" as Hoja
 participant "rubro:\nRubro" as Rubro
+participant "item:\nItemCliente" as Item
 end box
 
 Ing -> Obra: crearPresupuestoCliente(actor)
@@ -34,8 +37,8 @@ break la obra ya tiene un presupuesto del cliente finalizado
   Obra --> Ing: operación rechazada (RF-04)
 end
 create Pres
-Obra -> Pres: «create»(estado = propuesta)
-Obra --> Ing: presupuesto en propuesta
+Obra -> Pres: «create»()
+Obra --> Ing: presupuesto registrado
 
 alt carga desde XLSX
   Ing -> Pres: cargarArchivo(archivo)
@@ -53,7 +56,12 @@ alt carga desde XLSX
     Pres -> Pres: descartarCargaIncompleta()
     Pres --> Ing: carga descartada; se puede reintentar
   end
+  note right of Pres: estado En carga
   Pres -> Pres: identificarEstructura()
+  loop por cada hoja que no es del cliente (3c)
+    Pres -> Hoja: ignorar()
+    Pres --> Ing: la ignora y lo informa
+  end
   alt estructura identificada
     Pres --> Ing: hojas, columnas, rubros e ítems (RF-03)
   else no se identifica la estructura (3a)
@@ -62,17 +70,20 @@ alt carga desde XLSX
     end
   end
 else creación en el sistema sin XLSX (1a)
+  note right of Pres: estado Propuesta
   loop por cada rubro
     Ing -> Pres: agregarRubro(código, descripción)
     create Rubro
     Pres -> Rubro: «create»(código, descripción)
     loop por cada ítem del rubro
       Ing -> Rubro: agregarÍtem(código, descripción, unidad, cantidad, precio)
+      create Item
+      Rubro -> Item: «create»(código, descripción, unidad, cantidad, precio)
     end
   end
 end
 Ing -> Pres: confirmarEstructura()
-Pres --> Ing: carga guardada en propuesta, lista para validar
+Pres --> Ing: carga guardada en estado Propuesta, lista para validar
 ref over Ing, Rubro
   Validar y finalizar el presupuesto del cliente (CU-04).
 end ref

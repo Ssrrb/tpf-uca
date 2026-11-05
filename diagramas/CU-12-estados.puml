@@ -1,0 +1,56 @@
+@startuml
+!theme plain
+title CU-12 · Estados de la Versión de modelo
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+state paralelo <<fork>>
+
+state "Estado de la versión" as Ciclo {
+  state "En trabajo" as en_trabajo
+  state "Compartido" as compartido
+  state "Publicado" as publicado
+  state "Archivado" as archivado
+
+  [*] --> en_trabajo
+  en_trabajo --> compartido : compartir(actor) [actor con rol en la obra] / guardar actor y fecha
+  compartido --> publicado : publicar(actor) [actor es Administrador] / fijar versión vigente del modelo
+  publicado --> archivado : archivar(actor) [actor es Administrador] / guardar actor y fecha
+  archivado --> [*]
+}
+
+state "Procesamiento" as Proceso {
+  state "Pendiente" as pendiente
+  state "Procesando" as procesando
+  state "Listo" as listo
+  state "Falló" as fallo
+
+  [*] --> pendiente
+  pendiente --> procesando : procesar() / leer el IFC con el Lector IFC
+  procesando --> listo : marcarListo() [lectura correcta] / indexar elementos y preparar vista 3D
+  procesando --> fallo : marcarFallido(motivo) [no es IFC, GlobalId repetido o tamaño excedido] / guardar motivo
+  fallo --> pendiente : reintentar() [procesamiento en Falló] / volver a la cola
+}
+
+[*] --> paralelo : crear versión nueva de un IFC
+paralelo --> Ciclo
+paralelo --> Proceso
+
+note bottom of Ciclo
+  Solo avanza, un paso por vez, y nunca cambia el archivo.
+  La última versión Publicada es la vigente del modelo.
+end note
+@enduml

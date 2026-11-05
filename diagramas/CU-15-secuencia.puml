@@ -1,0 +1,140 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-15 · Abrir, asignar y cerrar una incidencia
+actor "Ingeniero de obra\n(quien la abre)" as Aut
+actor "Ingeniero de obra\n(responsable)" as Resp
+actor "Administrador" as Admin
+box "ERP" #EAF2F6
+participant "obra:\nObra" as Obra
+participant "usuario:\nUsuario" as Usr
+end box
+box "ECMS" #EAF2F6
+participant "ancla:\nAncla" as Anc
+participant "incidencia:\nIncidencia" as Inc
+participant "evidencia:\nAdjunto" as Adj
+participant "paso:\nPasoIncidencia" as Paso
+end box
+
+== Pasos 1 a 3 · Abrir la incidencia ==
+Aut -> Obra: abrirIncidencia(datos, ancla, actor)
+Obra -> Obra: estaCerrada()
+break la obra está cerrada
+  Obra --> Aut: no abre la incidencia (precondición)
+end
+Obra -> Anc: esValida()
+Anc --> Obra: válida: lógico
+Obra -> Obra: esMiembro(responsable)
+create Inc
+Obra -> Inc: «create»(número, datos, ancla, actor)
+Obra -> Inc: validar()
+Inc --> Obra: errores
+break falta un dato obligatorio o el ancla (2a)
+  Obra --> Aut: impide guardar y vuelve al paso 1
+end
+opt adjunta una foto o un archivo como evidencia (1a)
+  Aut -> Inc: adjuntarEvidencia(archivo, actor)
+  create Adj
+  Inc -> Adj: «create»(archivo)
+end
+Obra --> Aut: incidencia Abierta, con número, autor y fecha
+Resp -> Obra: pendientesDe(usuario)
+loop por cada incidencia de la obra
+  Obra -> Inc: estaPendienteDe(usuario)
+  Inc --> Obra: pendiente: lógico
+end
+Obra --> Resp: lista de pendientes
+
+opt cambia el responsable (3a)
+  Aut -> Inc: cambiarResponsable(nuevo, actor)
+  Inc -> Obra: esMiembro(nuevo)
+  Obra --> Inc: miembro: lógico
+  create Paso
+  Inc -> Paso: «create»(responsable anterior, nuevo, actor, fecha)
+end
+
+== Pasos 4 a 9 · Tomar, resolver y cerrar ==
+alt el responsable la descarta (4a)
+  Resp -> Inc: descartar(actor, motivo)
+  break descarta sin indicar el motivo (4b)
+    Inc --> Resp: lo impide; la incidencia no cambia
+  end
+  create Paso
+  Inc -> Paso: «create»(Abierta o En curso, Descartada, motivo, actor, fecha)
+  Inc --> Resp: estado Descartada
+else sigue el flujo normal
+  Resp -> Inc: tomar(actor)
+  create Paso
+  Inc -> Paso: «create»(Abierta, En curso, actor, fecha)
+  Inc --> Resp: estado En curso
+  Resp -> Inc: resolver(actor, comentario, evidencia)
+  break quien resuelve no es el responsable, o no deja comentario ni evidencia (6a)
+    Inc --> Resp: lo impide; la incidencia no cambia
+  end
+  Inc -> Paso: «create»(En curso, Resuelta, comentario, actor, fecha)
+  Inc --> Resp: estado Resuelta, pendiente de quien la abrió
+  alt la solución alcanza
+    Aut -> Inc: cerrar(actor)
+    Inc -> Usr: esAdministrador()
+    Usr --> Inc: administrador: lógico
+    break quien intenta cerrarla no la abrió ni es Administrador (8c)
+      Inc --> Aut: lo impide; la incidencia no cambia
+    end
+    Inc -> Paso: «create»(Resuelta, Cerrada, actor, fecha)
+    Inc --> Aut: estado Cerrada
+  else la solución no alcanza (8b)
+    Aut -> Inc: reabrir(actor, comentario)
+    Inc -> Paso: «create»(Resuelta, En curso, comentario, actor, fecha)
+    Inc --> Aut: estado En curso; sigue en el paso 6
+  end
+  opt la cierra el Administrador, aunque la abrió otra persona (8a)
+    Admin -> Inc: cerrar(actor)
+    Inc -> Usr: esAdministrador()
+    Usr --> Inc: administrador: lógico
+    Inc --> Admin: estado Cerrada
+  end
+end
+
+== *a Comentar en el hilo ==
+Aut -> Inc: comentar(actor, texto, evidencia)
+Inc -> Paso: «create»(comentario, texto, actor, fecha)
+
+== *b Exportar o importar incidencias con un archivo BCF ==
+alt exporta las incidencias de la obra
+  Aut -> Obra: exportarBCF()
+  Obra --> Aut: archivo BCF
+else importa las de otra herramienta
+  Aut -> Obra: importarBCF(archivo, actor)
+  loop por cada incidencia del archivo
+    Obra -> Obra: existeIncidencia(guidBCF)
+    opt todavía no existe
+      create Inc
+      Obra -> Inc: «create»(datos del BCF, actor)
+    end
+  end
+  Obra --> Aut: solo las que todavía no existían
+end
+
+note over Aut, Paso
+  Una incidencia nunca se borra: se cierra o se descarta con motivo.
+  Cada paso guarda actor y fecha (NF-03).
+end note
+@enduml

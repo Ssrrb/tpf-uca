@@ -1,0 +1,140 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-11 · Importar la carpeta existente de la obra
+actor "Administrador" as Admin
+box "ERP" #EAF2F6
+participant "usuario:\nUsuario" as Usr
+participant "obra:\nObra" as Obra
+participant "importacion:\nImportacion" as Imp
+participant "origen:\nArchivoOrigen" as Orig
+participant "regla:\nReglaClasificacion" as Regla
+participant "carpeta:\nCarpeta" as Carp
+participant "documento:\nDocumento" as Doc
+participant "version:\nVersionDocumento" as Ver
+end box
+box "ECMS" #EAF2F6
+participant "archivos:\nArchivosAdjuntos" as Arch
+participant "archivo:\nArchivo" as Archivo
+end box
+
+== 1 Elegir la carpeta y el modo ==
+Admin -> Obra: iniciarImportación(origen, modo, actor)
+Obra -> Usr: obtenerRol(obra)
+Usr --> Obra: rol [0..1]
+break el usuario no es Administrador
+  Obra --> Admin: operación denegada (NF-01)
+end
+Obra -> Obra: estaCerrada()
+break la obra está cerrada
+  Obra --> Admin: operación denegada
+end
+create Imp
+Obra -> Imp: «create»(origen, modo, actor)
+Obra --> Admin: importación en propuesta (modo ordenar o 1a. tal cual)
+
+== 2 Recorrer la carpeta y proponer ==
+Admin -> Imp: analizar()
+loop por cada archivo de la carpeta elegida
+  create Orig
+  Imp -> Orig: «create»(ruta)
+  Imp -> Orig: esTemporal()
+  Orig --> Imp: lógico
+  alt es un archivo temporal o de bloqueo
+    Imp -> Orig: marcarOmitido(motivo)
+  else es un archivo de trabajo
+    Imp -> Orig: calcularHuella()
+    Orig --> Imp: huella
+    alt modo ordenar
+      Imp -> Regla: clasificar(archivo)
+      Regla --> Imp: carpeta de la plantilla [0..1]
+      opt 2a. el archivo no coincide con ninguna regla
+        note right of Imp: se propone en Sin clasificar para que el Administrador elija
+      end
+    else 1a. modo tal cual
+      Imp -> Carp: crearSubcarpeta(nombre, actor)
+      note right of Imp: el árbol original va sin reordenar bajo la carpeta Importado
+    end
+  end
+end
+opt modo ordenar
+  Imp -> Imp: agruparCopias()
+  Imp -> Imp: agruparVersiones()
+end
+Imp --> Admin: propuesta: carpeta de cada archivo, copias y versiones agrupadas
+
+== 3 Revisar y confirmar ==
+loop 3. cambia la carpeta de lo que haga falta
+  Admin -> Imp: cambiarCarpeta(archivo, carpeta)
+end
+alt 3a. cancela
+  Admin -> Imp: cancelar()
+  Imp --> Admin: no se importa nada; la carpeta original no cambia
+else confirma
+  Admin -> Imp: confirmar(actor)
+  Imp -> Imp: importarPendientes(actor)
+  loop por cada archivo pendiente
+    Imp -> Orig: estaIntacto()
+    Orig --> Imp: lógico
+    alt 4b. el archivo cambió o no se puede leer
+      Imp -> Orig: marcarOmitido(motivo)
+      note right of Imp: se informa al final y se sigue con los demás
+    else archivo intacto
+      Imp -> Arch: buscarPorHuella(huella)
+      Arch --> Imp: archivo [0..1]
+      alt la empresa todavía no tiene ese contenido
+        Imp -> Arch: guardar(contenido, huella)
+        create Archivo
+        Arch -> Archivo: «create»(huella, tamaño)
+        Arch --> Imp: archivo
+      else la empresa ya lo tiene (copia)
+        note right of Imp: no se vuelve a guardar; se reutiliza el archivo
+      end
+      Imp -> Carp: buscarDocumento(nombre)
+      Carp --> Imp: documento [0..1]
+      alt no existe el documento en esa carpeta
+        create Doc
+        Imp -> Doc: «create»(nombre, actor)
+      else es una revisión de un documento existente
+        note right of Imp: se agrupa como versión nueva
+      end
+      Imp -> Doc: agregarVersión(archivo, actor, rutaOriginal)
+      create Ver
+      Doc -> Ver: «create»(número, archivo, actor, fecha, rutaOriginal)
+      Imp -> Orig: marcarImportado()
+    end
+  end
+  Imp -> Imp: resumen()
+  Imp --> Admin: 4. cuántos importó, cuánto se ahorró por las copias, qué quedó sin clasificar y qué se dejó afuera
+end
+
+== 4a Retomar una importación cortada ==
+opt 4a. la importación se cortó
+  Admin -> Imp: reanudar(actor)
+  Imp -> Imp: importarPendientes(actor)
+  note right of Imp: sigue desde el último archivo guardado, sin repetir los ya importados
+  Imp --> Admin: resumen de la importación
+end
+
+note over Admin, Archivo
+  La carpeta original no cambia: solo se lee (Post).
+end note
+@enduml

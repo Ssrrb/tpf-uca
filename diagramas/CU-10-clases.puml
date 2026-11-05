@@ -1,0 +1,127 @@
+@startuml
+!theme plain
+skinparam style strictuml
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+left to right direction
+
+title CU-10 · Gestionar la documentación de la obra
+package "ERP" {
+  class Usuario {
+    nombre: texto
+    --
+    + obtenerRol(obra): texto [0..1]
+  }
+
+  class Obra {
+    código: texto
+    nombre: texto
+    --
+    + estaCerrada(): lógico
+    + mostrarCarpetas(usuario): lista de Carpeta
+    + agregarCarpetaPrincipal(nombre, área, actor): Carpeta
+  }
+
+  class Carpeta {
+    código: texto
+    nombre: texto
+    esPrincipal: lógico
+    área: texto {Documentación de obra | Documentación técnica}
+    estado: EstadoCarpeta
+    motivoEliminación: texto [0..1]
+    --
+    + listarContenido(): lista de Documento
+    + crearSubcarpeta(nombre, actor): Carpeta
+    + existeNombre(nombre): lógico
+    + buscarDocumento(nombre): Documento [0..1]
+    + subirArchivo(nombre, contenido, huella, actor): Documento
+    + renombrar(nombre, actor)
+    + mover(destino, actor)
+    + estaVacía(): lógico
+    + eliminar(motivo, actor)
+  }
+
+  class Documento {
+    nombre: texto
+    estado: EstadoDocumento
+    bloqueadoPor: Usuario [0..1]
+    bloqueadoDesde: fecha y hora [0..1]
+    motivoEliminación: texto [0..1]
+    --
+    + ultimaVersión(): VersionDocumento
+    + abrirParaEditar(actor): Archivo
+    + agregarVersión(archivo, actor): VersionDocumento
+    + terminarEdición(actor)
+    + liberarBloqueo(actor)
+    + consultar(): Archivo
+    + renombrar(nombre, actor)
+    + mover(destino, actor)
+    + eliminar(motivo, actor)
+  }
+
+  class "Versión del documento" as VersionDocumento {
+    número: entero
+    actor: Usuario
+    fecha: fecha y hora
+    rutaOriginal: texto [0..1]
+  }
+
+  enum EstadoDocumento <<enumeration>> {
+    vigente
+    bloqueado
+    eliminado
+  }
+
+  enum EstadoCarpeta <<enumeration>> {
+    vigente
+    eliminada
+  }
+}
+
+package "ECMS" {
+  class "Archivos adjuntos" as ArchivosAdjuntos {
+    --
+    + verificarHuella(contenido, huella): lógico
+    + buscarPorHuella(huella): Archivo [0..1]
+    + guardar(contenido, huella): Archivo
+  }
+
+  class Archivo {
+    huella: texto
+    tamaño: entero
+    --
+  }
+}
+
+Obra "1" *-- "0..*" Carpeta : carpetas principales
+Carpeta "1" *-- "0..*" Carpeta : subcarpetas
+Carpeta "1" *-- "0..*" Documento : contiene
+Documento "1" *-- "1..*" VersionDocumento : versiones
+VersionDocumento "0..*" --> "1" Archivo : contenido
+ArchivosAdjuntos "1" o-- "0..*" Archivo : guarda
+Documento "0..*" --> "0..1" Usuario : bloqueado por
+Carpeta ..> Obra : consulta estaCerrada()
+Carpeta ..> EstadoCarpeta : estado
+Documento ..> EstadoDocumento : estado
+@enduml

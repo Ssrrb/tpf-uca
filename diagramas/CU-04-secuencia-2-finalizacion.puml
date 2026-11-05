@@ -24,8 +24,10 @@ actor "Ingeniero de obra" as Ing
 box "ECMS" #EAF2F6
 participant "presupuesto:\nPresupuestoCliente" as Pres
 participant "rubro:\nRubro" as Rubro
-participant "item:\nItem" as Item
+participant "item:\nItemCliente" as Item
 participant "informe:\nInformeImportacion" as Inf
+end box
+box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
 end box
 
@@ -34,7 +36,7 @@ loop por cada rubro
   Pres -> Rubro: recalcularTotal()
   loop por cada ítem
     Rubro -> Item: recalcularTotal()
-    Item --> Rubro: total
+    Item --> Rubro: total (guaraníes enteros, NF-05)
   end
   Rubro --> Pres: total del rubro
 end
@@ -52,9 +54,16 @@ opt hay diferencias de totales (3a)
     end ref
   end
 end
-Ing -> Pres: finalizar(actor)
-critical finalización atómica (NF-02)
-  Pres -> Obra: vincularPresupuestoCliente(presupuesto)
+alt finaliza el presupuesto (paso 4)
+  Ing -> Pres: finalizar(actor)
+  critical finalización atómica (NF-02)
+    Pres -> Obra: vincularPresupuestoCliente(presupuesto)
+    break falla la finalización (5a)
+      Pres --> Ing: sigue en propuesta; se puede reintentar
+    end
+  end
+  Pres --> Ing: presupuesto contractual que ya no se modifica,\ncon actor y fecha; base de la estructura de trabajo (CU-05)
+else no lo finaliza todavía (4a)
+  Pres --> Ing: queda en propuesta
 end
-Pres --> Ing: presupuesto contractual que ya no se modifica,\ncon actor y fecha; base del CU-05
 @enduml

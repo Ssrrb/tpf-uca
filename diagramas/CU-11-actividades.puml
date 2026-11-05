@@ -1,0 +1,89 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-11 · Actividades · Importar la carpeta existente de la obra
+|Administrador|
+start
+:Elegir la carpeta de la obra en su equipo o en el servidor;
+if (¿Quiere ordenarla en la plantilla de la empresa?) then ([sí, modo ordenar])
+  :Elegir el modo ordenar;
+else ([no, modo tal cual (1a)])
+  :Elegir el modo tal cual;
+endif
+|Ctrl+ · ERP|
+:Recorrer la carpeta y dejar afuera los archivos temporales y de bloqueo;
+:Calcular la huella de cada archivo;
+if (¿Modo ordenar?) then ([sí])
+  :Agrupar las copias con la misma huella;
+  :Proponer la carpeta de la plantilla de cada archivo;
+  if (¿Coincide con alguna regla?) then ([no (2a)])
+    :Proponer Sin clasificar;
+  else ([sí])
+  endif
+  :Agrupar como versiones las revisiones de un mismo documento;
+else ([no])
+  :Proponer el árbol original bajo la carpeta Importado;
+endif
+|Administrador|
+:Revisar la propuesta y cambiar la carpeta de lo que haga falta;
+if (¿Confirma la importación?) then ([no (3a)])
+  :Cancelar: no se importa nada;
+  stop
+else ([sí])
+endif
+|Ctrl+ · ERP|
+repeat
+  if (¿El archivo cambió o no se puede leer? (4b)) then ([sí])
+    :Dejarlo afuera e informarlo al final;
+  else ([no])
+    |Ctrl+ · ECMS|
+    if (¿La empresa ya tiene ese contenido?) then ([sí, copia])
+      :Reutilizar el archivo guardado;
+    else ([no])
+      :Guardar el archivo una sola vez por su huella;
+    endif
+    |Ctrl+ · ERP|
+    :Crear el documento o sumar la versión con su ruta original;
+  endif
+repeat while (¿Quedan archivos pendientes?) is ([sí]) not ([no])
+if (¿Se cortó la importación? (4a)) then ([sí])
+  |Administrador|
+  :Retomar la importación;
+  |Ctrl+ · ERP|
+  :Seguir desde el último archivo guardado, sin repetir;
+else ([no])
+endif
+:Mostrar cuántos importó, cuánto se ahorró por las copias y qué quedó sin clasificar;
+stop
+@enduml

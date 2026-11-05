@@ -1,0 +1,169 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title CU-14 · Vincular la estructura de trabajo con el modelo y los documentos
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+left to right direction
+
+package "ECMS" {
+  class "Versión del presupuesto de costos" as VersionPresupuestoCostos {
+    número: entero
+    estado: texto {Vigente | Histórica}
+    --
+    + obtenerItem(código): Item [0..1]
+    + vincularElementos(códigoItem, versionModelo, elementos, actor): lista de VinculoEstructura
+    + vinculosDeElemento(modelo, globalId): lista de VinculoEstructura
+    + resumenVinculos(): lista
+  }
+
+  class Rubro {
+    código: texto
+    nombre: texto
+    --
+    + vincularDocumento(documento, actor): VinculoEstructura
+    + documentosVinculados(): lista de VinculoEstructura
+  }
+
+  class "Ítem" as Item {
+    código: texto {estable}
+    cantidad: decimal
+    unidad: texto
+    --
+    + magnitud(): texto
+    + sugerirCantidad(versionModelo, globalId, partida): decimal [0..1]
+    + vincularElementos(versionModelo, elementos, actor): lista de VinculoEstructura
+    + vinculoVivoCon(modelo, globalId): VinculoEstructura [0..1]
+    + vincularDocumento(documento, actor): VinculoEstructura
+    + quitarVinculo(vinculo, actor)
+    + resumenVinculos(): resumen
+    + detalleVinculos(): lista de VinculoEstructura
+  }
+
+  class "Vínculo de la estructura" as VinculoEstructura {
+    tipo: elemento | documento
+    modelo: Modelo
+    versiónModelo: entero
+    globalId: texto
+    cantidadConfirmada: decimal
+    cantidadSugerida: decimal
+    versiónDocumento: entero
+    creadoPor: Usuario
+    fecha: fecha y hora
+    quitadoPor: Usuario [0..1]
+    fechaQuita: fecha y hora [0..1]
+    --
+    + quitar(actor)
+    + estaVivo(): lógico
+    + versionQueCambio(): entero [0..1]
+  }
+
+  class Modelo {
+    nombre: texto
+    --
+    + obtenerVersion(número): VersionModelo
+    + versionQueCambio(versión, globalId): entero [0..1]
+  }
+
+  class "Versión de modelo" as VersionModelo {
+    número: entero
+    estado: texto {En trabajo | Compartido | Publicado | Archivado}
+    procesamiento: texto {Pendiente | Procesando | Listo | Falló}
+    --
+    + estaProcesada(): lógico
+    + obtenerElemento(globalId): ElementoModelo [0..1]
+  }
+
+  class "Elemento del modelo" as ElementoModelo {
+    globalId: texto
+    clase: texto
+    nombre: texto
+    tipo: texto
+    nivel: texto
+    quantitySets: lista de cantidades
+    --
+    + cantidadEn(magnitud): decimal [0..1]
+  }
+
+  class "Partida del cómputo" as PartidaComputo {
+    descripción: texto
+    magnitud: texto
+    cantidad: decimal
+    --
+    + magnitud(): texto
+    + cantidadDe(globalId): decimal [0..1]
+  }
+}
+
+package "ERP" {
+  class Obra {
+    código: texto
+    nombre: texto
+    estado: texto
+    --
+    + estaCerrada(): lógico
+  }
+
+  class Carpeta {
+    nombre: texto
+    --
+    + esDeObra(obra): lógico
+  }
+
+  class Documento {
+    nombre: texto
+    eliminado: lógico
+    --
+    + estaDisponible(obra): lógico
+    + ultimaVersion(): VersionDocumento
+  }
+
+  class "Versión del documento" as VersionDocumento {
+    número: entero
+    archivo: archivo
+    autor: Usuario
+    fecha: fecha y hora
+    --
+    + obtenerNumero(): entero
+  }
+}
+
+VersionPresupuestoCostos "1" *-- "1..*" Rubro : rubros
+Rubro "1" *-- "0..*" Item : ítems
+VersionPresupuestoCostos "0..*" --> "1" Obra : de la obra
+Item "1" -- "0..*" VinculoEstructura : vinculado por
+Rubro "1" -- "0..*" VinculoEstructura : documentos
+VinculoEstructura "0..*" --> "0..1" VersionModelo : elemento de
+VinculoEstructura "0..*" --> "0..1" VersionDocumento : respaldado por
+Modelo "1" *-- "1..*" VersionModelo : versiones
+VersionModelo "1" *-- "0..*" ElementoModelo : índice
+PartidaComputo "0..*" --> "1" VersionModelo : calculada de
+PartidaComputo "0..*" --> "0..*" ElementoModelo : salió de
+Item "0..*" ..> PartidaComputo : sugerencia
+Obra "1" *-- "0..*" Modelo : modelos
+Obra "1" *-- "0..*" Carpeta : carpetas
+Carpeta "1" *-- "0..*" Documento : documentos
+Documento "1" *-- "1..*" VersionDocumento : versiones
+
+@enduml

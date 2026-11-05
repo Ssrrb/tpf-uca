@@ -1,0 +1,93 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-14 · Actividades · Vincular la estructura de trabajo con el modelo y los documentos
+|Ingeniero de obra|
+start
+if (¿Qué quiere vincular?) then ([elementos del modelo])
+  :Abrir una versión procesada del modelo en el visor 3D
+  o en su cómputo (CU-13);
+  :Elegir los elementos, o una partida del cómputo con los suyos,
+  y el ítem de la estructura vigente al que pertenecen;
+  |Ctrl+ · ECMS|
+  if (¿La versión del modelo está procesada?) then ([no])
+    :No vincular ningún elemento e informar el motivo;
+    stop
+  else ([sí])
+  endif
+  repeat
+    if (¿La unidad del ítem es «u»?) then ([sí])
+      :Sugerir 1 por elemento;
+    else ([no])
+      if (¿La partida mide en la magnitud de la unidad del ítem?) then ([sí])
+        :Sugerir la cantidad de la partida del cómputo;
+      else ([no])
+        if (¿Los quantity sets traen esa magnitud?) then ([sí])
+          :Sugerir la cantidad de los quantity sets;
+        else ([no])
+          :No sugerir ninguna cantidad;
+        endif
+      endif
+    endif
+    |Ingeniero de obra|
+    :Confirmar la cantidad del elemento o corregirla;
+    |Ctrl+ · ECMS|
+  repeat while (¿Quedan elementos elegidos?) is ([sí]) not ([no])
+  if (¿Los elementos están en el índice y las cantidades son números ≥ 0?) then ([no])
+    :No guardar ningún vínculo y marcar el campo;
+    stop
+  else ([sí])
+  endif
+  if (¿El ítem ya tiene vivo ese elemento?) then ([sí])
+    :Quitar el vínculo anterior con quién y cuándo;
+  else ([no])
+  endif
+  :Guardar todos los vínculos juntos con la cantidad confirmada
+  y la sugerida, quién y cuándo (NF-02);
+else ([documentos de la carpeta])
+  :Elegir un documento de la carpeta de la obra (CU-10)
+  y el ítem o el rubro que respalda;
+  |Ctrl+ · ECMS|
+  if (¿El documento es de la carpeta de la obra y no está eliminado?) then ([no])
+    :No vincular y marcar el campo;
+    stop
+  else ([sí])
+  endif
+  :Guardar el vínculo con la última versión del documento,
+  quién y cuándo;
+endif
+|Ingeniero de obra|
+:Consultar la estructura de trabajo con sus vínculos y marcas;
+stop
+@enduml

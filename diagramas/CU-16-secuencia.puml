@@ -19,51 +19,161 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-16 · Consultar tablero financiero
-actor "Administrador o\nFinanzas y tesorería" as Adm
-box "Motor de finanzas" #EAF2F6
+title CU-16 · Consultar el tablero y la actividad de la obra
+actor "Administrador" as Admin
+box "ECMS" #EAF2F6
 participant "tablero:\nTablero" as Tab
-participant "libro:\nLibroFinanciero" as Lib
-participant "total:\nTotalTablero" as Tot
+participant "actividad:\nActividad" as Act
+participant "cursor:\nCursor" as Cur
+participant "estructura:\nVersionPresupuestoCostos" as Estr
+participant "item:\nItem" as Item
+participant "precio:\nItemCliente" as ICli
+participant "medicion:\nMedicion" as Med
+participant "certificado:\nCertificado" as Cert
+participant "versionCert:\nVersionCertificado" as VCert
+participant "incidencia:\nIncidencia" as Inc
+participant "modelo:\nModelo" as Mod
+participant "versionModelo:\nVersionModelo" as VMod
+participant "cambio:\nCambio" as Camb
 end box
 box "ERP" #EAF2F6
-participant "usuario:\nUsuario" as Usr
+participant "organizacion:\nOrganizacion" as Org
 participant "obra:\nObra" as Obra
+participant "versionDoc:\nVersionDocumento" as VDoc
+participant "cambioEstado:\nCambioEstado" as CEst
 end box
-box "ECMS" #EAF2F6
-participant "resumen:\nResumenObra" as Res
+box "Motor de finanzas" #EAF2F6
+participant "liquidacion:\nLiquidacion" as Liq
 end box
 
-Adm -> Tab: consultar(alcance, usuario)
-loop por cada obra del alcance
-  Tab -> Usr: tieneAcceso(obra)
-  Usr --> Tab: acceso: lógico
-  alt sin acceso a la obra (1b)
-    Tab --> Adm: excluye sus datos y lo indica
-  else con acceso
-  Tab -> Res: presupuestado(obra)
-  Res --> Tab: a costo (con apartado Adendas) y a venta (presupuesto contratado + adendas)
-  break falla la lectura de los datos de obra (3a)
-    Tab --> Adm: los marca no disponibles con la fecha del último dato
+== Pasos 1 y 2 · Abrir el tablero de una obra ==
+Admin -> Tab: abrir(idObra, actor)
+Tab -> Org: obtenerObra(idObra)
+Org --> Tab: obra [0..1]
+break la obra no existe en la organización (1b)
+  Tab --> Admin: no la encuentra y no muestra nada
+end
+Tab -> Obra: verificarAcceso(actor)
+Obra --> Tab: acceso: lógico
+break el usuario no es miembro de la organización de la obra (NF-01)
+  Tab --> Admin: operación denegada
+end
+note right of Tab
+  1a. Una obra cerrada se muestra igual: el tablero solo lee.
+end note
+
+== Paso 3 · Avance físico contra plazo ==
+Tab -> Obra: estructuraVigente()
+Obra --> Tab: estructura [0..1]
+alt la obra tiene estructura de trabajo vigente
+  Tab -> Estr: montoContractual()
+  loop por cada ítem con partida del cliente
+    Estr -> Item: montoContractual()
+    Item -> ICli: obtenerPrecio()
+    ICli --> Item: precio unitario
+    Item --> Estr: cantidad por precio, en guaraníes
   end
-  Tab -> Res: certificadoPorRubro(obra, fecha)
-  Tab -> Res: avanceFísico(obra, fecha)
-  Tab -> Obra: plazoTranscurrido(fecha)
-  Tab -> Lib: totales(obra, fecha)
-  Lib --> Tab: facturado, cobrado, pagado y saldos
-  Tab -> Lib: resultadoEconómico(obra, fecha)
-  Tab -> Lib: resultadoFinanciero(obra, fecha)
-  create Tot
-  Tab -> Tot: «create»(concepto, importe, fecha, unidad, PYG, procedencia)
+  Estr --> Tab: monto contractual
+  alt el monto contractual es mayor que 0
+    Tab -> Obra: certificado()
+    Obra --> Tab: certificado
+    Tab -> Cert: totalBruto()
+    loop por cada versión guardada del certificado
+      Cert -> VCert: obtenerBruto()
+      VCert --> Cert: bruto de la versión
+    end
+    Cert --> Tab: lo certificado
+    Tab -> Estr: montoMedido()
+    loop por cada ítem
+      Estr -> Item: montoMedido()
+      loop por cada medición del ítem
+        Item -> Med: estaAnulada()
+        Med --> Item: anulada: lógico
+        opt la medición no se anuló
+          Item -> Med: valorizar(precio)
+          Med --> Item: monto al precio del cliente
+        end
+      end
+      Item --> Estr: monto medido, sin pasar el monto del ítem
+    end
+    Estr --> Tab: lo medido
+    Tab -> Tab: porcentaje(certificado, montoContractual)
+    Tab -> Tab: porcentaje(medido, montoContractual)
+  else todos los precios están en 0 (3a)
+    Tab --> Admin: avance físico sin calcular, y lo dice
   end
+else la obra no tiene estructura de trabajo vigente (3a)
+  Tab --> Admin: avance físico sin calcular, y lo dice
 end
-Tab --> Adm: totales por obra y empresa, avance físico y plazo\ntranscurrido en porcentaje (RF-18, NF-10)
-opt filtra por rubro o fecha (1a)
-  Adm -> Tab: filtrar(rubro, fecha)
+Tab -> Obra: plazoTranscurrido(hoy)
+Obra --> Tab: porcentaje [0..1]
+opt la obra no tiene fechas de inicio y de fin (3b)
+  Tab --> Admin: plazo sin calcular, y lo dice
 end
-Adm -> Tab: abrirRespaldo(total)
-Tab --> Adm: versión del presupuesto o del certificado, factura interna\ncon la legal, recibo o comprobante (NF-11)
-opt exporta (6a, RF-12)
-  Adm -> Tab: exportar(formato)
+
+== Paso 4 · Incidencias abiertas y modelos sin publicar ==
+Tab -> Obra: incidencias()
+Obra --> Tab: incidencias de la obra
+loop por cada incidencia
+  Tab -> Inc: estaAbierta()
+  Inc --> Tab: Abierta, En curso o Resuelta: lógico
 end
+Tab -> Tab: incidenciasMasPrioritarias(incidencias, 10)
+Tab -> Obra: modelos()
+Obra --> Tab: modelos de la obra
+loop por cada modelo
+  Tab -> Mod: ultimaVersion()
+  Mod --> Tab: versión
+  Tab -> VMod: estaSinPublicar()
+  VMod --> Tab: En trabajo o Compartido: lógico
+end
+
+== Paso 5 · Los últimos cambios de la obra ==
+Tab -> Act: listar(obra, cursor, 50)
+loop por cada módulo que guarda cambios (sin tabla de eventos propia)
+  Act -> VMod: cambiosAnteriores(obra, cursor, 50)
+  VMod --> Act: versiones nuevas del modelo con su diff, y su estado
+  Act -> VDoc: cambiosAnteriores(obra, cursor, 50)
+  VDoc --> Act: versiones nuevas de documentos
+  Act -> Inc: cambiosAnteriores(obra, cursor, 50)
+  Inc --> Act: estados de las incidencias
+  Act -> Estr: cambiosAnteriores(obra, cursor, 50)
+  Estr --> Act: versiones de la estructura de trabajo
+  Act -> VCert: cambiosAnteriores(obra, cursor, 50)
+  VCert --> Act: versiones guardadas del certificado
+  Act -> Liq: cambiosAnteriores(obra, cursor, 50)
+  Liq --> Act: liquidaciones
+  Act -> CEst: cambiosAnteriores(obra, cursor, 50)
+  CEst --> Act: estados de la obra
+end
+Act -> Act: combinar(cambios, 50)
+Act -> Cur: codificar()
+Cur --> Act: cursor del último cambio
+Act --> Tab: 50 cambios, del más nuevo al más viejo
+Tab --> Admin: tablero con avance, plazo, incidencias abiertas, modelos sin publicar y últimos cambios
+
+== Pasos 6 y 7 · Pedir más cambios ==
+Admin -> Act: listar(obra, cursor, 50)
+Act -> Cur: decodificar(texto)
+break el punto desde donde seguir no se entiende (7a)
+  Cur --> Admin: lo rechaza y no muestra nada
+end
+Act -> VMod: cambiosAnteriores(obra, cursor, 50)
+Act -> VDoc: cambiosAnteriores(obra, cursor, 50)
+Act -> Inc: cambiosAnteriores(obra, cursor, 50)
+Act -> Estr: cambiosAnteriores(obra, cursor, 50)
+Act -> VCert: cambiosAnteriores(obra, cursor, 50)
+Act -> Liq: cambiosAnteriores(obra, cursor, 50)
+Act -> CEst: cambiosAnteriores(obra, cursor, 50)
+Act -> Act: combinar(cambios, 50)
+Act --> Admin: los 50 que siguen a los que ya vio, hasta llegar al primero
+
+== Paso 8 · Abrir la pantalla de donde sale ==
+Admin -> Camb: obtenerPantalla()
+Camb --> Admin: avance, incidencia, modelo o cambio, en su pantalla (NF-11)
+
+note over Admin, Liq
+  El tablero no modifica ningún dato. Los montos van en guaraníes enteros
+  y los porcentajes en dos decimales (NF-05).
+end note
 @enduml

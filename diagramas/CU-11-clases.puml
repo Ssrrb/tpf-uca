@@ -1,0 +1,148 @@
+@startuml
+!theme plain
+skinparam style strictuml
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+left to right direction
+title CU-11 · Importar la carpeta existente de la obra
+
+package "ERP" {
+  class Usuario {
+    nombre: texto
+    --
+    + obtenerRol(obra): texto [0..1]
+  }
+
+  class Obra {
+    código: texto
+    nombre: texto
+    --
+    + estaCerrada(): lógico
+    + iniciarImportación(origen, modo, actor): Importación
+  }
+
+  class "Importación" as Importacion {
+    origen: texto
+    modo: ModoImportacion
+    estado: EstadoImportacion
+    actor: Usuario
+    fecha: fecha y hora
+    --
+    + analizar()
+    + agruparCopias()
+    + agruparVersiones()
+    + cambiarCarpeta(archivo, carpeta)
+    + confirmar(actor)
+    + cancelar()
+    + reanudar(actor)
+    + importarPendientes(actor)
+    + resumen(): texto
+  }
+
+  class "Archivo de origen" as ArchivoOrigen {
+    ruta: texto
+    nombre: texto
+    huella: texto
+    tamaño: entero
+    estado: pendiente | importado | omitido
+    motivoOmisión: texto [0..1]
+    --
+    + esTemporal(): lógico
+    + calcularHuella(): texto
+    + estaIntacto(): lógico
+    + marcarImportado()
+    + marcarOmitido(motivo)
+  }
+
+  class "Regla de clasificación" as ReglaClasificacion {
+    patrón: texto
+    --
+    + clasificar(archivo): Carpeta [0..1]
+  }
+
+  class Carpeta {
+    código: texto
+    nombre: texto
+    esPrincipal: lógico
+    --
+    + crearSubcarpeta(nombre, actor): Carpeta
+    + buscarDocumento(nombre): Documento [0..1]
+  }
+
+  class Documento {
+    nombre: texto
+    estado: EstadoDocumento
+    --
+    + agregarVersión(archivo, actor, rutaOriginal): VersionDocumento
+  }
+
+  class "Versión del documento" as VersionDocumento {
+    número: entero
+    rutaOriginal: texto [0..1]
+    actor: Usuario
+    fecha: fecha y hora
+  }
+
+  enum ModoImportacion <<enumeration>> {
+    ordenar
+    tal_cual
+  }
+
+  enum EstadoImportacion <<enumeration>> {
+    propuesta
+    en_curso
+    cortada
+    terminada
+    cancelada
+  }
+}
+
+package "ECMS" {
+  class "Archivos adjuntos" as ArchivosAdjuntos {
+    --
+    + buscarPorHuella(huella): Archivo [0..1]
+    + guardar(contenido, huella): Archivo
+  }
+
+  class Archivo {
+    huella: texto
+    tamaño: entero
+  }
+}
+
+Obra "1" *-- "0..*" Importacion : importaciones
+Importacion "1" *-- "0..*" ArchivoOrigen : archivos
+Importacion "0..*" --> "1" Carpeta : destino en la obra
+ArchivoOrigen "0..*" --> "0..1" Carpeta : carpeta propuesta
+ReglaClasificacion "0..*" --> "1" Carpeta : carpeta de la plantilla
+Carpeta "1" *-- "0..*" Carpeta : subcarpetas
+Carpeta "1" *-- "0..*" Documento : contiene
+Documento "1" *-- "1..*" VersionDocumento : versiones
+VersionDocumento "0..*" --> "1" Archivo : contenido
+ArchivosAdjuntos "1" o-- "0..*" Archivo : guarda
+Importacion ..> ReglaClasificacion : usa
+Importacion ..> ModoImportacion : modo
+Importacion ..> EstadoImportacion : estado
+Importacion ..> Usuario : actor
+@enduml

@@ -1,0 +1,166 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+
+title CU-10 · Gestionar la documentación de la obra
+actor "Ingeniero de obra" as Ing
+actor "Administrador" as Admin
+box "ERP" #EAF2F6
+participant "usuario:\nUsuario" as Usr
+participant "obra:\nObra" as Obra
+participant "carpeta:\nCarpeta" as Carp
+participant "sub:\nCarpeta" as Sub
+participant "documento:\nDocumento" as Doc
+participant "version:\nVersionDocumento" as Ver
+end box
+box "ECMS" #EAF2F6
+participant "archivos:\nArchivosAdjuntos" as Arch
+participant "archivo:\nArchivo" as Archivo
+end box
+
+== 1-2 Abrir la carpeta de la obra ==
+Ing -> Obra: mostrarCarpetas(usuario)
+Obra -> Usr: obtenerRol(obra)
+Usr --> Obra: rol [0..1]
+break el usuario no tiene rol en la obra
+  Obra --> Ing: operación denegada (NF-01)
+end
+Obra -> Carp: listarContenido()
+loop por cada documento de la carpeta
+  Carp -> Doc: ultimaVersión()
+  Doc --> Carp: versión
+end
+Carp --> Obra: subcarpetas, documentos, última versión y quién edita
+Obra --> Ing: carpetas principales con su contenido
+
+== 3a Crear una subcarpeta ==
+opt 3a. crea una subcarpeta
+  Ing -> Carp: crearSubcarpeta(nombre, actor)
+  Carp -> Obra: estaCerrada()
+  Obra --> Carp: lógico
+  break la obra está cerrada
+    Carp --> Ing: operación denegada
+  end
+  Carp -> Carp: existeNombre(nombre)
+  alt 3c. ya hay una carpeta con ese nombre en el mismo lugar
+    Carp --> Ing: impide crearla (vuelve al paso 3)
+  else nombre libre
+    create Sub
+    Carp -> Sub: «create»(nombre, actor)
+    Carp --> Ing: subcarpeta creada
+  end
+end
+
+== 3-4 Subir archivos (3b nueva versión de un documento existente) ==
+loop por cada archivo seleccionado
+  Ing -> Carp: subirArchivo(nombre, contenido, huella, actor)
+  Carp -> Obra: estaCerrada()
+  Obra --> Carp: lógico
+  break la obra está cerrada
+    Carp --> Ing: operación denegada
+  end
+  Carp -> Arch: verificarHuella(contenido, huella)
+  Arch --> Carp: lógico
+  break 4a. el archivo se cortó o no coincide con su huella
+    Carp --> Ing: no guarda la versión; se puede reintentar
+  end
+  Carp -> Arch: buscarPorHuella(huella)
+  Arch --> Carp: archivo [0..1]
+  alt el contenido todavía no está guardado en la empresa
+    Carp -> Arch: guardar(contenido, huella)
+    create Archivo
+    Arch -> Archivo: «create»(huella, tamaño)
+    Arch --> Carp: archivo
+  else el contenido ya está guardado
+    note right of Carp: no se vuelve a guardar; se reutiliza el archivo existente
+  end
+  Carp -> Carp: buscarDocumento(nombre)
+  alt no hay documento con ese nombre en la carpeta
+    Carp -> Doc: «create»(nombre, actor)
+  else 3b. ya hay un documento con ese nombre
+    note right of Carp: el archivo es una versión nueva de ese documento
+  end
+  Carp -> Doc: agregarVersión(archivo, actor)
+  create Ver
+  Doc -> Ver: «create»(número, archivo, actor, fecha)
+  Doc --> Carp: versión
+  Carp --> Ing: documento con su última versión
+end
+
+== 5-8 Abrir para editar y terminar ==
+alt 5a. solo lo consulta
+  Ing -> Doc: consultar()
+  Doc --> Ing: vista previa o descarga, sin bloquear
+else 5. abre para editar (5b desde la web: consultar() y subir la versión editada)
+  Ing -> Doc: abrirParaEditar(actor)
+  alt 6b. otra persona lo tiene bloqueado
+    Doc --> Ing: muestra quién lo edita y desde cuándo; no lo abre
+  else vigente
+    Doc --> Ing: archivo abierto con el programa instalado; bloqueado a su nombre
+    loop 6. cada vez que guarda
+      Ing -> Doc: agregarVersión(archivo, actor)
+      Doc --> Ing: versión nueva
+    end
+    Ing -> Doc: terminarEdición(actor)
+    Doc --> Ing: 8. bloqueo liberado
+  end
+end
+
+== 6a Liberar un bloqueo ajeno ==
+opt 6a. el documento quedó bloqueado por alguien que no lo libera
+  Admin -> Doc: liberarBloqueo(actor)
+  Doc --> Admin: bloqueo liberado; queda registrado quién y cuándo
+end
+
+== *a Mover o renombrar ==
+opt *a. mueve o renombra
+  Ing -> Doc: mover(destino, actor)
+  Ing -> Doc: renombrar(nombre, actor)
+  Ing -> Sub: mover(destino, actor)
+  Ing -> Sub: renombrar(nombre, actor)
+end
+
+== *b Eliminar con motivo ==
+opt *b. elimina un documento o una subcarpeta vacía
+  Admin -> Doc: eliminar(motivo, actor)
+  Doc --> Admin: deja de verse; sus versiones no se borran
+  Admin -> Sub: eliminar(motivo, actor)
+  Sub -> Sub: estaVacía()
+  break 2a. todavía tiene documentos o subcarpetas
+    Sub --> Admin: impide eliminarla; la carpeta no cambia
+  end
+  Sub --> Admin: deja de verse
+end
+
+== *c Administrar las carpetas principales ==
+opt *c. administra las carpetas principales de la obra
+  Admin -> Obra: agregarCarpetaPrincipal(nombre, área, actor)
+  Obra --> Admin: carpeta nueva (13 en adelante) con código propio
+  Admin -> Carp: renombrar(nombre, actor)
+  Carp --> Admin: el código no cambia
+  Admin -> Carp: eliminar(motivo, actor)
+  Carp -> Carp: estaVacía()
+  break 2a. todavía tiene documentos o subcarpetas
+    Carp --> Admin: impide eliminarla; la carpeta no cambia
+  end
+  Carp --> Admin: eliminada; su código no se vuelve a usar
+end
+@enduml

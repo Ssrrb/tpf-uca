@@ -29,7 +29,9 @@ box "ECMS" #EAF2F6
 participant "item:\nItemCostos" as Item
 participant "saldo:\nSaldoItem" as Saldo
 participant "medicion:\nMedicion" as Med
-participant "evidencia:\nEvidencia" as Evi
+participant "adjunto:\nArchivoAdjunto" as Evi
+participant "vinculo:\nVinculoEstructura" as Vin
+participant "elemento:\nElementoModelo" as Elem
 participant "certificado:\nCertificado" as Cert
 participant "version:\nVersionCertificado" as V
 participant "linea:\nLineaCertificado" as Lin
@@ -49,14 +51,26 @@ Item --> Ing: ítems con su saldo contractual
 loop por cada ítem medido
   create Med
   Ing -> Med: «create»(ítem, cantidad, unidad, ejecutor)
-  Med -> Item: insumosDelACU(cantidad)
-  Item --> Med: insumos propuestos (RF-07)
-  opt el Ingeniero corrige un insumo
+  opt el Ingeniero corrige un insumo consumido (3)
     Ing -> Med: corregirInsumo(insumo, cantidad)
   end
   Ing -> Med: adjuntarEvidencia(archivo)
   create Evi
   Med -> Evi: «create»(tipo, archivo)
+  note right of Evi
+    La foto o el archivo queda en Archivos adjuntos
+    de la obra y no se elimina (NF-03, NF-08).
+  end note
+  opt el Ingeniero elige elementos del modelo (CU-14)
+    Ing -> Med: apuntarAElementos(ítem, elementos)
+    Med -> Vin: estaVinculado(ítem, elemento)
+    Vin --> Med: vinculado: lógico
+    break un elemento no está vinculado con el ítem en esa versión del modelo (4b)
+      Med --> Ing: rechaza la medición y marca el elemento
+    end
+    create Elem
+    Med -> Elem: «create»(modelo, versión, globalId)
+  end
   Med -> Saldo: estaContada(cantidad, medicion)
   Saldo --> Med: contada: lógico
   break ya está contada en otra medición (4a, RF-08)

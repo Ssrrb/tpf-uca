@@ -28,39 +28,19 @@ skinparam note {
 package "ECMS" {
   class "Versión del certificado" as VersionCertificado {
     número: entero
-    estado: cantidades cerradas | valorizada
+    estado: guardada
     --
-    + líneasSubcontratadasPorContrato(): lista
-    + enviarALiquidar(contrato, actor): texto
+    + medicionesSinLiquidar(contrato): lista de Medición
+    + controlarLímites(alcance, mediciones): lista de texto
+    + liquidarSubcontratista(contrato, actor): Liquidación
   }
 
-  class "Línea del certificado" as LineaCertificado {
+  class "Medición" as Medicion {
     cantidad: decimal
     liquidada: lógico
     --
     + estaLiquidada(): lógico
     + marcarLiquidada(liquidación): vacío
-  }
-}
-
-package "Motor de finanzas" {
-  class "Liquidaciones" as Liquidaciones {
-    --
-    + liquidar(versión, contrato, cantidades): Liquidación
-    + buscar(versión, contrato): Liquidación [0..1]
-  }
-
-  class "Liquidación" as Liquidacion {
-    número: entero
-    bruto: guaraníes
-    retenciones: guaraníes
-    fondoReparo: guaraníes
-    deducciones: guaraníes
-    impuestos: guaraníes
-    /neto: guaraníes
-    estado: pendiente_de_pago | pagada_parcial | pagada
-    --
-    + calcular(contrato): vacío
   }
 }
 
@@ -70,24 +50,61 @@ package "ERP" {
     porcentajeFondoReparo: decimal
     impuestos: decimal
     --
-    + valorizar(ítem, cantidad): guaraníes
-    + excedeLímite(importe): lógico
+    + alcance(): lista de ÍtemContrato
+    + condiciones(): lista de Retención
+  }
+
+  class "Ítem del contrato" as ItemContrato {
+    cantidad: decimal
+    precio: guaraníes
+    límite: decimal
+    --
+    + datos(): cantidad, precio y límite
   }
 
   class "Retención" as Retencion {
     tipo: IVA | renta
     porcentaje: decimal
     --
-    + aplicar(base: guaraníes): guaraníes
+    + datos(): tipo y porcentaje
   }
 }
 
-VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
-LineaCertificado "0..*" --> "0..1" Contrato : subcontratada en
-LineaCertificado "0..*" --> "0..1" Liquidacion : liquidada en
+package "Motor de finanzas" {
+  class "Liquidaciones" as Liquidaciones {
+    --
+    + liquidar(versión, contrato, mediciones, alcance, condiciones): Liquidación
+    + buscar(versión, contrato): Liquidación [0..1]
+  }
+
+  class "Liquidación" as Liquidacion {
+    número: entero
+    bruto: guaraníes
+    fondoReparo: guaraníes
+    neto: guaraníes
+    iva: guaraníes
+    retenciones: guaraníes
+    /aPagar: guaraníes
+    registradaPor: Usuario
+    fecha: fecha y hora
+    --
+    + calcular(alcance, condiciones): vacío
+  }
+}
+
+VersionCertificado "1" --> "0..*" Medicion : certifica
+Medicion "0..*" --> "0..1" Contrato : a nombre de
+Liquidacion "0..1" --> "1..*" Medicion : liquida
+Contrato "1" *-- "1..*" ItemContrato : alcance
+Contrato "0..*" --> "0..*" Retencion : aplica
 Liquidaciones ..> Liquidacion : registra
 Liquidacion "0..*" --> "1" Contrato : de
-Liquidacion "0..1" --> "1" VersionCertificado : por
-Contrato "0..*" --> "0..*" Retencion : aplica
+Liquidacion "0..*" --> "1" VersionCertificado : por
+
+note bottom of Liquidacion
+  Única por (versión, contrato). Se registra una vez y no cambia:
+  no tiene estados. El pago ocurre fuera del sistema y no se
+  registra en el MVP.
+end note
 
 @enduml

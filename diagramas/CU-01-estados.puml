@@ -38,18 +38,23 @@ state "Recepción provisoria" as recepcion_provisoria
 state "Recepción definitiva" as recepcion_definitiva
 state "Cerrada" as cerrada
 
-en_ejecucion : mediciones y certificados: sí
-en_ejecucion : adendas, gastos, facturas, cobros y pagos: sí
-recepcion_provisoria : mediciones y certificados: no
-recepcion_provisoria : adendas, gastos, facturas, cobros y pagos: sí
-recepcion_definitiva : adendas, gastos, facturas, cobros y pagos: sí
-recepcion_definitiva : devolución del fondo de reparo: sí
+en_ejecucion : mediciones y versiones del certificado: sí
+recepcion_provisoria : mediciones y versiones del certificado: no
+recepcion_definitiva : mediciones y versiones del certificado: no
 cerrada : solo consultas
 
-[*] --> en_ejecucion : crearObra(datos, responsables, actor) / registrar actor y fecha
+[*] --> en_ejecucion : crearObra(datos, miembros, actor) / registrar actor y fecha
 en_ejecucion --> recepcion_provisoria : avanzarEstado(actor)
 recepcion_provisoria --> recepcion_definitiva : avanzarEstado(actor)
 recepcion_definitiva --> cerrada : avanzarEstado(actor)
 cerrada --> [*]
+
+note right of recepcion_provisoria
+  La pantalla muestra tres estados:
+  Activa (En ejecución),
+  En recepción (Recepción provisoria
+  o Recepción definitiva) y Cerrada.
+  Las dos recepciones permiten lo mismo.
+end note
 
 @enduml

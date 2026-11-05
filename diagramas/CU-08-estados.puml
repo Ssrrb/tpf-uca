@@ -1,0 +1,39 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-08 · Estados de la Versión del certificado
+state "Abierta" as abierta
+state "Cantidades cerradas" as cerradas
+state "Guardada" as guardada
+
+abierta : toma las mediciones registradas y no certificadas (CU-07)
+cerradas : lista para el cálculo
+guardada : no se modifica; se puede liquidar (CU-09)
+
+[*] --> abierta : generarVersiónSiguiente(actor) / numerar y tomarCantidades()
+abierta --> cerradas : cerrarCantidades(actor) [CU-07]
+cerradas --> cerradas : agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo)
+cerradas --> guardada : guardar(actor) [exceso señalado y sin ítems sin precio] / certificar mediciones
+guardada --> [*]
+
+note right of guardada
+  Las versiones se numeran correlativamente:
+  un único certificado por obra (RF-09).
+  Una versión guardada no se modifica: un error se
+  corrige con una línea de ajuste en la versión nueva.
+end note
+@enduml

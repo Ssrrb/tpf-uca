@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-02 · Mantener catálogos y banco de insumos
+title CU-02 · Mantener catálogos
 hide circle
 hide empty methods
 hide empty fields
@@ -28,45 +28,37 @@ skinparam note {
 package "ERP" {
   class "Catálogo" as Catalogo {
     --
-    + listar(filtro): lista de Recurso
-    + códigoDisponible(código): lógico
-    + crearRecurso(datos): Recurso
+    + listar(filtro): lista de empresas y clientes
+    + rucDisponible(ruc: texto): lógico
+    + crearProveedor(ruc, razónSocial): Proveedor
+    + crearCliente(ruc, razónSocial): Cliente
   }
 
-  class Recurso {
-    tipo: texto {persona | proveedor | cliente}
-    código: texto
-    descripción: texto
+  class Proveedor {
+    tipo: texto {subcontratista}
+    ruc: texto
+    razónSocial: texto
     activo: lógico
-    ruc: texto [0..1]
-    documento: texto [0..1]
-    esSubcontratista: lógico [0..1]
     --
     + modificar(datos): vacío
     + darDeBaja(actor): vacío
   }
 
-  class Insumo {
-    clase: texto {material | equipo | mano de obra}
-    unidad: texto
-    categoría: texto
+  class Cliente {
+    ruc: texto
+    razónSocial: texto
+    activo: lógico
     --
-    + registrarPrecio(valor, vigenteDesde): Precio
-    + obtenerPrecioVigente(fecha): guaraníes [0..1]
-  }
-
-  class Precio {
-    valor: guaraníes
-    vigenteDesde: fecha
-    vigenteHasta: fecha [0..1]
-    --
-    + seSuperpone(desde: fecha): lógico
-    + cerrarVigencia(hasta: fecha): vacío
+    + modificar(datos): vacío
+    + darDeBaja(actor): vacío
   }
 }
 
-Recurso <|-- Insumo
-Catalogo "1" o-- "0..*" Recurso : contiene
-Insumo "1" *-- "0..*" Precio : vigencias
-Insumo "0..*" --> "0..*" Recurso : mano de obra que prestan las personas
+Catalogo "1" o-- "0..*" Proveedor : empresas subcontratistas
+Catalogo "1" o-- "0..*" Cliente : clientes
+
+note bottom of Catalogo
+  En los dos el código es el RUC. Los insumos, los equipos y la
+  mano de obra, con sus precios, quedan fuera del MVP.
+end note
 @enduml

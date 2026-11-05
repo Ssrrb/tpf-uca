@@ -32,7 +32,7 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-04 · Estados del Presupuesto del cliente
+title CU-04 · Estados del presupuesto del cliente
 state origen <<choice>>
 state "En carga" as en_carga
 state "Propuesta" as propuesta
@@ -52,6 +52,8 @@ note right of en_carga
   En carga y Propuesta se recorren
   en CU-03; la validación y la
   finalización, en CU-04.
+  Finalizado deja la base de la
+  versión 1 de la estructura (CU-05).
 end note
 
 @enduml

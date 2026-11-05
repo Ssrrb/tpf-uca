@@ -32,25 +32,22 @@ package "ERP" {
     nombre: texto
     --
     + códigoDisponible(código: texto): lógico
-    + crearObra(datos, responsables, actor): Obra
+    + crearObra(datos, miembros, actor): Obra
   }
 
   class Usuario {
     nombre: texto
     correo: texto
+    rol: texto {Administrador | Ingeniero de obra}
     --
-    + obtenerMembresía(organización): Membresía [0..1]
-  }
-
-  class "Membresía" as Membresia {
-    rol: texto
-    --
-    + obtenerRol(): texto
+    + obtenerRol(organización): texto [0..1]
+    + perteneceA(organización): lógico
   }
 
   class Cliente {
     razónSocial: texto
     ruc: texto
+    activo: lógico
     --
     + estaActivo(): lógico
   }
@@ -58,12 +55,10 @@ package "ERP" {
   class Obra {
     código: texto
     nombre: texto
-    dirección: texto
     fechaInicio: fecha
     fechaFin: fecha
+    fechaFinVigente: fecha
     porcentajeIVA: decimal
-    límiteAdendas: decimal
-    topeCajaChica: guaraníes
     porcentajeFondoReparo: decimal [0..1]
     estado: EstadoObra
     registradaPor: Usuario
@@ -71,7 +66,7 @@ package "ERP" {
     --
     + validarDatos(): lista de texto
     + definirAnticipo(modalidad, valor): Anticipo
-    + asignarResponsable(usuario, rol, permisos): Asignación
+    + asignarMiembro(usuario, rol, permisos): Asignación
     + avanzarEstado(actor): EstadoObra
   }
 
@@ -81,7 +76,7 @@ package "ERP" {
   }
 
   class "Asignación" as Asignacion {
-    rol: texto {Ingeniero de obra | Finanzas y tesorería}
+    rol: texto {Administrador | Ingeniero de obra}
     permisos: lista de texto
     fechaAsignación: fecha y hora
   }
@@ -102,14 +97,19 @@ package "ERP" {
 }
 
 Organizacion "1" *-- "0..*" Obra : tiene
-Membresia "0..*" --> "1" Usuario : corresponde a
-Membresia "0..*" --> "1" Organizacion : pertenece a
+Organizacion "1" o-- "0..*" Usuario : tiene
 Obra "0..*" --> "1" Cliente : contratada por
 Obra "1" *-- "0..1" Anticipo : configura
-Obra "1" *-- "0..*" Asignacion : responsables
+Obra "1" *-- "0..*" Asignacion : miembros
 Asignacion "0..*" --> "1" Usuario : asigna a
 Obra "1" *-- "0..*" CambioEstado : historial
 
 Obra ..> EstadoObra : estado
+
+note right of EstadoObra
+  La pantalla muestra tres estados sobre estos cuatro:
+  Activa (en_ejecucion), En recepción (recepcion_provisoria
+  o recepcion_definitiva) y Cerrada (cerrada).
+end note
 
 @enduml

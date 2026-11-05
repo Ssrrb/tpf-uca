@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-08 · Calcular el certificado y el consumo de recursos
+title CU-08 · Calcular el certificado
 hide circle
 hide empty methods
 hide empty fields
@@ -36,7 +36,7 @@ package "Motor de finanzas" {
 package "ECMS" {
   class "Versión del certificado" as VersionCertificado {
     número: entero
-    estado: cantidades cerradas | valorizada
+    estado: abierta | cantidades cerradas | guardada
     bruto: guaraníes
     amortizaciónAnticipo: guaraníes
     fondoReparo: guaraníes
@@ -46,7 +46,6 @@ package "ECMS" {
     --
     + estaCerrada(): lógico
     + agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo): vacío
-    + agregarLíneaRegularización(ítem, cantidad, precio): vacío
     + registrarImportes(bruto, amortización, fondoReparo, neto, iva): vacío
     + guardar(actor): vacío
   }
@@ -64,8 +63,8 @@ package "ECMS" {
 
   class "Medición" as Medicion {
     cantidad: decimal
+    estado: registrada | incluida en una versión | certificada
     --
-    + insumosConsumidos(): lista de Insumo
     + marcarCertificada(versión): vacío
   }
 
@@ -76,18 +75,11 @@ package "ECMS" {
     + registrarCertificado(cantidad): vacío
     + montoContractual(): guaraníes
     + registrarExceso(importe): vacío
-    + regularizarExceso(importe): vacío
   }
 
   class "Presupuesto del cliente" as PresupuestoCliente {
     --
     + precioUnitario(ítem): guaraníes [0..1]
-  }
-
-  class "Apartado Adendas" as ApartadoAdendas {
-    --
-    + ítemsAprobadosDesde(versión): lista de ItemAdenda
-    + precioAprobado(ítem): guaraníes [0..1]
   }
 }
 
@@ -105,32 +97,20 @@ package "ERP" {
     --
     + amortizar(bruto: guaraníes): guaraníes
   }
-
-  class Insumo {
-    código: texto
-    --
-    + precioVigente(fecha): guaraníes [0..1]
-  }
-
-  class "Consumos de la obra" as ConsumosObra {
-    consumos: lista de Insumo
-    --
-    + prepararConsumo(insumo, cantidad, precio, medición): vacío
-    + registrar(versión): vacío
-  }
 }
 
 CalculoCertificado ..> VersionCertificado : <<use>>
-CalculoCertificado ..> ConsumosObra : <<use>>
 VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
 LineaCertificado "0..1" --> "0..*" Medicion : certifica
 LineaCertificado "0..*" --> "1" SaldoItem : ítem
 VersionCertificado "0..*" --> "1" PresupuestoCliente : precios
-VersionCertificado "0..*" --> "0..1" ApartadoAdendas : adendas registradas
-ApartadoAdendas ..> SaldoItem : suma al monto contractual
 VersionCertificado "0..*" --> "0..1" Anticipo : amortiza
 VersionCertificado "0..*" --> "1" Obra : de la obra
-Obra "1" *-- "1" ConsumosObra : consumos
-ConsumosObra "0..*" --> "0..*" Insumo : registra el consumo de
+
+note bottom of SaldoItem
+  Monto contractual = monto del presupuesto del cliente. Si el monto
+  acumulado lo supera, el exceso queda como saldo negativo del ítem
+  y de su rubro y fuera del bruto (RF-08).
+end note
 
 @enduml

@@ -1,0 +1,166 @@
+@startuml
+title CU-12 · Publicar y revisar una versión de modelo
+!theme plain
+skinparam style strictuml
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+left to right direction
+
+package "ERP" {
+  class Obra {
+    código: texto
+    nombre: texto
+    estado: EstadoObra
+    --
+    + obtenerRol(actor): texto
+    + estaCerrada(): lógico
+  }
+
+  class Carpeta {
+    código: texto
+    nombre: texto
+    --
+    + recibirArchivo(nombre, archivo, origen, actor): VersionModelo
+  }
+}
+
+package "ECMS" {
+  class Modelo {
+    nombre: texto
+    --
+    + agregarVersion(archivo, origen, actor): VersionModelo
+    + existeVersionIgual(hash): lógico
+    + versionAnterior(número): VersionModelo [0..1]
+    + fijarVersionVigente(versión)
+  }
+
+  class "Versión de modelo" as VersionModelo {
+    número: entero
+    archivo: archivo IFC
+    hash: texto
+    origen: carpeta | web | Speckle
+    estado: EstadoVersion
+    procesamiento: EstadoProcesamiento
+    motivoFalla: texto [0..1]
+    indexadaSinPropiedades: lógico
+    actor: Usuario
+    fecha: fecha y hora
+    --
+    + compartir(actor)
+    + publicar(actor)
+    + archivar(actor)
+    + procesar()
+    + marcarListo()
+    + marcarFallido(motivo)
+    + reintentar()
+  }
+
+  class "Elemento del modelo" as ElementoModelo {
+    globalId: texto
+    claseIfc: texto
+    nombre: texto
+    tipo: texto
+    nivel: texto
+    propertySets: texto
+    quantitySets: texto
+  }
+
+  class "Cambios de la versión" as CambiosVersion {
+    nuevos: entero
+    borrados: entero
+    modificados: entero
+    --
+    + elementosAfectados(): lista de globalId
+  }
+
+  class Incidencia {
+    número: entero
+    estado: texto
+    --
+    + marcarCambio(globalIds, versión)
+  }
+
+  class "Partida del cómputo" as PartidaComputo {
+    código: texto
+    --
+    + marcarCambio(globalIds, versión)
+  }
+
+  class "Vínculo de la estructura" as VinculoEstructura {
+    globalId: texto
+    cantidadConfirmada: decimal
+    --
+    + marcarCambio(globalIds, versión)
+  }
+
+  enum EstadoVersion <<enumeration>> {
+    en_trabajo
+    compartido
+    publicado
+    archivado
+  }
+
+  enum EstadoProcesamiento <<enumeration>> {
+    pendiente
+    procesando
+    listo
+    fallo
+  }
+}
+
+class "Visor de modelos" as VisorModelos <<servicio externo>> {
+  + obtenerPublicacion(referencia): archivo
+  + prepararVista(archivo)
+}
+
+class "Lector IFC" as LectorIFC <<servicio externo>> {
+  + leer(archivo): lista de elementos
+}
+
+note bottom of VisorModelos
+  Speckle (puente con Revit, Rhino y AutoCAD y visor 3D).
+  Lo que guarda se reconstruye desde Ctrl+.
+end note
+
+note bottom of LectorIFC
+  IfcOpenShell. No es un actor ni un subsistema.
+end note
+
+Obra "1" *-- "0..*" Carpeta : tiene
+Carpeta "1" o-- "0..*" Modelo : contiene
+Modelo "1" *-- "1..*" VersionModelo : versiones
+Modelo "1" --> "0..1" VersionModelo : vigente
+VersionModelo "1" *-- "0..*" ElementoModelo : índice
+VersionModelo "1" *-- "0..1" CambiosVersion : cambios
+
+VersionModelo ..> LectorIFC : lee con
+VersionModelo ..> VisorModelos : vista 3D
+Modelo ..> VisorModelos : publicaciones
+VersionModelo ..> Incidencia : marca
+VersionModelo ..> PartidaComputo : marca
+VersionModelo ..> VinculoEstructura : marca
+VersionModelo ..> EstadoVersion : estado
+VersionModelo ..> EstadoProcesamiento : procesamiento
+
+@enduml

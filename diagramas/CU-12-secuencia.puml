@@ -1,0 +1,140 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+
+title CU-12 · Publicar y revisar una versión de modelo
+actor "Ingeniero de obra" as Ing
+actor "Administrador" as Admin
+box "ERP" #EAF2F6
+participant "obra:\nObra" as Obra
+participant "carpeta:\nCarpeta" as Carp
+end box
+box "ECMS" #EAF2F6
+participant "modelo:\nModelo" as Mod
+participant "versión:\nVersionModelo" as Ver
+participant "elemento:\nElementoModelo" as Elem
+participant "cambios:\nCambiosVersion" as Camb
+participant "incidencia:\nIncidencia" as Inc
+participant "partida:\nPartidaComputo" as Part
+participant "vínculo:\nVinculoEstructura" as Vinc
+end box
+participant "Lector IFC" as Lector
+participant "Visor de modelos:\nVisorModelos" as Visor
+
+Ing -> Carp: recibirArchivo(nombre, archivo, origen, actor)
+Carp -> Obra: obtenerRol(actor)
+Obra --> Carp: rol
+Carp -> Obra: estaCerrada()
+Obra --> Carp: lógico
+break sin rol en la obra u obra cerrada (Pre, NF-01)
+  Carp --> Ing: operación denegada
+end
+opt 1a. publicación desde un conector de Speckle
+  Carp -> Visor: obtenerPublicacion(referencia)
+  Visor --> Carp: archivo
+end
+Carp -> Mod: agregarVersion(archivo, origen, actor)
+Mod -> Mod: existeVersionIgual(hash)
+break 1b. archivo igual al de la última versión
+  Mod --> Ing: no crea otra versión e indica cuál es
+end
+create Ver
+Mod -> Ver: «create»(número, archivo, hash, origen, actor)
+Mod --> Carp: versión En trabajo, procesamiento Pendiente (paso 2)
+
+alt 1a. origen Speckle
+  Carp --> Ing: versión En trabajo, sin cambios ni cómputo (sigue en el paso 5)
+else origen IFC (carpeta o web)
+  Carp -> Ver: procesar()
+  Ver -> Lector: leer(archivo)
+  Lector --> Ver: elementos
+  alt 3. lectura correcta
+    loop por cada elemento del IFC
+      create Elem
+      Ver -> Elem: «create»(globalId, claseIfc, nombre, tipo, nivel, propertySets, quantitySets)
+    end
+    Ver -> Visor: prepararVista(archivo)
+    Ver -> Ver: marcarListo()
+    Ver -> Mod: versionAnterior(número)
+    Mod --> Ver: versión anterior [0..1]
+    alt 4a. primera versión del modelo
+      Ver --> Carp: modelo sin cambios
+    else 4. hay versión anterior
+      create Camb
+      Ver -> Camb: «create»(nuevos, borrados, modificados)
+      Ver -> Camb: elementosAfectados()
+      Camb --> Ver: globalIds
+      opt hay elementos que cambiaron o desaparecieron
+        Ver -> Inc: marcarCambio(globalIds, versión)
+        Ver -> Part: marcarCambio(globalIds, versión)
+        Ver -> Vinc: marcarCambio(globalIds, versión)
+      end
+    end
+  else 3a. no es IFC, repite un GlobalId o supera el tamaño máximo
+    Ver -> Ver: marcarFallido(motivo)
+    note right of Ver: se conserva la versión; sin vista 3D ni cambios
+  end
+  Carp --> Ing: versión En trabajo con sus cambios
+end
+
+== 5 y 6. Revisar y compartir ==
+Ing -> Ver: compartir(actor)
+alt 6. la versión está En trabajo
+  Ver --> Ing: estado Compartido, con actor y fecha
+else 5a. el estado pedido no es el siguiente
+  Ver --> Ing: lo impide; la versión no cambia
+end
+
+== 7 y 8. Publicar (solo Administrador) ==
+Admin -> Ver: publicar(actor)
+Ver -> Obra: obtenerRol(actor)
+Obra --> Ver: rol
+alt 8. rol Administrador y versión Compartida
+  Ver -> Mod: fijarVersionVigente(versión)
+  Ver --> Admin: estado Publicado; es la vigente del modelo
+else 7b. no es Administrador, o 5a. no es el siguiente estado
+  Ver --> Admin: lo impide; el estado no cambia
+end
+
+== 7a. Archivar (solo Administrador) ==
+Admin -> Ver: archivar(actor)
+Ver -> Obra: obtenerRol(actor)
+Obra --> Ver: rol
+alt rol Administrador y versión Publicada
+  Ver --> Admin: estado Archivado
+else 7b. no es Administrador, o 5a. no es el siguiente estado
+  Ver --> Admin: lo impide; el estado no cambia
+end
+
+== *a. Reintentar el procesamiento ==
+Ing -> Ver: reintentar()
+alt el procesamiento está en Falló
+  Ver -> Ver: procesar()
+  note right of Ver: vuelve a Pendiente y sigue desde el paso 3
+else no falló
+  Ver --> Ing: no hay nada que reintentar
+end
+
+note over Ing, Visor
+  El estado de una versión solo avanza y nunca cambia el archivo (§7.9).
+  La última versión Publicada es la vigente del modelo.
+end note
+@enduml

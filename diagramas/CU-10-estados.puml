@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+title CU-10 · Estados del Documento y de la Carpeta principal
+state "Vigente" as cVigente {
+  state "Vigente" as dVigente
+  state "Bloqueado" as dBloqueado
+  state "Eliminado" as dEliminado
+  dBloqueado : bloqueado por quien edita
+  dEliminado : deja de verse en la carpeta
+  dEliminado : sus versiones no se borran
+
+  [*] --> dVigente : subirArchivo(nombre, contenido, huella, actor) / crear versión 1
+  dVigente --> dVigente : subirArchivo(nombre, contenido, huella, actor) [mismo nombre] / agregar versión
+  dVigente --> dBloqueado : abrirParaEditar(actor) [nadie lo edita] / bloquear a nombre del actor
+  dBloqueado --> dBloqueado : agregarVersión(archivo, actor) / sumar versión
+  dBloqueado --> dVigente : terminarEdición(actor) / liberar bloqueo
+  dBloqueado --> dVigente : liberarBloqueo(actor) [Administrador] / registrar quién y cuándo
+  dVigente --> dEliminado : eliminar(motivo, actor) [Administrador] / registrar motivo
+}
+state "Eliminada" as cEliminada
+cVigente : estados del Documento dentro de la carpeta
+cEliminada : deja de verse
+cEliminada : su código no se vuelve a usar en la obra
+
+[*] --> cVigente : plantilla de la empresa o agregarCarpetaPrincipal(nombre, área, actor)
+cVigente --> cEliminada : eliminar(motivo, actor) [Administrador y estaVacía()] / registrar motivo
+cEliminada --> [*]
+@enduml

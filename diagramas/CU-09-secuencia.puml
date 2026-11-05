@@ -23,10 +23,11 @@ title CU-09 · Liquidar subcontratista
 actor "Ingeniero de obra" as Ing
 box "ECMS" #EAF2F6
 participant "version:\nVersionCertificado" as V
-participant "linea:\nLineaCertificado" as Lin
+participant "medicion:\nMedicion" as Med
 end box
 box "ERP" #EAF2F6
 participant "contrato:\nContrato" as Con
+participant "itemContrato:\nItemContrato" as IC
 participant "retencion:\nRetencion" as Ret
 end box
 box "Motor de finanzas" #EAF2F6
@@ -34,53 +35,52 @@ participant "liquidaciones:\nLiquidaciones" as Mot
 participant "liquidacion:\nLiquidacion" as Liq
 end box
 
-Ing -> V: líneasSubcontratadasPorContrato()
-V --> Ing: ítems subcontratados sin liquidar, agrupados por contrato
 loop por cada contrato de la versión (1a)
-  loop por cada línea del contrato
-    Ing -> Con: valorizar(ítem, cantidad)
-    Con --> Ing: importe al precio del contrato (RF-16)
-    V -> Lin: estaLiquidada()
-    Lin --> V: liquidada: lógico
-    opt ya se liquidó en otra versión (RF-08)
-      V --> Ing: la excluye e informa en cuál
+  Ing -> V: medicionesSinLiquidar(contrato)
+  loop por cada medición del contrato certificada en la versión o en una anterior
+    V -> Med: estaLiquidada()
+    Med --> V: liquidada: lógico
+  end
+  V -> Con: alcance()
+  Con --> V: ítems del contrato
+  loop por cada ítem del contrato
+    V -> IC: datos()
+    IC --> V: cantidad, precio y límite
+  end
+  V -> V: controlarLímites(alcance, mediciones)
+  V --> Ing: cantidades sin liquidar y, si un ítem pasa su cantidad\no su límite en el contrato, el aviso (2a)
+  alt confirma la liquidación (paso 3)
+    Ing -> V: liquidarSubcontratista(contrato, actor)
+    V -> Con: condiciones()
+    loop por cada retención del contrato
+      Con -> Ret: datos()
+      Ret --> Con: tipo y porcentaje
     end
-  end
-  V -> Con: excedeLímite(importe)
-  Con --> V: excede: lógico
-  break supera el límite del contrato (2a)
-    V --> Ing: impide enviar ese contrato (vuelve al paso 3)
-  end
-  alt confirma el envío (paso 3)
-    Ing -> V: enviarALiquidar(contrato, actor)
-    V -> Mot: liquidar(version, contrato, cantidades)
+    Con --> V: fondo de reparo, IVA y retenciones
+    V -> Mot: liquidar(version, contrato, mediciones, alcance, condiciones)
     Mot -> Mot: buscar(version, contrato)
     alt ya existe (reintento, NF-02)
-      Mot --> V: número de la liquidación existente
+      Mot --> V: la liquidación existente; no se duplica
     else no existe
       create Liq
-      Mot -> Liq: «create»(version, contrato, cantidades)
-      Mot -> Liq: calcular(contrato)
-      Liq -> Con: valorizar(ítem, cantidad)
-      loop por cada retención del contrato
-        Liq -> Ret: aplicar(base)
-        Ret --> Liq: importe retenido
-      end
+      Mot -> Liq: «create»(version, contrato, mediciones)
+      Mot -> Liq: calcular(alcance, condiciones)
       note right of Liq
-        Aplica fondo de reparo, deducciones e
-        impuestos del contrato; queda pendiente de pago.
+        Al precio del contrato: bruto, fondo de reparo,
+        neto, IVA y retenciones; queda lo que se paga.
+        Se registra una vez y no cambia (RF-16, §6.3).
       end note
-      Mot --> V: número de la liquidación
+      Mot --> V: liquidación registrada
     end
     break falla el registro en el Motor de finanzas (4a)
-      V --> Ing: no se marca ninguna cantidad; el CU termina
+      V --> Ing: no se marca ninguna cantidad; se puede reintentar
     end
-    loop por cada línea enviada
-      V -> Lin: marcarLiquidada(liquidacion)
+    loop por cada medición liquidada
+      V -> Med: marcarLiquidada(liquidacion)
     end
-    V --> Ing: liquidación pendiente de pago (CU-14«QUITADO»)
+    V --> Ing: liquidación registrada; el pago ocurre fuera del sistema
   else no confirma
-    V --> Ing: no se envía nada; las cantidades quedan sin liquidar
+    V --> Ing: no se registra nada; las cantidades quedan sin liquidar
   end
 end
 @enduml

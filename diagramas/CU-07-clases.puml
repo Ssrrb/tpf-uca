@@ -31,12 +31,10 @@ package "ECMS" {
     unidad: texto
     --
     + obtenerSaldo(): SaldoÍtem
-    + insumosDelACU(cantidad): lista de Insumo
   }
 
   class "Saldo del ítem" as SaldoItem {
     cantidadCliente: decimal
-    cantidadAdendas: decimal
     asignadaAContratos: decimal
     medida: decimal
     certificada: decimal
@@ -56,12 +54,13 @@ package "ECMS" {
     ejecutor: propio | subcontratado
     estado: EstadoMedición
     motivo: texto [0..1]
-    insumosConsumidos: lista de Insumo
+    insumosConsumidos: lista de Insumo [0..*]
     registradaPor: Usuario
     fecha: fecha y hora
     --
     + corregirInsumo(insumo, cantidad): vacío
     + adjuntarEvidencia(archivo): vacío
+    + apuntarAElementos(ítem, elementos): vacío
     + validarCompleta(): lista de texto
     + confirmar(actor): vacío
     + anular(motivo, actor): vacío
@@ -74,19 +73,33 @@ package "ECMS" {
     signo: positivo | negativo
   }
 
-  class Evidencia {
-    tipo: foto | planilla | acta
+  class "Archivo adjunto" as ArchivoAdjunto {
+    tipo: foto | archivo
     archivo: archivo
+    {no se elimina}
   }
 
-  class "Certificado de avance" as Certificado {
+  class "Vínculo de la estructura" as VinculoEstructura {
+    cantidadConfirmada: decimal
+    cantidadSugerida: decimal
+    --
+    + estaVinculado(ítem, elemento): lógico
+  }
+
+  class "Elemento del modelo" as ElementoModelo {
+    modelo: texto
+    versión: entero
+    globalId: texto
+  }
+
+  class "Certificado" as Certificado {
     --
     + generarVersiónSiguiente(actor): VersiónCertificado
   }
 
   class "Versión del certificado" as VersionCertificado {
     número: entero
-    estado: cantidades cerradas | valorizada
+    estado: abierta | cantidades cerradas | guardada
     --
     + tomarCantidades(): vacío
     + cerrarCantidades(actor): vacío
@@ -100,8 +113,9 @@ package "ECMS" {
   }
 
   enum EstadoMedición <<enumeration>> {
+    en carga
     registrada
-    incluida
+    incluida en una versión
     certificada
     anulada
   }
@@ -126,7 +140,10 @@ ItemCostos "1" *-- "1" SaldoItem : lleva
 Medicion "0..*" --> "1" ItemCostos : mide
 Medicion "0..*" --> "1" Obra : de la obra
 Medicion "0..*" --> "0..1" Contrato : a nombre de
-Medicion "1" *-- "1..*" Evidencia : respaldo
+Medicion "1" --> "1..*" ArchivoAdjunto : evidencia
+Medicion "0..*" --> "0..*" ElementoModelo : apunta a
+VinculoEstructura "0..*" --> "1" ItemCostos : de
+VinculoEstructura "0..*" --> "1" ElementoModelo : a
 Medicion <|-- MedicionAjuste
 MedicionAjuste "0..*" --> "1" Medicion : corrige
 Certificado "0..1" --> "1" Obra : de la obra

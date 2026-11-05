@@ -1,0 +1,125 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title CU-15 · Abrir, asignar y cerrar una incidencia
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+left to right direction
+
+package "ECMS" {
+  class Incidencia {
+    número: texto {INC-0001, correlativo en la obra}
+    título: texto
+    tipo: texto
+    descripción: texto
+    prioridad: texto
+    estado: EstadoIncidencia
+    autor: Usuario
+    fecha: fecha y hora
+    responsable: Usuario
+    motivoDescarte: texto [0..1]
+    guidBCF: texto
+    --
+    + validar(): lista de texto
+    + tomar(actor)
+    + resolver(actor, comentario, evidencia)
+    + cerrar(actor)
+    + reabrir(actor, comentario)
+    + descartar(actor, motivo)
+    + cambiarResponsable(nuevo, actor)
+    + comentar(actor, texto, evidencia)
+    + adjuntarEvidencia(archivo, actor): Adjunto
+    + estaPendienteDe(usuario): lógico
+  }
+
+  class "Paso de incidencia" as PasoIncidencia {
+    tipo: comentario | cambio de estado | cambio de responsable
+    desde: texto [0..1]
+    hasta: texto [0..1]
+    texto: texto [0..1]
+    actor: Usuario
+    fecha: fecha y hora
+  }
+
+  class Ancla <<datatype>> {
+    tipo: elemento | documento | ítem
+    modelo: Modelo [0..1]
+    versiónModelo: entero [0..1]
+    globalId: texto [0..1]
+    puntoDeVista: texto [0..1]
+    documento: Documento [0..1]
+    versiónDocumento: entero [0..1]
+    página: entero [0..1]
+    ítem: Ítem [0..1]
+    --
+    + esValida(): lógico
+  }
+
+  class Adjunto {
+    nombre: texto
+    archivo: archivo
+  }
+
+  enum EstadoIncidencia <<enumeration>> {
+    abierta
+    en_curso
+    resuelta
+    cerrada
+    descartada
+  }
+}
+
+package "ERP" {
+  class Obra {
+    código: texto
+    nombre: texto
+    estado: texto
+    --
+    + estaCerrada(): lógico
+    + esMiembro(usuario): lógico
+    + abrirIncidencia(datos, ancla, actor): Incidencia
+    + pendientesDe(usuario): lista de Incidencia
+    + exportarBCF(): archivo
+    + importarBCF(archivo, actor): lista de Incidencia
+    + existeIncidencia(guidBCF): lógico
+  }
+
+  class Usuario {
+    nombre: texto
+    --
+    + esAdministrador(): lógico
+  }
+}
+
+Obra "1" *-- "0..*" Incidencia : incidencias
+Incidencia "1" *-- "0..*" PasoIncidencia : historial
+Incidencia "1" *-- "1" Ancla : anclada a
+Incidencia "1" o-- "0..*" Adjunto : evidencia
+Incidencia "0..*" --> "1" Usuario : abierta por
+Incidencia "0..*" --> "1" Usuario : responsable
+PasoIncidencia "0..*" --> "1" Usuario : hecho por
+Obra "1" o-- "0..*" Usuario : miembros
+Incidencia ..> EstadoIncidencia : estado
+
+@enduml

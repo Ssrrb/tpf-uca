@@ -1,0 +1,94 @@
+@startuml
+title CU-13 · Calcular el cómputo del modelo
+!theme plain
+skinparam style strictuml
+hide circle
+hide empty methods
+hide empty fields
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+left to right direction
+
+package "ECMS" {
+  class "Versión de modelo" as VersionModelo {
+    número: entero
+    archivo: archivo IFC
+    procesamiento: EstadoProcesamiento
+    motivoFalla: texto [0..1]
+    --
+    + estaProcesada(): lógico
+    + obtenerMotivoFalla(): texto
+    + pedirComputo(actor): ComputoModelo
+  }
+
+  class "Cómputo del modelo" as ComputoModelo {
+    actor: Usuario
+    fecha: fecha y hora
+    --
+    + calcular()
+    + armarXLSX(): archivo XLSX
+    + descargarXLSX(): archivo XLSX
+  }
+
+  class "Rubro del cómputo" as RubroComputo {
+    nombre: texto
+    clasesIfc: lista de texto
+    --
+    + sumar(globalId, tipo, cantidad, sinCantidades)
+    + filas(): lista de filas
+  }
+
+  class "Partida del cómputo" as PartidaComputo {
+    código: texto
+    descripción: texto
+    unidad: texto
+    cantidad: decimal
+    precioUnitario: guaraníes = 0
+    globalIds: lista de texto
+    sinCantidades: lista de texto
+    --
+    + agregarElemento(globalId, cantidad, sinCantidades)
+    + fila(): fila
+  }
+
+  enum EstadoProcesamiento <<enumeration>> {
+    pendiente
+    procesando
+    listo
+    fallo
+  }
+}
+
+class "Lector IFC" as LectorIFC <<servicio externo>> {
+  + leerCantidades(archivo, clasesIfc): lista de cantidades por elemento
+}
+
+note bottom of LectorIFC
+  IfcOpenShell. No es un actor ni un subsistema.
+end note
+
+VersionModelo "1" *-- "0..1" ComputoModelo : cómputo pedido
+ComputoModelo "1" *-- "1..*" RubroComputo : rubros
+RubroComputo "1" *-- "0..*" PartidaComputo : una por tipo
+ComputoModelo ..> LectorIFC : lee cantidades con
+VersionModelo ..> EstadoProcesamiento : procesamiento
+
+@enduml

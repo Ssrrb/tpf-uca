@@ -60,19 +60,29 @@ package "ECMS" {
     nombre: texto
     origen: detectada | manual
     columnas: lista de Columna
+    rol: del cliente | ignorada
     --
     + definirColumna(índice, campo): vacío
+    + ignorar(): vacío
   }
 
   class Rubro {
     código: texto
     descripción: texto
-    ítems: lista de Item
     --
-    + agregarÍtem(código, descripción, unidad, cantidad, precio): vacío
+    + agregarÍtem(código, descripción, unidad, cantidad, precio): ItemCliente
+  }
+
+  class "Ítem del cliente" as ItemCliente {
+    código: texto
+    descripción: texto
+    unidad: texto
+    cantidad: decimal
+    precioUnitario: guaraníes
   }
 
   enum EstadoPresupuestoCliente <<enumeration>> {
+    en_carga
     propuesta
     finalizado
   }
@@ -82,7 +92,13 @@ Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
 PresupuestoCliente "1" *-- "0..1" ArchivoOriginal : conserva sin modificar
 PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
+Rubro "1" *-- "1..*" ItemCliente : agrupa
 
 PresupuestoCliente ..> EstadoPresupuestoCliente : estado
+
+note bottom of Hoja
+  Una hoja que no es del cliente (por ejemplo, la de costo
+  o la de una adenda) se ignora y se informa; no se confirma (3c).
+end note
 
 @enduml

@@ -24,7 +24,6 @@ actor "Administrador" as Admin
 box "ERP" #EAF2F6
 participant "organizacion:\nOrganizacion" as Org
 participant "usuario:\nUsuario" as Usr
-participant "membresia:\nMembresia" as Memb
 participant "cliente:\nCliente" as Cli
 participant "obra:\nObra" as Obra
 participant "anticipo:\nAnticipo" as Ant
@@ -32,11 +31,9 @@ participant "asignacion:\nAsignacion" as Asig
 participant "cambio:\nCambioEstado" as Cambio
 end box
 
-Admin -> Org: crearObra(datos, responsables, actor)
-Org -> Usr: obtenerMembresía(organizacion)
-Usr --> Org: membresia [0..1]
-Org -> Memb: obtenerRol()
-Memb --> Org: rol
+Admin -> Org: crearObra(datos, miembros, actor)
+Org -> Usr: obtenerRol(organizacion)
+Usr --> Org: rol [0..1]
 break rol distinto de Administrador
   Org --> Admin: operación denegada (NF-01)
 end
@@ -46,6 +43,9 @@ break código ya en uso (5a)
 end
 Org -> Cli: estaActivo()
 Cli --> Org: activo: lógico
+opt el cliente no está en el catálogo (2a)
+  Org --> Admin: lo carga en CU-02 y continúa en el paso 2
+end
 create Obra
 Org -> Obra: «create»(datos, cliente, actor)
 Org -> Obra: validarDatos()
@@ -58,18 +58,18 @@ opt anticipo configurado (RF-22)
   create Ant
   Obra -> Ant: «create»(modalidad, valor)
 end
-loop por cada responsable seleccionado
-  Org -> Obra: asignarResponsable(usuario, rol, permisos)
-  Obra -> Usr: obtenerMembresía(organizacion)
-  Usr --> Obra: membresia [0..1]
-  alt responsable ajeno a la organización (5b)
+loop por cada miembro elegido
+  Org -> Obra: asignarMiembro(usuario, rol, permisos)
+  Obra -> Usr: perteneceA(organizacion)
+  Usr --> Obra: pertenece: lógico
+  alt la persona no es miembro de la organización (5b)
     Obra --> Admin: rechaza la asignación (vuelve al paso 3)
   else miembro de la organización
     create Asig
     Obra -> Asig: «create»(usuario, rol, permisos)
   end
 end
-Org --> Admin: obra registrada en ejecución, con actor y fecha
+Org --> Admin: obra registrada en ejecución (Activa), con actor y fecha
 
 == *a Avanzar el estado de una obra existente ==
 Admin -> Obra: avanzarEstado(actor)
@@ -78,10 +78,10 @@ break la obra está cerrada
 end
 create Cambio
 Obra -> Cambio: «create»(desde, hasta, actor, fecha)
-Obra --> Admin: estado nuevo (RF-23)
+Obra --> Admin: estado nuevo (RF-23); la pantalla lo muestra como Activa, En recepción o Cerrada
 
 note over Admin, Cambio
   La creación es atómica (NF-02): si falla o se cancela,
-  no se crea la obra ni se asigna ningún responsable.
+  no se crea la obra ni se asigna ningún miembro.
 end note
 @enduml

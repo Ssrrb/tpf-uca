@@ -28,18 +28,15 @@ skinparam note {
 package "ECMS" {
   class "Presupuesto de costos" as PresupuestoCostos {
     --
-    + consultarVersiones(): lista de VersiónCostos
-    + obtenerVigente(): VersiónCostos [0..1]
-    + crearPrimeraVersión(base: PresupuestoCliente, actor): VersiónCostos
-    + crearVersiónCorrectiva(motivo, actor): VersiónCostos
-    + activar(versión, actor): vacío
+    + consultarVersiones(): lista de VersionCostos
+    + obtenerVigente(): VersionCostos [0..1]
+    + guardarPrimeraVersión(base: PresupuestoCliente, actor): VersionCostos
+    + guardarVersión(cambios, motivo, actor): VersionCostos
   }
 
   enum EstadoVersionCostos <<enumeration>> {
-    propuesta
     vigente
     historica
-    descartada
   }
 
   class "Versión del presupuesto de costos" as VersionCostos {
@@ -48,45 +45,27 @@ package "ECMS" {
     motivo: texto [0..1]
     creadaPor: Usuario
     fecha: fecha y hora
-    /costoPresupuestado: guaraníes
     --
     + copiarRubros(base: PresupuestoCliente): vacío
     + agregarRubroGastosGenerales(): vacío
-    + completarÍtem(ítem, ejecutor, acu): vacío
-    + calcularCosto(): guaraníes
-    + validarDatos(): lista de texto
-    + marcarVigente(actor): vacío
+    + copiarDe(anterior: VersionCostos): vacío
+    + difiereDe(cambios): lógico
     + pasarAHistórica(): vacío
-    + cancelar(): vacío
   }
 
-  class "Rubro de costos" as RubroCostos {
+  class Rubro {
     código: texto {estable}
     descripción: texto
     esGastosGenerales: lógico
   }
 
-  class "Ítem de costos" as ItemCostos {
+  class "Ítem" as Item {
     código: texto {estable}
     unidad: texto
     cantidad: decimal
-    ejecutor: propio | subcontratista
     --
-    + estaCertificado(): lógico
-    + definirEjecutor(ejecutor): vacío
-    + calcularCostoPresupuestado(): guaraníes
-  }
-
-  class "Análisis de costo unitario" as ACU {
-    --
-    + calcularCostoUnitario(fecha): guaraníes
-  }
-
-  class "Línea de ACU" as LineaACU {
-    tipo: material | mano de obra | equipo
-    cantidadPorUnidad: decimal
-    --
-    + calcularCosto(fecha): guaraníes
+    + cambiarCantidad(cantidad: decimal): vacío
+    + moverA(rubro: Rubro): vacío
   }
 
   class "Presupuesto del cliente" as PresupuestoCliente {
@@ -94,37 +73,26 @@ package "ECMS" {
     --
     + obtenerRubros(): lista de Rubro
   }
-
-  class "Apartado Adendas" as ApartadoAdendas {
-    --
-    + costoTotal(): guaraníes
-  }
-}
-
-package "ERP" {
-  class Insumo {
-    código: texto
-    unidad: texto
-    --
-    + obtenerPrecioVigente(fecha): guaraníes [0..1]
-  }
 }
 
 PresupuestoCostos "1" *-- "1..*" VersionCostos : versiones
-PresupuestoCostos "1" *-- "1" ApartadoAdendas : se suma a la vigente
 VersionCostos "0..*" --> "1" PresupuestoCliente : se basa en
 VersionCostos "0..1" --> "0..1" VersionCostos : versión anterior
-VersionCostos "1" *-- "1..*" RubroCostos : contiene
-RubroCostos "1" *-- "0..*" ItemCostos : agrupa
-ItemCostos "1" *-- "0..1" ACU : análisis
-ACU "1" *-- "1..*" LineaACU : insumos
-LineaACU "0..*" --> "1" Insumo : usa
+VersionCostos "1" *-- "1..*" Rubro : contiene
+Rubro "1" *-- "0..*" Item : agrupa
 
 VersionCostos ..> EstadoVersionCostos : estado
 
-note bottom of ItemCostos
-  El código se conserva entre versiones y lo vincula
-  con su ítem del presupuesto del cliente (RF-05).
+note bottom of Item
+  El código se conserva entre versiones y lo vincula con su ítem
+  del presupuesto del cliente (RF-05). Los vínculos con el modelo
+  y los documentos (CU-14) siguen al ítem por su código.
+end note
+
+note bottom of VersionCostos
+  La versión que se guarda nace vigente y la anterior pasa a histórica.
+  El ejecutor, los insumos, el ACU y el costo de cada ítem
+  quedan fuera del MVP.
 end note
 
 @enduml

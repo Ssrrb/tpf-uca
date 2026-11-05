@@ -33,22 +33,21 @@ skinparam note {
   BorderColor #17324D
 }
 title CU-05 · Estados de la Versión del presupuesto de costos
-state "Propuesta" as propuesta
 state "Vigente" as vigente
 state "Histórica" as historica
-state "Descartada" as descartada
 
-[*] --> propuesta : crearPrimeraVersión() o crearVersiónCorrectiva(motivo)
-propuesta --> propuesta : completarÍtem(ítem, ejecutor, acu)
-propuesta --> vigente : activar(versión, actor) [datos válidos] / marcarVigente(actor)
-propuesta --> descartada : cancelar()
-vigente --> vigente : completarÍtem(ítem, ejecutor, acu) [ítem no certificado]
-vigente --> historica : activar(otra versión) / pasarAHistórica()
+[*] --> vigente : guardarPrimeraVersión(base, actor) o guardarVersión(cambios, motivo, actor)
+vigente --> historica : guardarVersión(cambios, motivo, actor) de la versión siguiente / pasarAHistórica()
 historica --> [*]
-descartada --> [*]
 
 note right of historica
   Sigue consultable con los certificados
   que la usaron (NF-04).
+end note
+
+note right of vigente
+  Hay una sola vigente por obra. No hay
+  versión propuesta que se complete, se
+  active o se cancele en el MVP.
 end note
 @enduml

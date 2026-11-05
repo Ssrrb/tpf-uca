@@ -35,7 +35,7 @@ package "ERP" {
 
   class Proveedor {
     ruc: texto
-    esSubcontratista: lógico
+    tipo: texto
     --
     + esSubcontratista(): lógico
   }
@@ -51,12 +51,13 @@ package "ERP" {
     fecha: fecha y hora
     --
     + validarArchivo(): lógico
-    + agregarÍtem(ítem, precio, límite): vacío
+    + agregarÍtem(ítem, cantidad, precio, límite): vacío
     + configurarCondiciones(impuestos, retenciones, fondoReparo): vacío
     + confirmar(actor): vacío
   }
 
   class "Ítem del contrato" as ItemContrato {
+    cantidad: decimal
     precio: guaraníes
     límite: decimal
   }
@@ -69,10 +70,10 @@ package "ERP" {
 
 package "ECMS" {
   class "Saldo del ítem" as SaldoItem {
-    cantidadPresupuestada: decimal
+    cantidadVigente: decimal
     asignadaAContratos: decimal
     --
-    + cantidadPresupuestada(): decimal
+    + cantidadVigente(): decimal
     + disponibleParaContratos(): decimal
     + reservarParaContrato(cantidad): vacío
   }
@@ -91,7 +92,9 @@ Contrato "0..*" --> "0..*" Retencion : aplica
 
 note bottom of SaldoItem
   El ECMS lleva el saldo de cada ítem y el ERP lo consulta:
-  ninguna cantidad se asigna a dos contratos (RF-08).
+  la cantidad del contrato no pasa la de la vigente y ninguna
+  cantidad se asigna a dos contratos (RF-08). El límite no se
+  valida contra el costo: queda como lo escribe el Administrador.
 end note
 
 @enduml

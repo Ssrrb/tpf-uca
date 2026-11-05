@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-16 · Consultar tablero financiero
+title CU-16 · Consultar el tablero y la actividad de la obra
 hide circle
 hide empty methods
 hide empty fields
@@ -25,69 +25,195 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-package "Motor de finanzas" {
-  class "Tablero financiero" as Tablero {
-    alcance: obra | empresa
-    fechaConsulta: fecha
-    filtro: rubro [0..1]
-    --
-    + consultar(alcance, usuario): lista de TotalTablero
-    + filtrar(rubro, fecha): vacío
-    + abrirRespaldo(total): lista de archivo
-    + exportar(formato: XLSX | PDF): archivo
-  }
-
-  class "Total del tablero" as TotalTablero {
-    concepto: texto
-    importe: guaraníes
-    fecha: fecha
-    unidad: texto
-    moneda: texto = PYG
-    procedencia: ECMS | Motor de finanzas
-    disponible: lógico
-  }
-
-  class "Libro financiero" as LibroFinanciero {
-    --
-    + totales(obra, fecha): lista de TotalTablero
-    + resultadoEconómico(obra, fecha): guaraníes
-    + resultadoFinanciero(obra, fecha): guaraníes
-  }
-}
+left to right direction
 
 package "ECMS" {
-  class "Resumen de obra" as ResumenObra {
+  class Tablero <<control>> {
+    avanceCertificado: porcentaje [0..1]
+    avanceMedido: porcentaje [0..1]
+    plazoTranscurrido: porcentaje [0..1]
+    incidenciasAbiertas: lista de Incidencia
+    modelosSinPublicar: lista de Modelo
     --
-    + presupuestado(obra): lista de TotalTablero
-    + certificadoPorRubro(obra, fecha): lista
-    + avanceFísico(obra, fecha): porcentaje
+    + abrir(idObra, actor): Tablero
+    + porcentaje(monto, total): decimal
+    + incidenciasMasPrioritarias(incidencias, cantidad): lista de Incidencia
+  }
+
+  class Actividad <<control>> {
+    --
+    + listar(obra, cursor, límite): lista de Cambio
+    + combinar(cambios, límite): lista de Cambio
+  }
+
+  class Cursor <<datatype>> {
+    fecha: fecha y hora
+    clase: texto
+    id: texto
+    --
+    + decodificar(texto): Cursor
+    + codificar(): texto
+  }
+
+  class Cambio <<datatype>> {
+    qué: texto
+    sobre: texto
+    autor: Usuario
+    fecha: fecha y hora
+    pantalla: referencia
+    --
+    + obtenerPantalla(): referencia
+  }
+
+  interface FuenteDeCambios {
+    + cambiosAnteriores(obra, cursor, límite): lista de Cambio
+  }
+
+  class "Versión del presupuesto de costos" as VersionPresupuestoCostos {
+    número: entero
+    estado: texto {Vigente | Histórica}
+    --
+    + montoContractual(): guaraníes
+    + montoMedido(): guaraníes
+  }
+
+  class "Ítem" as Item {
+    código: texto
+    cantidad: decimal
+    --
+    + montoContractual(): guaraníes
+    + montoMedido(): guaraníes
+  }
+
+  class "Ítem del cliente" as ItemCliente {
+    precioUnitario: guaraníes
+    --
+    + obtenerPrecio(): guaraníes
+  }
+
+  class "Medición" as Medicion {
+    cantidad: decimal
+    estado: texto
+    --
+    + estaAnulada(): lógico
+    + valorizar(precio): guaraníes
+  }
+
+  class Certificado {
+    --
+    + totalBruto(): guaraníes
+  }
+
+  class "Versión del certificado" as VersionCertificado {
+    número: entero
+    --
+    + obtenerBruto(): guaraníes
+  }
+
+  class Modelo {
+    nombre: texto
+    --
+    + ultimaVersion(): VersionModelo
+  }
+
+  class "Versión de modelo" as VersionModelo {
+    número: entero
+    estado: texto {En trabajo | Compartido | Publicado | Archivado}
+    --
+    + estaSinPublicar(): lógico
+  }
+
+  class Incidencia {
+    número: texto
+    prioridad: texto
+    estado: EstadoIncidencia
+    --
+    + estaAbierta(): lógico
+  }
+
+  enum EstadoIncidencia <<enumeration>> {
+    abierta
+    en_curso
+    resuelta
+    cerrada
+    descartada
   }
 }
 
 package "ERP" {
-  class Usuario {
+  class "Organización" as Organizacion {
+    nombre: texto
     --
-    + tieneAcceso(obra): lógico
+    + obtenerObra(idObra): Obra [0..1]
   }
 
   class Obra {
-    fechaInicio: fecha
-    fechaFinVigente: fecha
+    código: texto
+    nombre: texto
+    fechaInicio: fecha [0..1]
+    fechaFin: fecha [0..1]
+    estado: texto
     --
-    + plazoTranscurrido(fecha): porcentaje
+    + verificarAcceso(actor): lógico
+    + estructuraVigente(): VersionPresupuestoCostos [0..1]
+    + certificado(): Certificado
+    + plazoTranscurrido(hoy): decimal [0..1]
+    + incidencias(): lista de Incidencia
+    + modelos(): lista de Modelo
+  }
+
+  class "Cambio de estado" as CambioEstado {
+    desde: texto
+    hasta: texto
+    actor: Usuario
+    fecha: fecha y hora
+  }
+
+  class "Versión del documento" as VersionDocumento {
+    número: entero
+    autor: Usuario
+    fecha: fecha y hora
   }
 }
 
-Tablero "1" *-- "0..*" TotalTablero : muestra
-Tablero ..> LibroFinanciero : usa
-Tablero ..> ResumenObra : usa
-Tablero ..> Usuario : verifica acceso (NF-01)
-ResumenObra ..> Obra : de
-LibroFinanciero ..> Obra : de
+package "Motor de finanzas" {
+  class "Liquidación" as Liquidacion {
+    fecha: fecha y hora
+    autor: Usuario
+  }
+}
 
-note bottom of TotalTablero
-  Cada total indica fecha, unidad, moneda
-  y procedencia, y abre su respaldo (NF-10, NF-11).
+Organizacion "1" *-- "0..*" Obra : tiene
+Obra "1" *-- "0..*" CambioEstado : historial
+Obra "1" *-- "0..*" Incidencia : incidencias
+Obra "1" *-- "0..*" Modelo : modelos
+Obra "1" *-- "1" Certificado : certificado
+Obra "1" o-- "0..*" VersionPresupuestoCostos : estructura de trabajo
+Certificado "1" *-- "0..*" VersionCertificado : versiones
+VersionPresupuestoCostos "1" o-- "0..*" Item : ítems
+Item "0..1" --> "0..1" ItemCliente : partida del cliente
+Item "1" o-- "0..*" Medicion : mediciones
+Modelo "1" *-- "1..*" VersionModelo : versiones
+Liquidacion "0..*" --> "1" VersionCertificado : de la versión
+Tablero ..> Obra : de la obra
+Tablero ..> Actividad : usa
+Actividad ..> Cursor : pagina con
+Actividad ..> Cambio : arma
+Actividad ..> FuenteDeCambios : lee
+Incidencia ..> EstadoIncidencia : estado
+
+FuenteDeCambios <|.. VersionModelo
+FuenteDeCambios <|.. VersionDocumento
+FuenteDeCambios <|.. Incidencia
+FuenteDeCambios <|.. VersionPresupuestoCostos
+FuenteDeCambios <|.. VersionCertificado
+FuenteDeCambios <|.. Liquidacion
+FuenteDeCambios <|.. CambioEstado
+
+note bottom of Actividad
+  La actividad no es una entidad ni tiene tabla:
+  se arma al leer lo que cada módulo ya guarda
+  con su autor y su fecha. El tablero solo lee.
 end note
 
 @enduml

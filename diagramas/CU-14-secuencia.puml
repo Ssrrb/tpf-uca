@@ -1,0 +1,168 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-14 · Vincular la estructura de trabajo con el modelo y los documentos
+actor "Ingeniero de obra" as Ing
+box "ECMS" #EAF2F6
+participant "estructura:\nVersionPresupuestoCostos" as Estr
+participant "rubro:\nRubro" as Rub
+participant "item:\nItem" as Item
+participant "anterior:\nVinculoEstructura" as VAnt
+participant "vinculo:\nVinculoEstructura" as Vin
+participant "modelo:\nModelo" as Mod
+participant "version:\nVersionModelo" as Ver
+participant "elemento:\nElementoModelo" as Elem
+participant "partida:\nPartidaComputo" as Part
+end box
+box "ERP" #EAF2F6
+participant "obra:\nObra" as Obra
+participant "carpeta:\nCarpeta" as Carp
+participant "documento:\nDocumento" as Doc
+participant "versionDoc:\nVersionDocumento" as VDoc
+end box
+
+== Pasos 1 a 3 · Elegir elementos y ver la cantidad que sugiere el modelo ==
+Ing -> Mod: obtenerVersion(número)
+Mod --> Ing: version (procesada, en el visor 3D o en su cómputo)
+loop por cada elemento elegido (o los de una partida del cómputo)
+  Ing -> Ver: obtenerElemento(globalId)
+  Ver --> Ing: clase, nombre, tipo y nivel
+  Ing -> Estr: vinculosDeElemento(modelo, globalId)
+  Estr --> Ing: ítems con los que ya está vinculado
+  Ing -> Item: sugerirCantidad(version, globalId, partida)
+  Item -> Item: magnitud()
+  alt la unidad del ítem es «u» (un elemento cuenta 1)
+    Item --> Ing: 1
+  else se vincula desde una partida que mide en la misma magnitud
+    Item -> Part: magnitud()
+    Part --> Item: magnitud de la partida
+    Item -> Part: cantidadDe(globalId)
+    Part --> Item: cantidad de la partida
+    Item --> Ing: cantidad sugerida
+  else el elemento trae quantity sets en esa magnitud
+    Item -> Elem: cantidadEn(magnitud)
+    Elem --> Item: cantidad sugerida
+    Item --> Ing: cantidad sugerida
+  else el elemento no trae ninguna (2a)
+    Item --> Ing: sin sugerencia; la persona escribe la cantidad
+  end
+end
+note right of Ing
+  Paso 3: confirma la cantidad de cada elemento o la corrige.
+end note
+
+== Paso 4 · Guardar el vínculo de cada elemento, todos juntos o ninguno ==
+Ing -> Estr: vincularElementos(códigoItem, version, elementos, actor)
+Estr -> Obra: estaCerrada()
+Obra --> Estr: cerrada: lógico
+break la obra está cerrada
+  Estr --> Ing: no vincula (precondición)
+end
+Estr -> Estr: obtenerItem(códigoItem)
+break la partida no es un ítem de la estructura vigente (1b)
+  Estr --> Ing: no vincula y marca el campo
+end
+Estr -> Item: vincularElementos(version, elementos, actor)
+Item -> Ver: estaProcesada()
+Ver --> Item: procesada: lógico
+break la versión del modelo no está procesada (4a)
+  Item --> Ing: no vincula ningún elemento y dice por qué
+end
+critical operación atómica (NF-02)
+  loop por cada elemento, validar
+    Item -> Ver: obtenerElemento(globalId)
+    Ver --> Item: elemento [0..1]
+    break el elemento no está en el índice o la cantidad no es un número ≥ 0 (4b)
+      Item --> Ing: no guarda ningún vínculo y marca el campo
+    end
+  end
+  loop por cada elemento, guardar
+    Item -> Item: vinculoVivoCon(modelo, globalId)
+    opt el ítem ya tiene ese elemento, en otra versión o con otra cantidad (3a)
+      Item -> VAnt: quitar(actor)
+    end
+    create Vin
+    Item -> Vin: «create»(item, modelo, version, globalId, cantidadConfirmada, cantidadSugerida, actor)
+  end
+end
+Item --> Ing: vínculos guardados, con quién y cuándo
+
+== Pasos 5 a 8 · Consultar la estructura y abrir un ítem ==
+Ing -> Estr: resumenVinculos()
+loop por cada ítem con vínculos
+  Estr -> Item: resumenVinculos()
+  loop por cada vínculo del ítem
+    Item -> Vin: estaVivo()
+    Vin --> Item: vivo: lógico
+    Item -> Vin: versionQueCambio()
+    Vin -> Mod: versionQueCambio(versión, globalId)
+    Mod --> Vin: N [0..1]
+    Vin --> Item: «el elemento cambió en la versión N»
+  end
+  Item --> Estr: elementos, documentos y suma confirmada
+end
+loop por cada rubro con documentos
+  Estr -> Rub: documentosVinculados()
+  Rub --> Estr: documentos vinculados
+end
+Estr --> Ing: estructura con cantidades, marcas y documentos
+Ing -> Item: detalleVinculos()
+Item --> Ing: modelo, versión, clase, nombre, tipo, nivel, cantidad confirmada, sugerida, marca y documentos con su versión
+
+== 1a Vincular un documento de la carpeta con un ítem o un rubro ==
+alt el documento respalda un ítem
+  Ing -> Item: vincularDocumento(documento, actor)
+  Item -> Doc: estaDisponible(obra)
+  Doc -> Carp: esDeObra(obra)
+  Carp --> Doc: de la obra: lógico
+  Doc --> Item: disponible: lógico
+  break el documento no es de la carpeta de la obra o está eliminado (1b)
+    Item --> Ing: no lo vincula y marca el campo
+  end
+  Item -> Doc: ultimaVersion()
+  Doc --> Item: versionDoc
+  Item -> VDoc: obtenerNumero()
+  create Vin
+  Item -> Vin: «create»(item, documento, versión, actor)
+else el documento respalda un rubro
+  Ing -> Rub: vincularDocumento(documento, actor)
+  Rub -> Doc: estaDisponible(obra)
+  Doc --> Rub: disponible: lógico
+  break el documento no es de la carpeta de la obra o está eliminado (1b)
+    Rub --> Ing: no lo vincula y marca el campo
+  end
+  Rub -> Doc: ultimaVersion()
+  Doc --> Rub: versionDoc
+  Rub -> VDoc: obtenerNumero()
+  create Vin
+  Rub -> Vin: «create»(rubro, documento, versión, actor)
+end
+
+== *a Quitar un vínculo ==
+Ing -> Item: quitarVinculo(vinculo, actor)
+Item -> Vin: quitar(actor)
+Item --> Ing: el vínculo deja de contar; queda con quién y cuándo, sin borrarse
+
+note over Ing, Doc
+  Vincular no crea una versión de la estructura de trabajo ni cambia el modelo,
+  los documentos o la cantidad del ítem. Ctrl+ no modifica el IFC de autor.
+end note
+@enduml

@@ -1,0 +1,86 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam ParticipantBackgroundColor #F5F8FA
+skinparam ParticipantBorderColor #17324D
+skinparam ActorBorderColor #17324D
+skinparam ActorBackgroundColor #F5F8FA
+skinparam ArrowColor #17324D
+skinparam SequenceBoxBorderColor #17324D
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+hide footbox
+title CU-13 · Calcular el cómputo del modelo
+actor "Ingeniero de obra" as Ing
+box "ECMS" #EAF2F6
+participant "versión:\nVersionModelo" as Ver
+participant "cómputo:\nComputoModelo" as Comp
+participant "rubro:\nRubroComputo" as Rub
+participant "partida:\nPartidaComputo" as Part
+end box
+participant "Lector IFC" as Lector
+
+Ing -> Ver: estaProcesada()
+Ver --> Ing: lógico
+break 1a. la versión no se procesó o su procesamiento falló
+  Ver -> Ver: obtenerMotivoFalla()
+  Ver --> Ing: no calcula y dice por qué
+end
+Ing -> Ver: pedirComputo(actor)
+create Comp
+Ver -> Comp: «create»(versión, actor)
+Ing -> Comp: calcular()
+
+loop por cada rubro (muros, losas, columnas, aberturas)
+  create Rub
+  Comp -> Rub: «create»(nombre, clasesIfc)
+  Comp -> Lector: leerCantidades(archivo, clasesIfc)
+  Lector --> Comp: cantidades por elemento
+  loop 2. por cada elemento del rubro
+    alt el elemento trae quantity sets
+      Comp -> Rub: sumar(globalId, tipo, cantidad, falso)
+    else 2a. el elemento no trae cantidades
+      Comp -> Rub: sumar(globalId, tipo, 1, verdadero)
+    end
+    alt ya hay una partida de ese tipo
+      Rub -> Part: agregarElemento(globalId, cantidad, sinCantidades)
+    else primer elemento de ese tipo
+      create Part
+      Rub -> Part: «create»(tipo, unidad, precioUnitario = 0)
+      Rub -> Part: agregarElemento(globalId, cantidad, sinCantidades)
+    end
+  end
+end
+
+== 3. Armar el XLSX ==
+Comp -> Comp: armarXLSX()
+loop por cada rubro
+  Comp -> Rub: filas()
+  Rub -> Part: fila()
+  Part --> Rub: fila de la partida
+  Rub --> Comp: fila del rubro y filas de sus partidas
+end
+Comp --> Ing: XLSX con Código, Rubro, Descripción, Unidad, Cantidad y Precio unitario
+
+== 4. Descargar ==
+Ing -> Comp: descargarXLSX()
+Comp --> Ing: archivo XLSX
+
+opt 4a. importar el XLSX como presupuesto del cliente
+  ref over Ing, Comp : CU-03 · Cargar el presupuesto del cliente
+end
+
+note over Ing, Lector
+  Cada partida guarda los GlobalId de los elementos que la forman.
+  Ni el modelo ni el presupuesto de la obra cambian.
+end note
+@enduml

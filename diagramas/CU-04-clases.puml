@@ -69,7 +69,7 @@ package "ECMS" {
     + recalcularTotal(): guaraníes
   }
 
-  class "Ítem" as Item {
+  class "Ítem del cliente" as ItemCliente {
     código: texto
     cantidad: decimal
     precioUnitario: guaraníes
@@ -88,6 +88,7 @@ package "ECMS" {
   }
 
   enum EstadoPresupuestoCliente <<enumeration>> {
+    en_carga
     propuesta
     finalizado
   }
@@ -97,13 +98,14 @@ Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
 PresupuestoCliente "1" *-- "0..*" Hoja : estructura
 Hoja "1" *-- "1..*" Columna : define
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
-Rubro "1" *-- "1..*" Item : agrupa
+Rubro "1" *-- "1..*" ItemCliente : agrupa
 PresupuestoCliente "1" *-- "0..*" InformeImportacion : informes
 
 PresupuestoCliente ..> EstadoPresupuestoCliente : estado
 note bottom of PresupuestoCliente
-  Finalizado no se modifica (RF-04): los cambios van
-  por el presupuesto de costos (CU-05) o por adendas (CU-11«QUITADO»).
+  Finalizado no se modifica (RF-04): es la base de la estructura
+  de trabajo, cuya versión 1 guarda CU-05; los cambios van
+  por las versiones de esa estructura (CU-05).
 end note
 
 @enduml
