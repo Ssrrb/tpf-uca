@@ -33,18 +33,23 @@ skinparam note {
   BorderColor #17324D
 }
 title Diagrama de Subsistemas de Ctrl+ · con las clases principales
-hide circle
-hide members
-hide empty methods
-hide empty fields
 skinparam classAttributeIconSize 0
-skinparam nodesep 40
-skinparam ranksep 60
+skinparam nodesep 30
+skinparam ranksep 40
 skinparam class {
   BackgroundColor #F5F8FA
   BorderColor #17324D
   HeaderBackgroundColor #EAF2F6
 }
+skinparam circle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+show empty fields
+show empty methods
+
+' Cada relación que cruza de un paquete a otro se dibuja en dos mitades
+' unidas por el mismo número, para que ninguna línea atraviese el diagrama.
 
 package "ERP" as erp {
   class Organizacion
@@ -56,6 +61,11 @@ package "ERP" as erp {
   class Contrato
   class Carpeta
   class Documento
+  circle "1" as e1
+  circle "2" as e2
+  circle "3" as e3
+  circle "4" as e4
+  circle "7" as e7
 }
 
 package "ECMS" as ecms {
@@ -68,6 +78,12 @@ package "ECMS" as ecms {
   class VersionModelo
   class VinculoEstructura
   class Incidencia
+  circle "1" as s1
+  circle "2" as s2
+  circle "3" as s3
+  circle "4" as s4
+  circle "5" as s5
+  circle "6" as s6
 }
 
 package "Motor de finanzas" as mf {
@@ -75,35 +91,61 @@ package "Motor de finanzas" as mf {
   class Liquidacion
   class DetalleLiquidacion
   class Deduccion
+  circle "5" as m5
+  circle "6" as m6
+  circle "7" as m7
 }
 
 Organizacion -- Usuario
 Usuario -- Asignacion
 Asignacion -- Obra
 Obra -- Cliente
-Contrato -- Proveedor
-Contrato -- Obra
 Obra -- Carpeta
 Carpeta -- Documento
+Obra -- Contrato
+Contrato -- Proveedor
 
 PresupuestoCliente -- VersionPresupuestoCostos
 VersionPresupuestoCostos -- Item
 Item -- Medicion
 Medicion -- VersionCertificado
-Modelo -- VersionModelo
-VinculoEstructura -- Item
+Item -- VinculoEstructura
 VinculoEstructura -- VersionModelo
+Modelo -- VersionModelo
 Incidencia -- VersionModelo
 
-PresupuestoCliente -- Obra
-Incidencia -- Usuario
-VinculoEstructura -- Documento
-Medicion -- Contrato
-
-CalculoCertificado -- VersionCertificado
-Liquidacion -- VersionCertificado
-Liquidacion -- Contrato
 Liquidacion *-- DetalleLiquidacion
 Liquidacion *-- Deduccion
+CalculoCertificado -- Liquidacion
+
+Obra -- e1
+Usuario -- e2
+Documento -- e3
+Contrato -- e4
+Contrato -- e7
+PresupuestoCliente -- s1
+Incidencia -- s2
+VinculoEstructura -- s3
+Medicion -- s4
+VersionCertificado -- s5
+VersionCertificado -- s6
+CalculoCertificado -- m5
+Liquidacion -- m6
+Liquidacion -- m7
+
+note as Leyenda
+  Cada círculo numerado es una relación entre paquetes, dibujada
+  en dos mitades que llevan el mismo número:
+  1  Obra – PresupuestoCliente
+  2  Usuario – Incidencia
+  3  Documento – VinculoEstructura
+  4  Contrato – Medicion
+  5  VersionCertificado – CalculoCertificado
+  6  VersionCertificado – Liquidacion
+  7  Contrato – Liquidacion
+end note
+Organizacion -[hidden]right- PresupuestoCliente
+PresupuestoCliente -[hidden]right- CalculoCertificado
+DetalleLiquidacion -[hidden]down- Leyenda
 
 @enduml
