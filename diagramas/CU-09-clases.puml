@@ -26,13 +26,19 @@ skinparam note {
   BorderColor #17324D
 }
 package "ECMS" {
+  enum EstadoVersionCertificado <<enumeration>> {
+    abierta
+    cantidades_cerradas
+    guardada
+  }
+
   class "Versión del certificado" as VersionCertificado {
     número: entero
-    estado: guardada
+    estado: EstadoVersionCertificado
     --
-    + medicionesSinLiquidar(contrato): lista de Medición
+    + medicionesSinLiquidar(contrato): lista de Medicion
     + controlarLímites(alcance, mediciones): lista de texto
-    + liquidarSubcontratista(contrato, actor): Liquidación
+    + liquidarSubcontratista(contrato, actor): Liquidacion
   }
 
   class "Medición" as Medicion {
@@ -50,8 +56,8 @@ package "ERP" {
     porcentajeFondoReparo: decimal
     impuestos: decimal
     --
-    + alcance(): lista de ÍtemContrato
-    + condiciones(): lista de Retención
+    + alcance(): lista de ItemContrato
+    + condiciones(): lista de Retencion
   }
 
   class "Ítem del contrato" as ItemContrato {
@@ -59,22 +65,22 @@ package "ERP" {
     precio: guaraníes
     límite: decimal
     --
-    + datos(): cantidad, precio y límite
+    + datos(): ItemContrato
   }
 
   class "Retención" as Retencion {
     tipo: IVA | renta
     porcentaje: decimal
     --
-    + datos(): tipo y porcentaje
+    + datos(): Retencion
   }
 }
 
 package "Motor de finanzas" {
-  class "Liquidaciones" as Liquidaciones {
+  class "Registro de liquidaciones" as RegistroLiquidacion {
     --
-    + liquidar(versión, contrato, mediciones, alcance, condiciones): Liquidación
-    + buscar(versión, contrato): Liquidación [0..1]
+    + liquidar(versión, contrato, mediciones, alcance, condiciones): Liquidacion
+    + buscar(versión, contrato): Liquidacion [0..1]
   }
 
   class "Liquidación" as Liquidacion {
@@ -89,6 +95,30 @@ package "Motor de finanzas" {
     fecha: fecha y hora
     --
     + calcular(alcance, condiciones): vacío
+    + armarDetalle(mediciones, alcance): vacío
+    + aplicarDeducciones(condiciones): vacío
+  }
+
+  class "Detalle de la liquidación" as DetalleLiquidacion {
+    cantidadCertificada: decimal
+    precioContrato: guaraníes
+    importe: guaraníes
+    --
+    + calcularImporte(): guaraníes
+  }
+
+  class "Deducción" as Deduccion {
+    tipo: TipoDeduccion
+    importe: guaraníes
+    --
+    + calcularImporte(base): guaraníes
+  }
+
+  enum TipoDeduccion <<enumeration>> {
+    fondo_de_reparo
+    retencion_de_IVA
+    retencion_de_renta
+    IVA
   }
 }
 
@@ -97,7 +127,12 @@ Medicion "0..*" --> "0..1" Contrato : a nombre de
 Liquidacion "0..1" --> "1..*" Medicion : liquida
 Contrato "1" *-- "1..*" ItemContrato : alcance
 Contrato "0..*" --> "0..*" Retencion : aplica
-Liquidaciones ..> Liquidacion : registra
+RegistroLiquidacion ..> Liquidacion : registra
+Liquidacion "1" *-- "1..*" DetalleLiquidacion : detalle
+Liquidacion "1" *-- "0..*" Deduccion : deducciones
+DetalleLiquidacion "0..*" --> "1" ItemContrato : ítem
+Deduccion ..> TipoDeduccion : tipo
+VersionCertificado ..> EstadoVersionCertificado : estado
 Liquidacion "0..*" --> "1" Contrato : de
 Liquidacion "0..*" --> "1" VersionCertificado : por
 

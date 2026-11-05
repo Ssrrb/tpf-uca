@@ -30,7 +30,7 @@ left to right direction
 package "ECMS" {
   class "Versión del presupuesto de costos" as VersionPresupuestoCostos {
     número: entero
-    estado: texto {Vigente | Histórica}
+    estado: EstadoVersionPresupuestoCostos
     --
     + obtenerItem(código): Item [0..1]
     + vincularElementos(códigoItem, versionModelo, elementos, actor): lista de VinculoEstructura
@@ -57,7 +57,7 @@ package "ECMS" {
     + vinculoVivoCon(modelo, globalId): VinculoEstructura [0..1]
     + vincularDocumento(documento, actor): VinculoEstructura
     + quitarVinculo(vinculo, actor)
-    + resumenVinculos(): resumen
+    + resumenVinculos(): texto
     + detalleVinculos(): lista de VinculoEstructura
   }
 
@@ -88,8 +88,8 @@ package "ECMS" {
 
   class "Versión de modelo" as VersionModelo {
     número: entero
-    estado: texto {En trabajo | Compartido | Publicado | Archivado}
-    procesamiento: texto {Pendiente | Procesando | Listo | Falló}
+    estado: EstadoVersion
+    procesamiento: EstadoProcesamiento
     --
     + estaProcesada(): lógico
     + obtenerElemento(globalId): ElementoModelo [0..1]
@@ -101,7 +101,7 @@ package "ECMS" {
     nombre: texto
     tipo: texto
     nivel: texto
-    quantitySets: lista de cantidades
+    quantitySets: texto
     --
     + cantidadEn(magnitud): decimal [0..1]
   }
@@ -114,13 +114,32 @@ package "ECMS" {
     + magnitud(): texto
     + cantidadDe(globalId): decimal [0..1]
   }
+
+  enum EstadoVersionPresupuestoCostos <<enumeration>> {
+    vigente
+    historica
+  }
+
+  enum EstadoVersion <<enumeration>> {
+    en_trabajo
+    compartido
+    publicado
+    archivado
+  }
+
+  enum EstadoProcesamiento <<enumeration>> {
+    pendiente
+    procesando
+    listo
+    fallo
+  }
 }
 
 package "ERP" {
   class Obra {
     código: texto
     nombre: texto
-    estado: texto
+    estado: EstadoObra
     --
     + estaCerrada(): lógico
   }
@@ -136,7 +155,7 @@ package "ERP" {
     eliminado: lógico
     --
     + estaDisponible(obra): lógico
-    + ultimaVersion(): VersionDocumento
+    + ultimaVersión(): VersionDocumento
   }
 
   class "Versión del documento" as VersionDocumento {
@@ -147,12 +166,19 @@ package "ERP" {
     --
     + obtenerNumero(): entero
   }
+
+  enum EstadoObra <<enumeration>> {
+    en_ejecucion
+    recepcion_provisoria
+    recepcion_definitiva
+    cerrada
+  }
 }
 
 VersionPresupuestoCostos "1" *-- "1..*" Rubro : rubros
 Rubro "1" *-- "0..*" Item : ítems
 VersionPresupuestoCostos "0..*" --> "1" Obra : de la obra
-Item "1" -- "0..*" VinculoEstructura : vinculado por
+VinculoEstructura "0..*" --> "1" Item : de
 Rubro "1" -- "0..*" VinculoEstructura : documentos
 VinculoEstructura "0..*" --> "0..1" VersionModelo : elemento de
 VinculoEstructura "0..*" --> "0..1" VersionDocumento : respaldado por
@@ -165,5 +191,13 @@ Obra "1" *-- "0..*" Modelo : modelos
 Obra "1" *-- "0..*" Carpeta : carpetas
 Carpeta "1" *-- "0..*" Documento : documentos
 Documento "1" *-- "1..*" VersionDocumento : versiones
+
+VersionPresupuestoCostos ..> EstadoVersionPresupuestoCostos : estado
+
+VersionModelo ..> EstadoVersion : estado
+
+VersionModelo ..> EstadoProcesamiento : estado
+
+Obra ..> EstadoObra : estado
 
 @enduml

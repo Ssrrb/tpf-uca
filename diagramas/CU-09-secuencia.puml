@@ -31,8 +31,10 @@ participant "itemContrato:\nItemContrato" as IC
 participant "retencion:\nRetencion" as Ret
 end box
 box "Motor de finanzas" #EAF2F6
-participant "liquidaciones:\nLiquidaciones" as Mot
+participant "liquidaciones:\nRegistroLiquidacion" as Mot
 participant "liquidacion:\nLiquidacion" as Liq
+participant "detalle:\nDetalleLiquidacion" as Det
+participant "deduccion:\nDeduccion" as Ded
 end box
 
 loop por cada contrato de la versión (1a)
@@ -65,6 +67,18 @@ loop por cada contrato de la versión (1a)
       create Liq
       Mot -> Liq: «create»(version, contrato, mediciones)
       Mot -> Liq: calcular(alcance, condiciones)
+      Liq -> Liq: armarDetalle(mediciones, alcance)
+      loop por cada ítem del contrato con cantidad certificada
+        create Det
+        Liq -> Det: «create»(ítem, cantidad)
+        Liq -> Det: calcularImporte()
+      end
+      Liq -> Liq: aplicarDeducciones(condiciones)
+      loop por cada deducción (fondo de reparo, retención de IVA, retención de renta, IVA)
+        create Ded
+        Liq -> Ded: «create»(tipo)
+        Liq -> Ded: calcularImporte(base)
+      end
       note right of Liq
         Al precio del contrato: bruto, fondo de reparo,
         neto, IVA y retenciones; queda lo que se paga.

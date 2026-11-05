@@ -36,7 +36,7 @@ package "Motor de finanzas" {
 package "ECMS" {
   class "Versión del certificado" as VersionCertificado {
     número: entero
-    estado: abierta | cantidades cerradas | guardada
+    estado: EstadoVersionCertificado
     bruto: guaraníes
     amortizaciónAnticipo: guaraníes
     fondoReparo: guaraníes
@@ -61,9 +61,23 @@ package "ECMS" {
     + señalarExceso(montoContractual: guaraníes): guaraníes [0..1]
   }
 
+  enum EstadoVersionCertificado <<enumeration>> {
+    abierta
+    cantidades_cerradas
+    guardada
+  }
+
+  enum EstadoMedicion <<enumeration>> {
+    en_carga
+    registrada
+    incluida_en_una_version
+    certificada
+    anulada
+  }
+
   class "Medición" as Medicion {
     cantidad: decimal
-    estado: registrada | incluida en una versión | certificada
+    estado: EstadoMedicion
     --
     + marcarCertificada(versión): vacío
   }
@@ -100,6 +114,8 @@ package "ERP" {
 }
 
 CalculoCertificado ..> VersionCertificado : <<use>>
+VersionCertificado ..> EstadoVersionCertificado : estado
+Medicion ..> EstadoMedicion : estado
 VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
 LineaCertificado "0..1" --> "0..*" Medicion : certifica
 LineaCertificado "0..*" --> "1" SaldoItem : ítem

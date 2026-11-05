@@ -29,7 +29,7 @@ left to right direction
 
 package "ECMS" {
   class Incidencia {
-    número: texto {INC-0001, correlativo en la obra}
+    número: entero
     título: texto
     tipo: texto
     descripción: texto
@@ -71,7 +71,7 @@ package "ECMS" {
     documento: Documento [0..1]
     versiónDocumento: entero [0..1]
     página: entero [0..1]
-    ítem: Ítem [0..1]
+    ítem: Item [0..1]
     --
     + esValida(): lógico
   }
@@ -94,7 +94,7 @@ package "ERP" {
   class Obra {
     código: texto
     nombre: texto
-    estado: texto
+    estado: EstadoObra
     --
     + estaCerrada(): lógico
     + esMiembro(usuario): lógico
@@ -110,16 +110,24 @@ package "ERP" {
     --
     + esAdministrador(): lógico
   }
+
+  enum EstadoObra <<enumeration>> {
+    en_ejecucion
+    recepcion_provisoria
+    recepcion_definitiva
+    cerrada
+  }
 }
 
 Obra "1" *-- "0..*" Incidencia : incidencias
 Incidencia "1" *-- "0..*" PasoIncidencia : historial
 Incidencia "1" *-- "1" Ancla : anclada a
 Incidencia "1" o-- "0..*" Adjunto : evidencia
-Incidencia "0..*" --> "1" Usuario : abierta por
 Incidencia "0..*" --> "1" Usuario : responsable
 PasoIncidencia "0..*" --> "1" Usuario : hecho por
 Obra "1" o-- "0..*" Usuario : miembros
 Incidencia ..> EstadoIncidencia : estado
+
+Obra ..> EstadoObra : estado
 
 @enduml

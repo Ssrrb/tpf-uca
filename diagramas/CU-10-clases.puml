@@ -71,7 +71,7 @@ package "ERP" {
     --
     + ultimaVersión(): VersionDocumento
     + abrirParaEditar(actor): Archivo
-    + agregarVersión(archivo, actor): VersionDocumento
+    + agregarVersión(archivo, actor, rutaOriginal): VersionDocumento
     + terminarEdición(actor)
     + liberarBloqueo(actor)
     + consultar(): Archivo
@@ -100,7 +100,7 @@ package "ERP" {
 }
 
 package "ECMS" {
-  class "Archivos adjuntos" as ArchivosAdjuntos {
+  class "Almacén de archivos" as AlmacenArchivos {
     --
     + verificarHuella(contenido, huella): lógico
     + buscarPorHuella(huella): Archivo [0..1]
@@ -114,12 +114,12 @@ package "ECMS" {
   }
 }
 
-Obra "1" *-- "0..*" Carpeta : carpetas principales
+Obra "1" *-- "0..*" Carpeta : carpetas
 Carpeta "1" *-- "0..*" Carpeta : subcarpetas
-Carpeta "1" *-- "0..*" Documento : contiene
+Carpeta "1" *-- "0..*" Documento : documentos
 Documento "1" *-- "1..*" VersionDocumento : versiones
 VersionDocumento "0..*" --> "1" Archivo : contenido
-ArchivosAdjuntos "1" o-- "0..*" Archivo : guarda
+AlmacenArchivos "1" o-- "0..*" Archivo : guarda
 Documento "0..*" --> "0..1" Usuario : bloqueado por
 Carpeta ..> Obra : consulta estaCerrada()
 Carpeta ..> EstadoCarpeta : estado

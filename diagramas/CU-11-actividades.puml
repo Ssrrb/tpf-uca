@@ -47,7 +47,7 @@ endif
 if (¿Modo ordenar?) then ([sí])
   :Agrupar las copias con la misma huella;
   :Proponer la carpeta de la plantilla de cada archivo;
-  if (¿Coincide con alguna regla?) then ([no (2a)])
+  if (¿Coincide con alguna regla?) then ([no, 2a])
     :Proponer Sin clasificar;
   else ([sí])
   endif
@@ -57,7 +57,7 @@ else ([no])
 endif
 |Administrador|
 :Revisar la propuesta y cambiar la carpeta de lo que haga falta;
-if (¿Confirma la importación?) then ([no (3a)])
+if (¿Confirma la importación?) then ([no, 3a])
   :Cancelar: no se importa nada;
   stop
 else ([sí])

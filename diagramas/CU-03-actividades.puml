@@ -47,7 +47,7 @@ if (¿Tiene el XLSX del cliente?) then ([sí])
   :Guardar el archivo sin modificarlo
   y registrar el presupuesto en propuesta (RF-02);
   if (¿Identifica la estructura?) then ([sí])
-    :Ignorar e informar las hojas que no son del cliente (3c);
+    :Ignorar e informar las hojas que no son del cliente (3b);
     :Presentar hojas, columnas, rubros e ítems (RF-03);
   else ([no])
     |Ingeniero de obra|

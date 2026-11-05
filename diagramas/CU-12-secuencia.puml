@@ -31,12 +31,12 @@ box "ECMS" #EAF2F6
 participant "modelo:\nModelo" as Mod
 participant "versión:\nVersionModelo" as Ver
 participant "elemento:\nElementoModelo" as Elem
-participant "cambios:\nCambiosVersion" as Camb
+participant "cambios:\nCambioVersion" as Camb
 participant "incidencia:\nIncidencia" as Inc
 participant "partida:\nPartidaComputo" as Part
 participant "vínculo:\nVinculoEstructura" as Vinc
 end box
-participant "Lector IFC" as Lector
+participant "Lector IFC:\nLectorIFC" as Lector
 participant "Visor de modelos:\nVisorModelos" as Visor
 
 Ing -> Carp: recibirArchivo(nombre, archivo, origen, actor)

@@ -90,15 +90,15 @@ package "ECMS" {
 
 Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
 PresupuestoCliente "1" *-- "0..1" ArchivoOriginal : conserva sin modificar
-PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
+PresupuestoCliente "1" *-- "0..*" Hoja : estructura
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
-Rubro "1" *-- "1..*" ItemCliente : agrupa
+Rubro "1" *-- "1..*" ItemCliente : ítems cliente
 
 PresupuestoCliente ..> EstadoPresupuestoCliente : estado
 
 note bottom of Hoja
-  Una hoja que no es del cliente (por ejemplo, la de costo
-  o la de una adenda) se ignora y se informa; no se confirma (3c).
+  Una hoja que no es del cliente (por ejemplo, la de costo)
+  se ignora y se informa; no se confirma (3b).
 end note
 
 @enduml

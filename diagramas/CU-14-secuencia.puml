@@ -137,7 +137,7 @@ alt el documento respalda un ítem
   break el documento no es de la carpeta de la obra o está eliminado (1b)
     Item --> Ing: no lo vincula y marca el campo
   end
-  Item -> Doc: ultimaVersion()
+  Item -> Doc: ultimaVersión()
   Doc --> Item: versionDoc
   Item -> VDoc: obtenerNumero()
   create Vin
@@ -149,7 +149,7 @@ else el documento respalda un rubro
   break el documento no es de la carpeta de la obra o está eliminado (1b)
     Rub --> Ing: no lo vincula y marca el campo
   end
-  Rub -> Doc: ultimaVersion()
+  Rub -> Doc: ultimaVersión()
   Doc --> Rub: versionDoc
   Rub -> VDoc: obtenerNumero()
   create Vin

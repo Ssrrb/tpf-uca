@@ -30,7 +30,7 @@ package "ECMS" {
     código: texto {estable}
     unidad: texto
     --
-    + obtenerSaldo(): SaldoÍtem
+    + obtenerSaldo(): SaldoItem
   }
 
   class "Saldo del ítem" as SaldoItem {
@@ -54,7 +54,7 @@ package "ECMS" {
     ejecutor: propio | subcontratado
     estado: EstadoMedicion
     motivo: texto [0..1]
-    insumosConsumidos: lista de Insumo [0..*]
+    insumosConsumidos: lista de texto [0..*]
     registradaPor: Usuario
     fecha: fecha y hora
     --
@@ -65,7 +65,7 @@ package "ECMS" {
     + confirmar(actor): vacío
     + anular(motivo, actor): vacío
     + puedeAnularse(): lógico
-    + registrarAjuste(cantidad, motivo, actor): MediciónAjuste
+    + registrarAjuste(cantidad, motivo, actor): MedicionAjuste
     + incluirEn(versión): vacío
   }
 
@@ -75,8 +75,7 @@ package "ECMS" {
 
   class "Archivo adjunto" as ArchivoAdjunto {
     tipo: foto | archivo
-    archivo: Archivo
-    {no se elimina}
+    archivo: Archivo {no se elimina}
   }
 
   class "Vínculo de la estructura" as VinculoEstructura {
@@ -94,15 +93,21 @@ package "ECMS" {
 
   class "Certificado" as Certificado {
     --
-    + generarVersiónSiguiente(actor): VersiónCertificado
+    + generarVersiónSiguiente(actor): VersionCertificado
   }
 
   class "Versión del certificado" as VersionCertificado {
     número: entero
-    estado: abierta | cantidades cerradas | guardada
+    estado: EstadoVersionCertificado
     --
     + tomarCantidades(): vacío
     + cerrarCantidades(actor): vacío
+  }
+
+  enum EstadoVersionCertificado <<enumeration>> {
+    abierta
+    cantidades_cerradas
+    guardada
   }
 
   class "Línea del certificado" as LineaCertificado {
@@ -113,9 +118,9 @@ package "ECMS" {
   }
 
   enum EstadoMedicion <<enumeration>> {
-    en carga
+    en_carga
     registrada
-    incluida en una versión
+    incluida_en_una_version
     certificada
     anulada
   }
@@ -136,7 +141,7 @@ package "ERP" {
 
 }
 
-Item "1" *-- "1" SaldoItem : lleva
+Item "1" *-- "1" SaldoItem : saldo
 Medicion "0..*" --> "1" Item : mide
 Medicion "0..*" --> "1" Obra : de la obra
 Medicion "0..*" --> "0..1" Contrato : a nombre de
@@ -146,12 +151,13 @@ VinculoEstructura "0..*" --> "1" Item : de
 VinculoEstructura "0..*" --> "1" ElementoModelo : a
 Medicion <|-- MedicionAjuste
 MedicionAjuste "0..*" --> "1" Medicion : corrige
-Certificado "0..1" --> "1" Obra : de la obra
-Certificado "1" *-- "0..*" VersionCertificado : versiones numeradas
+Obra "1" *-- "1" Certificado : certificado
+Certificado "1" *-- "0..*" VersionCertificado : versiones
 VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
-LineaCertificado "0..1" --> "0..*" Medicion : incluye
+LineaCertificado "0..1" --> "0..*" Medicion : certifica
 LineaCertificado "0..*" --> "1" SaldoItem : ítem
 
 Medicion ..> EstadoMedicion : estado
+VersionCertificado ..> EstadoVersionCertificado : estado
 
 @enduml

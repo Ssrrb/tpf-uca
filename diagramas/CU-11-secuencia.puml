@@ -32,7 +32,7 @@ participant "documento:\nDocumento" as Doc
 participant "version:\nVersionDocumento" as Ver
 end box
 box "ECMS" #EAF2F6
-participant "archivos:\nArchivosAdjuntos" as Arch
+participant "archivos:\nAlmacenArchivos" as Arch
 participant "archivo:\nArchivo" as Archivo
 end box
 

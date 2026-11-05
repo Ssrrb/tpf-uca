@@ -37,7 +37,7 @@ alt crear una empresa subcontratista o un cliente (paso 2)
     Admin -> Cat: crearCliente(ruc, razónSocial)
   end
   Cat -> Cat: rucDisponible(ruc)
-  break el RUC ya existe (4a)
+  break el RUC ya existe (3a)
     Cat --> Admin: pide otro RUC (vuelve al paso 2)
   end
   create Prov

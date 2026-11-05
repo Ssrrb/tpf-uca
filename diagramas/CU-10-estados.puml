@@ -45,7 +45,7 @@ state "Vigente" as cVigente {
   [*] --> dVigente : subirArchivo(nombre, contenido, huella, actor) / crear versión 1
   dVigente --> dVigente : subirArchivo(nombre, contenido, huella, actor) [mismo nombre] / agregar versión
   dVigente --> dBloqueado : abrirParaEditar(actor) [nadie lo edita] / bloquear a nombre del actor
-  dBloqueado --> dBloqueado : agregarVersión(archivo, actor) / sumar versión
+  dBloqueado --> dBloqueado : agregarVersión(archivo, actor, rutaOriginal) / sumar versión
   dBloqueado --> dVigente : terminarEdición(actor) / liberar bloqueo
   dBloqueado --> dVigente : liberarBloqueo(actor) [Administrador] / registrar quién y cuándo
   dVigente --> dEliminado : eliminar(motivo, actor) [Administrador] / registrar motivo

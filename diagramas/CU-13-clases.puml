@@ -53,7 +53,7 @@ package "ECMS" {
     clasesIfc: lista de texto
     --
     + sumar(globalId, tipo, cantidad, sinCantidades)
-    + filas(): lista de filas
+    + filas(): lista de PartidaComputo
   }
 
   class "Partida del cómputo" as PartidaComputo {
@@ -66,7 +66,7 @@ package "ECMS" {
     sinCantidades: lista de texto
     --
     + agregarElemento(globalId, cantidad, sinCantidades)
-    + fila(): fila
+    + fila(): lista de texto
   }
 
   enum EstadoProcesamiento <<enumeration>> {
@@ -78,7 +78,7 @@ package "ECMS" {
 }
 
 class "Lector IFC" as LectorIFC <<servicio externo>> {
-  + leerCantidades(archivo, clasesIfc): lista de cantidades por elemento
+  + leerCantidades(archivo, clasesIfc): lista de ElementoModelo
 }
 
 note bottom of LectorIFC

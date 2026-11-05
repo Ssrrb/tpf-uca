@@ -24,8 +24,8 @@ actor "Ingeniero de obra" as Ing
 box "ECMS" #EAF2F6
 participant "costos:\nPresupuestoCostos" as PC
 participant "cliente:\nPresupuestoCliente" as Cli
-participant "anterior:\nVersionCostos" as Ant
-participant "version:\nVersionCostos" as V
+participant "anterior:\nVersionPresupuestoCostos" as Ant
+participant "version:\nVersionPresupuestoCostos" as V
 participant "gg:\nRubro" as GG
 participant "item:\nItem" as Item
 end box
@@ -44,12 +44,12 @@ alt primera versión, tal como sale del presupuesto del cliente (1c, paso 2)
   create GG
   V -> GG: «create»("Gastos generales de obra")
   PC --> Ing: versión 1 vigente, con actor y fecha
-else versión siguiente, con cambios de cantidad o ubicación (1c)
+else versión siguiente, con cambios de cantidad o ubicación (4)
   Ing -> PC: guardarVersión(cambios, motivo, actor)
   PC -> PC: obtenerVigente()
   PC -> Ant: difiereDe(cambios)
   Ant --> PC: distinta: lógico
-  break nada de lo que se guarda deja la vigente distinta (6a)
+  break nada de lo que se guarda deja la vigente distinta (5a)
     PC --> Ing: lo informa; no crea otra versión y la vigente no cambia
   end
   critical guardado atómico (NF-02)

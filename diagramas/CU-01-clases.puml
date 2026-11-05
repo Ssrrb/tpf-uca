@@ -66,7 +66,7 @@ package "ERP" {
     --
     + validarDatos(): lista de texto
     + definirAnticipo(modalidad, valor): Anticipo
-    + asignarMiembro(usuario, rol, permisos): Asignación
+    + asignarMiembro(usuario, rol, permisos): Asignacion
     + avanzarEstado(actor): EstadoObra
   }
 

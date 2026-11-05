@@ -60,9 +60,9 @@ package "ECMS" {
     sobre: texto
     autor: Usuario
     fecha: fecha y hora
-    pantalla: referencia
+    pantalla: texto
     --
-    + obtenerPantalla(): referencia
+    + obtenerPantalla(): texto
   }
 
   interface FuenteDeCambios {
@@ -71,7 +71,7 @@ package "ECMS" {
 
   class "Versión del presupuesto de costos" as VersionPresupuestoCostos {
     número: entero
-    estado: texto {Vigente | Histórica}
+    estado: EstadoVersionPresupuestoCostos
     --
     + montoContractual(): guaraníes
     + montoMedido(): guaraníes
@@ -93,7 +93,7 @@ package "ECMS" {
 
   class "Medición" as Medicion {
     cantidad: decimal
-    estado: texto
+    estado: EstadoMedicion
     --
     + estaAnulada(): lógico
     + valorizar(precio): guaraníes
@@ -118,13 +118,13 @@ package "ECMS" {
 
   class "Versión de modelo" as VersionModelo {
     número: entero
-    estado: texto {En trabajo | Compartido | Publicado | Archivado}
+    estado: EstadoVersion
     --
     + estaSinPublicar(): lógico
   }
 
   class Incidencia {
-    número: texto
+    número: entero
     prioridad: texto
     estado: EstadoIncidencia
     --
@@ -137,6 +137,26 @@ package "ECMS" {
     resuelta
     cerrada
     descartada
+  }
+
+  enum EstadoVersionPresupuestoCostos <<enumeration>> {
+    vigente
+    historica
+  }
+
+  enum EstadoVersion <<enumeration>> {
+    en_trabajo
+    compartido
+    publicado
+    archivado
+  }
+
+  enum EstadoMedicion <<enumeration>> {
+    en_carga
+    registrada
+    incluida_en_una_version
+    certificada
+    anulada
   }
 }
 
@@ -152,7 +172,7 @@ package "ERP" {
     nombre: texto
     fechaInicio: fecha [0..1]
     fechaFin: fecha [0..1]
-    estado: texto
+    estado: EstadoObra
     --
     + verificarAcceso(actor): lógico
     + estructuraVigente(): VersionPresupuestoCostos [0..1]
@@ -163,8 +183,8 @@ package "ERP" {
   }
 
   class "Cambio de estado" as CambioEstado {
-    desde: texto
-    hasta: texto
+    desde: EstadoObra
+    hasta: EstadoObra
     actor: Usuario
     fecha: fecha y hora
   }
@@ -173,6 +193,13 @@ package "ERP" {
     número: entero
     autor: Usuario
     fecha: fecha y hora
+  }
+
+  enum EstadoObra <<enumeration>> {
+    en_ejecucion
+    recepcion_provisoria
+    recepcion_definitiva
+    cerrada
   }
 }
 
@@ -188,13 +215,13 @@ Obra "1" *-- "0..*" CambioEstado : historial
 Obra "1" *-- "0..*" Incidencia : incidencias
 Obra "1" *-- "0..*" Modelo : modelos
 Obra "1" *-- "1" Certificado : certificado
-Obra "1" o-- "0..*" VersionPresupuestoCostos : estructura de trabajo
+VersionPresupuestoCostos "0..*" --> "1" Obra : de la obra
 Certificado "1" *-- "0..*" VersionCertificado : versiones
 VersionPresupuestoCostos "1" o-- "0..*" Item : ítems
 Item "0..1" --> "0..1" ItemCliente : partida del cliente
-Item "1" o-- "0..*" Medicion : mediciones
+Medicion "0..*" --> "1" Item : mide
 Modelo "1" *-- "1..*" VersionModelo : versiones
-Liquidacion "0..*" --> "1" VersionCertificado : de la versión
+Liquidacion "0..*" --> "1" VersionCertificado : por
 Tablero ..> Obra : de la obra
 Tablero ..> Actividad : usa
 Actividad ..> Cursor : pagina con
@@ -215,5 +242,13 @@ note bottom of Actividad
   se arma al leer lo que cada módulo ya guarda
   con su autor y su fecha. El tablero solo lee.
 end note
+
+VersionPresupuestoCostos ..> EstadoVersionPresupuestoCostos : estado
+
+VersionModelo ..> EstadoVersion : estado
+
+Medicion ..> EstadoMedicion : estado
+
+Obra ..> EstadoObra : estado
 
 @enduml

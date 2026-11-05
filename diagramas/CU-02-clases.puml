@@ -28,7 +28,7 @@ skinparam note {
 package "ERP" {
   class "Catálogo" as Catalogo {
     --
-    + listar(filtro): lista de empresas y clientes
+    + listar(filtro): lista de texto
     + rucDisponible(ruc: texto): lógico
     + crearProveedor(ruc, razónSocial): Proveedor
     + crearCliente(ruc, razónSocial): Cliente

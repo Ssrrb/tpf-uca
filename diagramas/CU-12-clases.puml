@@ -86,17 +86,17 @@ package "ECMS" {
     quantitySets: texto
   }
 
-  class "Cambios de la versión" as CambiosVersion {
+  class "Cambios de la versión" as CambioVersion {
     nuevos: entero
     borrados: entero
     modificados: entero
     --
-    + elementosAfectados(): lista de globalId
+    + elementosAfectados(): lista de texto
   }
 
   class Incidencia {
     número: entero
-    estado: texto
+    estado: EstadoIncidencia
     --
     + marcarCambio(globalIds, versión)
   }
@@ -127,6 +127,14 @@ package "ECMS" {
     listo
     fallo
   }
+
+  enum EstadoIncidencia <<enumeration>> {
+    abierta
+    en_curso
+    resuelta
+    cerrada
+    descartada
+  }
 }
 
 class "Visor de modelos" as VisorModelos <<servicio externo>> {
@@ -135,7 +143,7 @@ class "Visor de modelos" as VisorModelos <<servicio externo>> {
 }
 
 class "Lector IFC" as LectorIFC <<servicio externo>> {
-  + leer(archivo): lista de elementos
+  + leer(archivo): lista de ElementoModelo
 }
 
 note bottom of VisorModelos
@@ -147,12 +155,11 @@ note bottom of LectorIFC
   IfcOpenShell. No es un actor ni un subsistema.
 end note
 
-Obra "1" *-- "0..*" Carpeta : tiene
+Obra "1" *-- "0..*" Carpeta : carpetas
 Carpeta "1" o-- "0..*" Modelo : contiene
 Modelo "1" *-- "1..*" VersionModelo : versiones
-Modelo "1" --> "0..1" VersionModelo : vigente
 VersionModelo "1" *-- "0..*" ElementoModelo : índice
-VersionModelo "1" *-- "0..1" CambiosVersion : cambios
+VersionModelo "1" *-- "0..1" CambioVersion : cambios
 
 VersionModelo ..> LectorIFC : lee con
 VersionModelo ..> VisorModelos : vista 3D
@@ -162,5 +169,7 @@ VersionModelo ..> PartidaComputo : marca
 VersionModelo ..> VinculoEstructura : marca
 VersionModelo ..> EstadoVersion : estado
 VersionModelo ..> EstadoProcesamiento : procesamiento
+
+Incidencia ..> EstadoIncidencia : estado
 
 @enduml

@@ -27,7 +27,7 @@ participant "cómputo:\nComputoModelo" as Comp
 participant "rubro:\nRubroComputo" as Rub
 participant "partida:\nPartidaComputo" as Part
 end box
-participant "Lector IFC" as Lector
+participant "Lector IFC:\nLectorIFC" as Lector
 
 Ing -> Ver: estaProcesada()
 Ver --> Ing: lógico

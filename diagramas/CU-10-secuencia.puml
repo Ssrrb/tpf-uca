@@ -32,7 +32,7 @@ participant "documento:\nDocumento" as Doc
 participant "version:\nVersionDocumento" as Ver
 end box
 box "ECMS" #EAF2F6
-participant "archivos:\nArchivosAdjuntos" as Arch
+participant "archivos:\nAlmacenArchivos" as Arch
 participant "archivo:\nArchivo" as Archivo
 end box
 
@@ -98,7 +98,7 @@ loop por cada archivo seleccionado
   else 3b. ya hay un documento con ese nombre
     note right of Carp: el archivo es una versión nueva de ese documento
   end
-  Carp -> Doc: agregarVersión(archivo, actor)
+  Carp -> Doc: agregarVersión(archivo, actor, rutaOriginal)
   create Ver
   Doc -> Ver: «create»(número, archivo, actor, fecha)
   Doc --> Carp: versión
@@ -116,7 +116,7 @@ else 5. abre para editar (5b desde la web: consultar() y subir la versión edita
   else vigente
     Doc --> Ing: archivo abierto con el programa instalado; bloqueado a su nombre
     loop 6. cada vez que guarda
-      Ing -> Doc: agregarVersión(archivo, actor)
+      Ing -> Doc: agregarVersión(archivo, actor, rutaOriginal)
       Doc --> Ing: versión nueva
     end
     Ing -> Doc: terminarEdición(actor)

@@ -43,9 +43,9 @@ package "ECMS" {
     finalizadoPor: Usuario [0..1]
     fechaFinalización: fecha y hora [0..1]
     --
-    + validarDatos(): Informe de importación
+    + validarDatos(): InformeImportacion
     + recalcularTotales(): guaraníes
-    + compararTotales(): Informe de importación
+    + compararTotales(): InformeImportacion
     + finalizar(actor): vacío
   }
 
@@ -98,7 +98,7 @@ Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
 PresupuestoCliente "1" *-- "0..*" Hoja : estructura
 Hoja "1" *-- "1..*" Columna : define
 PresupuestoCliente "1" *-- "1..*" Rubro : contiene
-Rubro "1" *-- "1..*" ItemCliente : agrupa
+Rubro "1" *-- "1..*" ItemCliente : ítems cliente
 PresupuestoCliente "1" *-- "0..*" InformeImportacion : informes
 
 PresupuestoCliente ..> EstadoPresupuestoCliente : estado

@@ -58,7 +58,7 @@ alt carga desde XLSX
   end
   note right of Pres: estado En carga
   Pres -> Pres: identificarEstructura()
-  loop por cada hoja que no es del cliente (3c)
+  loop por cada hoja que no es del cliente (3b)
     Pres -> Hoja: ignorar()
     Pres --> Ing: la ignora y lo informa
   end

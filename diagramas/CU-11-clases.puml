@@ -39,7 +39,7 @@ package "ERP" {
     nombre: texto
     --
     + estaCerrada(): lógico
-    + iniciarImportación(origen, modo, actor): Importación
+    + iniciarImportación(origen, modo, actor): Importacion
   }
 
   class "Importación" as Importacion {
@@ -119,7 +119,7 @@ package "ERP" {
 }
 
 package "ECMS" {
-  class "Archivos adjuntos" as ArchivosAdjuntos {
+  class "Almacén de archivos" as AlmacenArchivos {
     --
     + buscarPorHuella(huella): Archivo [0..1]
     + guardar(contenido, huella): Archivo
@@ -137,10 +137,10 @@ Importacion "0..*" --> "1" Carpeta : destino en la obra
 ArchivoOrigen "0..*" --> "0..1" Carpeta : carpeta propuesta
 ReglaClasificacion "0..*" --> "1" Carpeta : carpeta de la plantilla
 Carpeta "1" *-- "0..*" Carpeta : subcarpetas
-Carpeta "1" *-- "0..*" Documento : contiene
+Carpeta "1" *-- "0..*" Documento : documentos
 Documento "1" *-- "1..*" VersionDocumento : versiones
 VersionDocumento "0..*" --> "1" Archivo : contenido
-ArchivosAdjuntos "1" o-- "0..*" Archivo : guarda
+AlmacenArchivos "1" o-- "0..*" Archivo : guarda
 Importacion ..> ReglaClasificacion : usa
 Importacion ..> ModoImportacion : modo
 Importacion ..> EstadoImportacion : estado

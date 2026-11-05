@@ -78,8 +78,8 @@ package "ECMS" {
 PresupuestoCostos "1" *-- "1..*" VersionPresupuestoCostos : versiones
 VersionPresupuestoCostos "0..*" --> "1" PresupuestoCliente : se basa en
 VersionPresupuestoCostos "0..1" --> "0..1" VersionPresupuestoCostos : versión anterior
-VersionPresupuestoCostos "1" *-- "1..*" Rubro : contiene
-Rubro "1" *-- "0..*" Item : agrupa
+VersionPresupuestoCostos "1" *-- "1..*" Rubro : rubros
+Rubro "1" *-- "0..*" Item : ítems
 
 VersionPresupuestoCostos ..> EstadoVersionPresupuestoCostos : estado
 
@@ -91,8 +91,8 @@ end note
 
 note bottom of VersionPresupuestoCostos
   La versión que se guarda nace vigente y la anterior pasa a histórica.
-  El ejecutor, los insumos, el ACU y el costo de cada ítem
-  quedan fuera del MVP.
+  Los ítems no llevan costo: la estructura de trabajo
+  tiene solo cantidad, unidad y precio de venta.
 end note
 
 @enduml
