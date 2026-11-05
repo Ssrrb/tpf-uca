@@ -57,7 +57,7 @@ package "ECMS" {
   class "Liquidación" as Liquidacion
   class "Presupuesto de costos" as PresupuestoCostos
   class "Incidencia" as Incidencia
-  class "Modelo" as Modelo
+  class "BIM" as Modelo
 }
 
 package "ERP" {
