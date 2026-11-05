@@ -19,7 +19,7 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-13 · Consultar tablero financiero
+title CU-16 · Consultar tablero financiero
 actor "Administrador o\nFinanzas y tesorería" as Adm
 box "Motor de finanzas" #EAF2F6
 participant "tablero:\nTablero" as Tab

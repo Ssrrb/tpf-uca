@@ -19,68 +19,86 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-07 · Registrar gasto de obra
-actor "Administrador o\nIngeniero de obra" as Usr
+title CU-07 · Medir el avance del certificado
+actor "Ingeniero de obra" as Ing
 box "ERP" #EAF2F6
 participant "obra:\nObra" as Obra
-participant "proveedor:\nProveedor" as Prov
-participant "persona:\nPersona" as Pers
-end box
-box "Motor de finanzas" #EAF2F6
-participant "gasto:\nGasto" as G
-participant "imputacion:\nImputacion" as Imp
-participant "comprobante:\nComprobante" as Comp
-participant "costo:\nCostoReal" as CR
+participant "contrato:\nContrato" as Con
 end box
 box "ECMS" #EAF2F6
-participant "vigente:\nVersionCostos" as VC
+participant "item:\nItemCostos" as Item
+participant "saldo:\nSaldoItem" as Saldo
+participant "medicion:\nMedicion" as Med
+participant "evidencia:\nEvidencia" as Evi
+participant "certificado:\nCertificado" as Cert
+participant "version:\nVersionCertificado" as V
+participant "linea:\nLineaCertificado" as Lin
+participant "ajuste:\nMedicionAjuste" as Aj
 end box
 
-Usr -> Obra: permiteGastos()
-Obra --> Usr: permitido: lógico
-create G
-Usr -> G: «create»(obra, tipo, importe, fecha, medio, actor)
-alt material o caja chica con proveedor
-  G -> Prov: estaActivo()
-  Prov --> G: activo: lógico
-else mano de obra propia
-  G -> Pers: estaActiva()
-  Pers --> G: activa: lógico
+Ing -> Obra: permiteMediciones()
+Obra --> Ing: permitido: lógico
+break la obra no está en ejecución (RF-23)
+  Obra --> Ing: no se registran mediciones
 end
-opt compra de materiales
-  Usr -> G: indicarInsumo(insumo, cantidad)
-end
-loop por cada rubro al que se imputa (3a: varios rubros)
-  Usr -> G: imputar(rubro, ítem, importe)
-  G -> VC: obtenerRubro(código)
-  VC --> G: rubro [0..1]
-  opt gasto que no es de un rubro en particular (3b)
-    G -> VC: rubroGastosGenerales()
-    VC --> G: "Gastos generales de obra"
+Ing -> Item: obtenerSaldo()
+Item -> Saldo: saldoContractual()
+Saldo --> Item: saldo
+Item --> Ing: ítems con su saldo contractual
+
+loop por cada ítem medido
+  create Med
+  Ing -> Med: «create»(ítem, cantidad, unidad, ejecutor)
+  Med -> Item: insumosDelACU(cantidad)
+  Item --> Med: insumos propuestos (RF-07)
+  opt el Ingeniero corrige un insumo
+    Ing -> Med: corregirInsumo(insumo, cantidad)
   end
-  break el rubro no existe en la vigente
-    G --> Usr: impide imputar
+  Ing -> Med: adjuntarEvidencia(archivo)
+  create Evi
+  Med -> Evi: «create»(tipo, archivo)
+  Med -> Saldo: estaContada(cantidad, medicion)
+  Saldo --> Med: contada: lógico
+  break ya está contada en otra medición (4a, RF-08)
+    Med --> Ing: rechazada; indica dónde figura
   end
-  create Imp
-  G -> Imp: «create»(rubro, importe)
-end
-Usr -> G: adjuntarComprobante(archivo)
-create Comp
-G -> Comp: «create»(tipo, archivo)
-G -> G: validarImporte()
-opt gasto de caja chica (1a, RF-21)
-  G -> Obra: obtenerTopeCajaChica()
-  Obra --> G: tope
-  break el importe supera el tope y lo registra el Ingeniero
-    G --> Usr: no permite confirmar; lo registra el Administrador
+  Ing -> Med: confirmar(actor)
+  Med -> Med: validarCompleta()
+  break faltan datos obligatorios o evidencia (5a)
+    Med --> Ing: marca cada campo e impide confirmar
+  end
+  Med -> Saldo: registrarMedición(cantidad)
+  opt ítem subcontratado (3a)
+    Med -> Con: descontarSaldo(ítem, cantidad)
   end
 end
-Usr -> G: confirmar(actor)
-break falta el comprobante (5a)
-  G --> Usr: marca el campo e impide confirmar (vuelve al paso 4)
+
+Ing -> Cert: generarVersiónSiguiente(actor)
+create V
+Cert -> V: «create»(número siguiente, anterior)
+V -> V: tomarCantidades()
+loop por cada ítem con mediciones o ajustes sin certificar
+  V -> Saldo: cantidadCertificable()
+  Saldo --> V: cantidad medida sin certificar
+  create Lin
+  V -> Lin: «create»(ítem, avance anterior, cantidad)
+  V -> Med: incluirEn(version)
 end
-loop por cada imputación
-  G -> CR: sumar(importe)
+Ing -> V: cerrarCantidades(actor)
+V --> Ing: versión con avance anterior, de la versión\ny acumulado, lista para el cálculo (CU-08)
+
+== *a Anular o ajustar una medición ==
+Ing -> Med: puedeAnularse()
+Med --> Ing: registrada: lógico
+alt registrada (todavía no está en una versión)
+  Ing -> Med: anular(motivo, actor)
+  Med -> Saldo: revertirMedición(cantidad)
+else incluida en una versión o certificada (RF-07)
+  Ing -> Med: registrarAjuste(cantidad, motivo, actor)
+  create Aj
+  Med -> Aj: «create»(original, cantidad, motivo)
+  note right of Aj
+    Entra en la versión siguiente.
+  end note
 end
-G --> Usr: gasto registrado; suma al costo real del rubro (RF-21)
 @enduml

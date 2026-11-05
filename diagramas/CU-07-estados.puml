@@ -1,0 +1,57 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title CU-07 · Estados de la Medición
+state "En carga" as en_carga
+state "Registrada" as registrada
+state "Incluida en una versión" as incluida
+state "Certificada" as certificada
+state "Anulada" as anulada
+
+[*] --> en_carga : crear(ítem, cantidad, ejecutor)
+en_carga --> registrada : confirmar(actor) [datos completos y no contada] / registrarMedición(cantidad)
+registrada --> anulada : anular(motivo, actor)
+registrada --> incluida : incluirEn(versión)
+incluida --> certificada : guardar(actor) [CU-08]
+incluida --> incluida : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
+certificada --> certificada : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
+anulada --> [*]
+certificada --> [*]
+
+note right of certificada
+  Incluida o certificada no se anula:
+  se corrige con una medición de
+  ajuste (RF-07).
+end note
+@enduml

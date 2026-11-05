@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-02 · Cargar el presupuesto del cliente
+title CU-02 · Mantener catálogos y banco de insumos
 hide circle
 hide empty methods
 hide empty fields
@@ -26,63 +26,47 @@ skinparam note {
   BorderColor #17324D
 }
 package "ERP" {
-  class Obra {
-    código: texto
-    nombre: texto
+  class "Catálogo" as Catalogo {
     --
-    + crearPresupuestoCliente(actor): PresupuestoCliente
-  }
-}
-
-package "ECMS" {
-
-  class "Presupuesto del cliente" as PresupuestoCliente {
-    estado: EstadoPresupuestoCliente
-    --
-    + cargarArchivo(archivo): vacío
-    + esArchivoRepetido(huella: texto): lógico
-    + descartarCargaIncompleta(): vacío
-    + agregarRubro(código, descripción): Rubro
-    + identificarEstructura(): lógico
-    + confirmarEstructura(): vacío
+    + listar(filtro): lista de Recurso
+    + códigoDisponible(código): lógico
+    + crearRecurso(datos): Recurso
   }
 
-  class "Archivo original" as ArchivoOriginal {
-    nombre: texto {inmutable}
-    tamañoBytes: entero {inmutable}
-    huella: texto {inmutable}
-    --
-    + validarFormato(): lógico
-    + guardar(): vacío
-  }
-
-  class Hoja {
-    nombre: texto
-    origen: detectada | manual
-    columnas: lista de Columna
-    --
-    + definirColumna(índice, campo): vacío
-  }
-
-  class Rubro {
+  class Recurso {
+    tipo: texto {persona | proveedor | cliente}
     código: texto
     descripción: texto
-    ítems: lista de Item
+    activo: lógico
+    ruc: texto [0..1]
+    documento: texto [0..1]
+    esSubcontratista: lógico [0..1]
     --
-    + agregarÍtem(código, descripción, unidad, cantidad, precio): vacío
+    + modificar(datos): vacío
+    + darDeBaja(actor): vacío
   }
 
-  enum EstadoPresupuestoCliente <<enumeration>> {
-    propuesta
-    finalizado
+  class Insumo {
+    clase: texto {material | equipo | mano de obra}
+    unidad: texto
+    categoría: texto
+    --
+    + registrarPrecio(valor, vigenteDesde): Precio
+    + obtenerPrecioVigente(fecha): guaraníes [0..1]
+  }
+
+  class Precio {
+    valor: guaraníes
+    vigenteDesde: fecha
+    vigenteHasta: fecha [0..1]
+    --
+    + seSuperpone(desde: fecha): lógico
+    + cerrarVigencia(hasta: fecha): vacío
   }
 }
 
-Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
-PresupuestoCliente "1" *-- "0..1" ArchivoOriginal : conserva sin modificar
-PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
-PresupuestoCliente "1" *-- "1..*" Rubro : contiene
-
-PresupuestoCliente ..> EstadoPresupuestoCliente : estado
-
+Recurso <|-- Insumo
+Catalogo "1" o-- "0..*" Recurso : contiene
+Insumo "1" *-- "0..*" Precio : vigencias
+Insumo "0..*" --> "0..*" Recurso : mano de obra que prestan las personas
 @enduml

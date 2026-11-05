@@ -19,7 +19,7 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-06 · 1/2 · Valorizar y calcular la versión
+title CU-08 · 1/2 · Valorizar y calcular la versión
 actor "Ingeniero de obra" as Ing
 box "Motor de finanzas" #EAF2F6
 participant "calculo:\nCalculoCertificado" as Calc
@@ -44,7 +44,7 @@ break la obra no está en ejecución (RF-23)
 end
 Calc -> V: estaCerrada()
 V --> Calc: cerrada: lógico
-break las cantidades no se cerraron en CU-04
+break las cantidades no se cerraron en CU-07
   Calc --> Ing: primero hay que cerrar las cantidades
 end
 opt error en una versión ya guardada (1a, RF-09)
@@ -76,7 +76,7 @@ loop por cada línea de la versión
   Lin --> Calc: exceso [0..1]
   opt el monto acumulado supera el monto contractual (3a)
     Calc -> Saldo: registrarExceso(exceso)
-    Calc --> Ing: ítem en exceso: saldo negativo fuera del bruto;\nse puede registrar una adenda (CU-11)
+    Calc --> Ing: ítem en exceso: saldo negativo fuera del bruto;\nse puede registrar una adenda (CU-11«QUITADO»)
   end
 end
 Calc -> Ant: amortizar(bruto)

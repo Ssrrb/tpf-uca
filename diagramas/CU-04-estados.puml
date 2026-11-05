@@ -32,26 +32,26 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-04 · Estados de la Medición
+title CU-04 · Estados del Presupuesto del cliente
+state origen <<choice>>
 state "En carga" as en_carga
-state "Registrada" as registrada
-state "Incluida en una versión" as incluida
-state "Certificada" as certificada
-state "Anulada" as anulada
+state "Propuesta" as propuesta
+state "Finalizado" as finalizado
 
-[*] --> en_carga : crear(ítem, cantidad, ejecutor)
-en_carga --> registrada : confirmar(actor) [datos completos y no contada] / registrarMedición(cantidad)
-registrada --> anulada : anular(motivo, actor)
-registrada --> incluida : incluirEn(versión)
-incluida --> certificada : guardar(actor) [CU-06]
-incluida --> incluida : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
-certificada --> certificada : registrarAjuste(cantidad, motivo, actor) / crear medición de ajuste
-anulada --> [*]
-certificada --> [*]
+[*] --> origen : crearPresupuestoCliente(actor)
+origen --> en_carga : [con XLSX] / cargarArchivo(archivo)
+origen --> propuesta : [sin XLSX] / agregarRubro(código, descripción)
+en_carga --> propuesta : confirmarEstructura() [XLSX válido y no repetido]
+en_carga --> [*] : [archivo rechazado o repetido] / descartarCargaIncompleta()
+propuesta --> en_carga : cargarArchivo(archivo) [recarga]
+propuesta --> propuesta : validarDatos() [hay datos inválidos]
+propuesta --> finalizado : finalizar(actor) [datos válidos] / vincularPresupuestoCliente()
+finalizado --> [*]
 
-note right of certificada
-  Incluida o certificada no se anula:
-  se corrige con una medición de
-  ajuste (RF-07).
+note right of en_carga
+  En carga y Propuesta se recorren
+  en CU-03; la validación y la
+  finalización, en CU-04.
 end note
+
 @enduml

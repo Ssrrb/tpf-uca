@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-03 · Armar y versionar el presupuesto de costos
+title CU-03 · Cargar el presupuesto del cliente
 hide circle
 hide empty methods
 hide empty fields
@@ -25,106 +25,64 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
+package "ERP" {
+  class Obra {
+    código: texto
+    nombre: texto
+    --
+    + crearPresupuestoCliente(actor): PresupuestoCliente
+  }
+}
+
 package "ECMS" {
-  class "Presupuesto de costos" as PresupuestoCostos {
-    --
-    + consultarVersiones(): lista de VersiónCostos
-    + obtenerVigente(): VersiónCostos [0..1]
-    + crearPrimeraVersión(base: PresupuestoCliente, actor): VersiónCostos
-    + crearVersiónCorrectiva(motivo, actor): VersiónCostos
-    + activar(versión, actor): vacío
-  }
-
-  enum EstadoVersionCostos <<enumeration>> {
-    propuesta
-    vigente
-    historica
-    descartada
-  }
-
-  class "Versión del presupuesto de costos" as VersionCostos {
-    número: entero
-    estado: EstadoVersionCostos
-    motivo: texto [0..1]
-    creadaPor: Usuario
-    fecha: fecha y hora
-    /costoPresupuestado: guaraníes
-    --
-    + copiarRubros(base: PresupuestoCliente): vacío
-    + agregarRubroGastosGenerales(): vacío
-    + completarÍtem(ítem, ejecutor, acu): vacío
-    + calcularCosto(): guaraníes
-    + validarDatos(): lista de texto
-    + marcarVigente(actor): vacío
-    + pasarAHistórica(): vacío
-    + cancelar(): vacío
-  }
-
-  class "Rubro de costos" as RubroCostos {
-    código: texto {estable}
-    descripción: texto
-    esGastosGenerales: lógico
-  }
-
-  class "Ítem de costos" as ItemCostos {
-    código: texto {estable}
-    unidad: texto
-    cantidad: decimal
-    ejecutor: propio | subcontratista
-    --
-    + estaCertificado(): lógico
-    + definirEjecutor(ejecutor): vacío
-    + calcularCostoPresupuestado(): guaraníes
-  }
-
-  class "Análisis de costo unitario" as ACU {
-    --
-    + calcularCostoUnitario(fecha): guaraníes
-  }
-
-  class "Línea de ACU" as LineaACU {
-    tipo: material | mano de obra | equipo
-    cantidadPorUnidad: decimal
-    --
-    + calcularCosto(fecha): guaraníes
-  }
 
   class "Presupuesto del cliente" as PresupuestoCliente {
     estado: EstadoPresupuestoCliente
     --
-    + obtenerRubros(): lista de Rubro
+    + cargarArchivo(archivo): vacío
+    + esArchivoRepetido(huella: texto): lógico
+    + descartarCargaIncompleta(): vacío
+    + agregarRubro(código, descripción): Rubro
+    + identificarEstructura(): lógico
+    + confirmarEstructura(): vacío
   }
 
-  class "Apartado Adendas" as ApartadoAdendas {
+  class "Archivo original" as ArchivoOriginal {
+    nombre: texto {inmutable}
+    tamañoBytes: entero {inmutable}
+    huella: texto {inmutable}
     --
-    + costoTotal(): guaraníes
+    + validarFormato(): lógico
+    + guardar(): vacío
   }
-}
 
-package "ERP" {
-  class Insumo {
+  class Hoja {
+    nombre: texto
+    origen: detectada | manual
+    columnas: lista de Columna
+    --
+    + definirColumna(índice, campo): vacío
+  }
+
+  class Rubro {
     código: texto
-    unidad: texto
+    descripción: texto
+    ítems: lista de Item
     --
-    + obtenerPrecioVigente(fecha): guaraníes [0..1]
+    + agregarÍtem(código, descripción, unidad, cantidad, precio): vacío
+  }
+
+  enum EstadoPresupuestoCliente <<enumeration>> {
+    propuesta
+    finalizado
   }
 }
 
-PresupuestoCostos "1" *-- "1..*" VersionCostos : versiones
-PresupuestoCostos "1" *-- "1" ApartadoAdendas : se suma a la vigente
-VersionCostos "0..*" --> "1" PresupuestoCliente : se basa en
-VersionCostos "0..1" --> "0..1" VersionCostos : versión anterior
-VersionCostos "1" *-- "1..*" RubroCostos : contiene
-RubroCostos "1" *-- "0..*" ItemCostos : agrupa
-ItemCostos "1" *-- "0..1" ACU : análisis
-ACU "1" *-- "1..*" LineaACU : insumos
-LineaACU "0..*" --> "1" Insumo : usa
+Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
+PresupuestoCliente "1" *-- "0..1" ArchivoOriginal : conserva sin modificar
+PresupuestoCliente "1" *-- "0..*" Hoja : estructura identificada
+PresupuestoCliente "1" *-- "1..*" Rubro : contiene
 
-VersionCostos ..> EstadoVersionCostos : estado
-
-note bottom of ItemCostos
-  El código se conserva entre versiones y lo vincula
-  con su ítem del presupuesto del cliente (RF-05).
-end note
+PresupuestoCliente ..> EstadoPresupuestoCliente : estado
 
 @enduml

@@ -19,50 +19,94 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-05 · Mantener catálogos y banco de insumos
-actor "Administrador" as Admin
+title CU-05 · Armar y versionar el presupuesto de costos
+actor "Ingeniero de obra" as Ing
+box "ECMS" #EAF2F6
+participant "costos:\nPresupuestoCostos" as PC
+participant "apartado:\nApartadoAdendas" as Apa
+participant "cliente:\nPresupuestoCliente" as Cli
+participant "anterior:\nVersionCostos" as Ant
+participant "version:\nVersionCostos" as V
+participant "gg:\nRubroCostos" as GG
+participant "item:\nItemCostos" as Item
+participant "acu:\nACU" as Acu
+participant "linea:\nLineaACU" as Lin
+end box
 box "ERP" #EAF2F6
-participant "catalogo:\nCatalogo" as Cat
-participant "nuevo:\nInsumo" as Nue
-participant "recurso:\nRecurso" as Rec
 participant "insumo:\nInsumo" as Ins
-participant "precioInicial:\nPrecio" as PIni
-participant "precioActual:\nPrecio" as PAct
-participant "precioNuevo:\nPrecio" as PNue
 end box
 
-Admin -> Cat: listar(filtro)
-Cat --> Admin: lista paginada por código, nombre y rubro
+Ing -> PC: consultarVersiones()
+PC -> Apa: costoTotal()
+PC --> Ing: presupuesto del cliente, versiones con su estado,\napartado Adendas y presupuestos de adendas del cliente (RF-06)
 
-alt crear un recurso (paso 2)
-  Admin -> Cat: crearRecurso(datos)
-  Cat -> Cat: códigoDisponible(código)
-  break el código ya existe (4a)
-    Cat --> Admin: pide otro código (vuelve al paso 2)
+alt completar ítems no certificados de la vigente (1a)
+  Ing -> PC: obtenerVigente()
+  PC --> Ing: versión vigente (es la versión que se completa)
+else versión nueva (paso 1 o 1b)
+  alt primera versión (paso 1)
+    Ing -> PC: crearPrimeraVersión(cliente, actor)
+  else corregir un error o reflejar un retrabajo (1b)
+    Ing -> PC: crearVersiónCorrectiva(motivo, actor)
+    PC -> PC: obtenerVigente()
   end
-  create Nue
-  Cat -> Nue: «create»(código, descripción, clase, unidad, categoría)
-  note right of Nue
-    Una persona, un proveedor o un cliente se crean igual, sin precio.
+  create V
+  PC -> V: «create»(estado = propuesta, anterior [0..1], motivo [0..1])
+  opt primera versión (paso 2)
+    PC -> V: copiarRubros(cliente)
+    V -> Cli: obtenerRubros()
+    Cli --> V: rubros e ítems con su código
+    PC -> V: agregarRubroGastosGenerales()
+    create GG
+    V -> GG: «create»("Gastos generales de obra")
+  end
+  note right of V
+    En 1b los rubros e ítems conservan su código
+    y lo ya registrado sigue vinculado (RF-05).
   end note
-  Admin -> Nue: registrarPrecio(valor, vigenteDesde)
-  create PIni
-  Nue -> PIni: «create»(valor, vigenteDesde)
-else modificar un recurso (2a)
-  Admin -> Rec: modificar(datos)
-else dar de baja un recurso (2b)
-  Admin -> Rec: darDeBaja(actor)
-else actualizar un precio (3a)
-  Admin -> Ins: registrarPrecio(valor, vigenteDesde)
-  Ins -> Ins: obtenerPrecioVigente(vigenteDesde)
-  Ins -> PAct: seSuperpone(vigenteDesde)
-  PAct --> Ins: superpone: lógico
-  break la vigencia se superpone con otro precio (4b)
-    Ins --> Admin: rechaza; indica la vigencia en conflicto
-  end
-  Ins -> PAct: cerrarVigencia(vigenteDesde - 1 día)
-  create PNue
-  Ins -> PNue: «create»(valor, vigenteDesde)
 end
-Cat --> Admin: recurso y precio vigente guardados con actor y fecha
+
+loop por cada ítem a completar
+  Ing -> V: completarÍtem(ítem, ejecutor, acu)
+  V -> Item: estaCertificado()
+  Item --> V: certificado: lógico
+  break ítem certificado de la vigente (3a)
+    V --> Ing: lo impide; la corrección va por una versión nueva (1b)
+  end
+  V -> Item: definirEjecutor(ejecutor)
+end
+
+V -> V: calcularCosto()
+loop por cada ítem
+  V -> Item: calcularCostoPresupuestado()
+  Item -> Acu: calcularCostoUnitario(fecha)
+  loop por cada línea del ACU
+    Acu -> Lin: calcularCosto(fecha)
+    Lin -> Ins: obtenerPrecioVigente(fecha)
+    Ins --> Lin: precio [0..1]
+    opt insumo sin precio vigente (4a)
+      Lin --> Ing: señala el insumo; no calcula ese ítem
+    end
+  end
+end
+V -> V: validarDatos()
+V --> Ing: costo por ítem y rubro, datos faltantes
+
+alt confirma (paso 5)
+  Ing -> PC: activar(version, actor)
+  critical activación atómica (NF-02)
+    alt versión nueva
+      PC -> Ant: pasarAHistórica()
+      PC -> V: marcarVigente(actor)
+    else misma versión vigente (1a)
+      PC --> Ing: guarda el detalle sin crear otra versión
+    end
+    break falla la activación (NF-02)
+      PC --> Ing: revierte; la vigente anterior no cambia
+    end
+  end
+  PC --> Ing: versión vigente con actor, fecha y motivo
+else cancela (5a)
+  Ing -> V: cancelar()
+end
 @enduml

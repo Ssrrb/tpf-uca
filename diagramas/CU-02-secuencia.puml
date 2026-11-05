@@ -19,61 +19,50 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-02 · Cargar el presupuesto del cliente
-actor "Ingeniero de obra" as Ing
-box "ECMS" #EAF2F6
-participant "obra:\nObra" as Obra
-participant "presupuesto:\nPresupuestoCliente" as Pres
-participant "archivo:\nArchivoOriginal" as Arch
-participant "hoja:\nHoja" as Hoja
-participant "rubro:\nRubro" as Rubro
+title CU-02 · Mantener catálogos y banco de insumos
+actor "Administrador" as Admin
+box "ERP" #EAF2F6
+participant "catalogo:\nCatalogo" as Cat
+participant "nuevo:\nInsumo" as Nue
+participant "recurso:\nRecurso" as Rec
+participant "insumo:\nInsumo" as Ins
+participant "precioInicial:\nPrecio" as PIni
+participant "precioActual:\nPrecio" as PAct
+participant "precioNuevo:\nPrecio" as PNue
 end box
 
-Ing -> Obra: crearPresupuestoCliente(actor)
-break la obra ya tiene un presupuesto del cliente finalizado
-  Obra --> Ing: operación rechazada (RF-04)
-end
-create Pres
-Obra -> Pres: «create»(estado = propuesta)
-Obra --> Ing: presupuesto en propuesta
+Admin -> Cat: listar(filtro)
+Cat --> Admin: lista paginada por código, nombre y rubro
 
-alt carga desde XLSX
-  Ing -> Pres: cargarArchivo(archivo)
-  Pres -> Arch: validarFormato()
-  Arch --> Pres: válido: lógico
-  break no es XLSX, está dañado o tiene contraseña (2a)
-    Pres --> Ing: carga rechazada con el motivo
+alt crear un recurso (paso 2)
+  Admin -> Cat: crearRecurso(datos)
+  Cat -> Cat: códigoDisponible(código)
+  break el código ya existe (4a)
+    Cat --> Admin: pide otro código (vuelve al paso 2)
   end
-  Pres -> Pres: esArchivoRepetido(huella)
-  break el mismo XLSX ya se cargó sin cambios (2b, NF-06)
-    Pres --> Ing: lo informa; no se crea otra carga
+  create Nue
+  Cat -> Nue: «create»(código, descripción, clase, unidad, categoría)
+  note right of Nue
+    Una persona, un proveedor o un cliente se crean igual, sin precio.
+  end note
+  Admin -> Nue: registrarPrecio(valor, vigenteDesde)
+  create PIni
+  Nue -> PIni: «create»(valor, vigenteDesde)
+else modificar un recurso (2a)
+  Admin -> Rec: modificar(datos)
+else dar de baja un recurso (2b)
+  Admin -> Rec: darDeBaja(actor)
+else actualizar un precio (3a)
+  Admin -> Ins: registrarPrecio(valor, vigenteDesde)
+  Ins -> Ins: obtenerPrecioVigente(vigenteDesde)
+  Ins -> PAct: seSuperpone(vigenteDesde)
+  PAct --> Ins: superpone: lógico
+  break la vigencia se superpone con otro precio (4b)
+    Ins --> Admin: rechaza; indica la vigencia en conflicto
   end
-  Pres -> Arch: guardar()
-  break falla el guardado (NF-02)
-    Pres -> Pres: descartarCargaIncompleta()
-    Pres --> Ing: carga descartada; se puede reintentar
-  end
-  Pres -> Pres: identificarEstructura()
-  alt estructura identificada
-    Pres --> Ing: hojas, columnas, rubros e ítems (RF-03)
-  else no se identifica la estructura (3a)
-    loop por cada columna que falta definir
-      Ing -> Hoja: definirColumna(índice, campo)
-    end
-  end
-else creación en el sistema sin XLSX (1a)
-  loop por cada rubro
-    Ing -> Pres: agregarRubro(código, descripción)
-    create Rubro
-    Pres -> Rubro: «create»(código, descripción)
-    loop por cada ítem del rubro
-      Ing -> Rubro: agregarÍtem(código, descripción, unidad, cantidad, precio)
-    end
-  end
+  Ins -> PAct: cerrarVigencia(vigenteDesde - 1 día)
+  create PNue
+  Ins -> PNue: «create»(valor, vigenteDesde)
 end
-Ing -> Pres: confirmarEstructura()
-Pres --> Ing: carga guardada en propuesta, lista para validar
-ref over Ing, Rubro
-  Validar y finalizar el presupuesto del cliente (CU-16).
-end ref
+Cat --> Admin: recurso y precio vigente guardados con actor y fecha
 @enduml

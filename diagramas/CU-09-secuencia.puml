@@ -19,59 +19,68 @@ skinparam note {
   BorderColor #17324D
 }
 hide footbox
-title CU-09 · Registrar contrato de subcontratista
-actor "Administrador" as Admin
+title CU-09 · Liquidar subcontratista
+actor "Ingeniero de obra" as Ing
+box "ECMS" #EAF2F6
+participant "version:\nVersionCertificado" as V
+participant "linea:\nLineaCertificado" as Lin
+end box
 box "ERP" #EAF2F6
-participant "obra:\nObra" as Obra
-participant "subcontratista:\nProveedor" as Prov
 participant "contrato:\nContrato" as Con
-participant "itemContrato:\nItemContrato" as IC
 participant "retencion:\nRetencion" as Ret
 end box
-box "ECMS" #EAF2F6
-participant "saldo:\nSaldoItem" as Saldo
-participant "item:\nItemCostos" as Item
+box "Motor de finanzas" #EAF2F6
+participant "liquidaciones:\nLiquidaciones" as Mot
+participant "liquidacion:\nLiquidacion" as Liq
 end box
 
-Admin -> Obra: registrarContrato(subcontratista, número, fechas, archivo)
-Obra -> Prov: esSubcontratista()
-Prov --> Obra: sí
-Obra -> Obra: númeroContratoDisponible(número)
-break el número ya existe en la obra (4b)
-  Obra --> Admin: pide otro número (vuelve al paso 1)
-end
-create Con
-Obra -> Con: «create»(subcontratista, número, fechas, archivo)
-Con -> Con: validarArchivo()
-break falta el archivo o el formato no está permitido (4b)
-  Con --> Admin: impide confirmar (vuelve al paso 1)
-end
-loop por cada ítem del alcance
-  Admin -> Con: agregarÍtem(ítem, precio, límite)
-  Con -> Saldo: cantidadPresupuestada()
-  Saldo --> Con: presupuestada
-  Con -> Saldo: disponibleParaContratos()
-  Saldo --> Con: disponible
-  alt el límite supera lo presupuestado (4a)
-    Con --> Admin: rechaza el ítem e informa el exceso
-  else la cantidad ya está asignada a otro contrato (4a, RF-08)
-    Con --> Admin: lo informa para evitar el doble conteo
-  else válido
-    create IC
-    Con -> IC: «create»(ítem, precio, límite)
+Ing -> V: líneasSubcontratadasPorContrato()
+V --> Ing: ítems subcontratados sin liquidar, agrupados por contrato
+loop por cada contrato de la versión (1a)
+  loop por cada línea del contrato
+    Ing -> Con: valorizar(ítem, cantidad)
+    Con --> Ing: importe al precio del contrato (RF-16)
+    V -> Lin: estaLiquidada()
+    Lin --> V: liquidada: lógico
+    opt ya se liquidó en otra versión (RF-08)
+      V --> Ing: la excluye e informa en cuál
+    end
+  end
+  V -> Con: excedeLímite(importe)
+  Con --> V: excede: lógico
+  break supera el límite del contrato (2a)
+    V --> Ing: impide enviar ese contrato (vuelve al paso 3)
+  end
+  alt confirma el envío (paso 3)
+    Ing -> V: enviarALiquidar(contrato, actor)
+    V -> Mot: liquidar(version, contrato, cantidades)
+    Mot -> Mot: buscar(version, contrato)
+    alt ya existe (reintento, NF-02)
+      Mot --> V: número de la liquidación existente
+    else no existe
+      create Liq
+      Mot -> Liq: «create»(version, contrato, cantidades)
+      Mot -> Liq: calcular(contrato)
+      Liq -> Con: valorizar(ítem, cantidad)
+      loop por cada retención del contrato
+        Liq -> Ret: aplicar(base)
+        Ret --> Liq: importe retenido
+      end
+      note right of Liq
+        Aplica fondo de reparo, deducciones e
+        impuestos del contrato; queda pendiente de pago.
+      end note
+      Mot --> V: número de la liquidación
+    end
+    break falla el registro en el Motor de finanzas (4a)
+      V --> Ing: no se marca ninguna cantidad; el CU termina
+    end
+    loop por cada línea enviada
+      V -> Lin: marcarLiquidada(liquidacion)
+    end
+    V --> Ing: liquidación pendiente de pago (CU-14«QUITADO»)
+  else no confirma
+    V --> Ing: no se envía nada; las cantidades quedan sin liquidar
   end
 end
-Admin -> Con: configurarCondiciones(impuestos, retenciones, fondoReparo)
-loop por cada retención
-  create Ret
-  Con -> Ret: «create»(tipo, porcentaje)
-end
-Admin -> Con: confirmar(actor)
-loop por cada ítem del contrato
-  Con -> Saldo: reservarParaContrato(cantidad)
-end
-Con --> Admin: contrato guardado y vinculado al alcance (RF-15)
-note over Item, Saldo
-  El saldo es del ítem de costos (código estable, RF-05).
-end note
 @enduml

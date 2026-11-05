@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-16 · Validar y finalizar el presupuesto del cliente
+title CU-16 · Consultar tablero financiero
 hide circle
 hide empty methods
 hide empty fields
@@ -25,85 +25,69 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-package "ERP" {
-  class Obra {
-    código: texto
+package "Motor de finanzas" {
+  class "Tablero financiero" as Tablero {
+    alcance: obra | empresa
+    fechaConsulta: fecha
+    filtro: rubro [0..1]
     --
-    + vincularPresupuestoCliente(presupuesto): vacío
+    + consultar(alcance, usuario): lista de TotalTablero
+    + filtrar(rubro, fecha): vacío
+    + abrirRespaldo(total): lista de archivo
+    + exportar(formato: XLSX | PDF): archivo
+  }
+
+  class "Total del tablero" as TotalTablero {
+    concepto: texto
+    importe: guaraníes
+    fecha: fecha
+    unidad: texto
+    moneda: texto = PYG
+    procedencia: ECMS | Motor de finanzas
+    disponible: lógico
+  }
+
+  class "Libro financiero" as LibroFinanciero {
+    --
+    + totales(obra, fecha): lista de TotalTablero
+    + resultadoEconómico(obra, fecha): guaraníes
+    + resultadoFinanciero(obra, fecha): guaraníes
   }
 }
 
 package "ECMS" {
-
-  class "Presupuesto del cliente" as PresupuestoCliente {
-    estado: EstadoPresupuestoCliente
-    totalDeclarado: guaraníes [0..1]
-    totalRecalculado: guaraníes
-    /diferenciaTotal: guaraníes [0..1]
-    finalizadoPor: Usuario [0..1]
-    fechaFinalización: fecha y hora [0..1]
+  class "Resumen de obra" as ResumenObra {
     --
-    + validarDatos(): Informe de importación
-    + recalcularTotales(): guaraníes
-    + compararTotales(): Informe de importación
-    + finalizar(actor): vacío
-  }
-
-  class Hoja {
-    nombre: texto
-    --
-    + validarFilas(informe): vacío
-  }
-
-  class Columna {
-    campoDestino: texto
-    obligatoria: lógico
-    --
-    + validarValor(valor: texto): lógico
-  }
-
-  class Rubro {
-    código: texto
-    totalDeclarado: guaraníes [0..1]
-    --
-    + recalcularTotal(): guaraníes
-  }
-
-  class "Ítem" as Item {
-    código: texto
-    cantidad: decimal
-    precioUnitario: guaraníes
-    /total: guaraníes
-    --
-    + recalcularTotal(): guaraníes
-  }
-
-  class "Informe de importación" as InformeImportacion {
-    fecha: fecha y hora
-    diferenciasAceptadas: lógico
-    --
-    + registrarError(hoja, fila, columna, motivo): vacío
-    + registrarDiferencia(rubro, declarado, recalculado): vacío
-    + aceptarDiferencias(): vacío
-  }
-
-  enum EstadoPresupuestoCliente <<enumeration>> {
-    propuesta
-    finalizado
+    + presupuestado(obra): lista de TotalTablero
+    + certificadoPorRubro(obra, fecha): lista
+    + avanceFísico(obra, fecha): porcentaje
   }
 }
 
-Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
-PresupuestoCliente "1" *-- "0..*" Hoja : estructura
-Hoja "1" *-- "1..*" Columna : define
-PresupuestoCliente "1" *-- "1..*" Rubro : contiene
-Rubro "1" *-- "1..*" Item : agrupa
-PresupuestoCliente "1" *-- "0..*" InformeImportacion : informes
+package "ERP" {
+  class Usuario {
+    --
+    + tieneAcceso(obra): lógico
+  }
 
-PresupuestoCliente ..> EstadoPresupuestoCliente : estado
-note bottom of PresupuestoCliente
-  Finalizado no se modifica (RF-04): los cambios van
-  por el presupuesto de costos (CU-03) o por adendas (CU-11).
+  class Obra {
+    fechaInicio: fecha
+    fechaFinVigente: fecha
+    --
+    + plazoTranscurrido(fecha): porcentaje
+  }
+}
+
+Tablero "1" *-- "0..*" TotalTablero : muestra
+Tablero ..> LibroFinanciero : usa
+Tablero ..> ResumenObra : usa
+Tablero ..> Usuario : verifica acceso (NF-01)
+ResumenObra ..> Obra : de
+LibroFinanciero ..> Obra : de
+
+note bottom of TotalTablero
+  Cada total indica fecha, unidad, moneda
+  y procedencia, y abre su respaldo (NF-10, NF-11).
 end note
 
 @enduml

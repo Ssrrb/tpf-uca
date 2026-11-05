@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-07 · Registrar gasto de obra
+title CU-07 · Medir el avance del certificado
 hide circle
 hide empty methods
 hide empty fields
@@ -25,76 +25,116 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-package "Motor de finanzas" {
-  class Gasto {
-    tipo: texto {material | mano de obra | caja chica}
-    importe: guaraníes
-    fecha: fecha
-    medioPago: texto
-    insumo: Insumo [0..1]
-    cantidad: decimal [0..1]
-    registradoPor: Usuario
-    fechaRegistro: fecha y hora
+package "ECMS" {
+  class "Ítem de costos" as ItemCostos {
+    código: texto {estable}
+    unidad: texto
     --
-    + indicarInsumo(insumo, cantidad): vacío
-    + imputar(rubro, ítem, importe): vacío
-    + adjuntarComprobante(archivo): vacío
-    + validarImporte(): lógico
+    + obtenerSaldo(): SaldoÍtem
+    + insumosDelACU(cantidad): lista de Insumo
+  }
+
+  class "Saldo del ítem" as SaldoItem {
+    cantidadCliente: decimal
+    cantidadAdendas: decimal
+    asignadaAContratos: decimal
+    medida: decimal
+    certificada: decimal
+    liquidada: decimal
+    /saldoContractual: decimal
+    --
+    + saldoContractual(): decimal
+    + estaContada(cantidad, medición): lógico
+    + registrarMedición(cantidad): vacío
+    + revertirMedición(cantidad): vacío
+    + cantidadCertificable(): decimal
+  }
+
+  class "Medición" as Medicion {
+    cantidad: decimal
+    unidad: texto
+    ejecutor: propio | subcontratado
+    estado: EstadoMedición
+    motivo: texto [0..1]
+    insumosConsumidos: lista de Insumo
+    registradaPor: Usuario
+    fecha: fecha y hora
+    --
+    + corregirInsumo(insumo, cantidad): vacío
+    + adjuntarEvidencia(archivo): vacío
+    + validarCompleta(): lista de texto
     + confirmar(actor): vacío
+    + anular(motivo, actor): vacío
+    + puedeAnularse(): lógico
+    + registrarAjuste(cantidad, motivo, actor): MediciónAjuste
+    + incluirEn(versión): vacío
   }
 
-  class "Imputación" as Imputacion {
-    rubro: texto
-    importe: guaraníes
+  class "Medición de ajuste" as MedicionAjuste {
+    signo: positivo | negativo
   }
 
-  class Comprobante {
-    tipo: factura | planilla | ticket | recibo | comprobante | retención
+  class Evidencia {
+    tipo: foto | planilla | acta
     archivo: archivo
   }
 
-  class "Costo real del rubro" as CostoReal {
-    rubro: texto
-    total: guaraníes
+  class "Certificado de avance" as Certificado {
     --
-    + sumar(importe): vacío
+    + generarVersiónSiguiente(actor): VersiónCertificado
   }
-}
 
-package "ECMS" {
-  class "Versión del presupuesto de costos" as VersionCostos {
-    estado: EstadoVersionCostos
+  class "Versión del certificado" as VersionCertificado {
+    número: entero
+    estado: cantidades cerradas | valorizada
     --
-    + obtenerRubro(código): texto [0..1]
-    + rubroGastosGenerales(): texto
+    + tomarCantidades(): vacío
+    + cerrarCantidades(actor): vacío
+  }
+
+  class "Línea del certificado" as LineaCertificado {
+    tipo: cantidad | ajuste | regularización
+    avanceAnterior: decimal
+    cantidad: decimal
+    /acumulado: decimal
+  }
+
+  enum EstadoMedición <<enumeration>> {
+    registrada
+    incluida
+    certificada
+    anulada
   }
 }
 
 package "ERP" {
   class Obra {
-    topeCajaChica: guaraníes
+    estado: EstadoObra
     --
-    + permiteGastos(): lógico
-    + obtenerTopeCajaChica(): guaraníes
+    + permiteMediciones(): lógico
   }
 
-  class Proveedor {
+  class Contrato {
+    número: texto
     --
-    + estaActivo(): lógico
+    + descontarSaldo(ítem, cantidad): vacío
   }
 
-  class "Persona (RRHH)" as Persona {
-    --
-    + estaActiva(): lógico
-  }
 }
 
-Gasto "0..*" --> "1" Obra : de la obra
-Gasto "0..*" --> "0..1" Proveedor : pagado a
-Gasto "0..*" --> "0..1" Persona : pagado a
-Gasto "1" *-- "1..*" Imputacion : se reparte en
-Imputacion "0..*" --> "1" VersionCostos : rubro de la vigente
-Gasto "1" *-- "1" Comprobante : respaldo
-Imputacion "0..*" --> "1" CostoReal : suma al
+ItemCostos "1" *-- "1" SaldoItem : lleva
+Medicion "0..*" --> "1" ItemCostos : mide
+Medicion "0..*" --> "1" Obra : de la obra
+Medicion "0..*" --> "0..1" Contrato : a nombre de
+Medicion "1" *-- "1..*" Evidencia : respaldo
+Medicion <|-- MedicionAjuste
+MedicionAjuste "0..*" --> "1" Medicion : corrige
+Certificado "0..1" --> "1" Obra : de la obra
+Certificado "1" *-- "0..*" VersionCertificado : versiones numeradas
+VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
+LineaCertificado "0..1" --> "0..*" Medicion : incluye
+LineaCertificado "0..*" --> "1" SaldoItem : ítem
+
+Medicion ..> EstadoMedición : estado
 
 @enduml

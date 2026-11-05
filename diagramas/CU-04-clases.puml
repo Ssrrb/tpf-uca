@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-04 · Medir el avance del certificado
+title CU-04 · Validar y finalizar el presupuesto del cliente
 hide circle
 hide empty methods
 hide empty fields
@@ -25,116 +25,85 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-package "ECMS" {
-  class "Ítem de costos" as ItemCostos {
-    código: texto {estable}
-    unidad: texto
-    --
-    + obtenerSaldo(): SaldoÍtem
-    + insumosDelACU(cantidad): lista de Insumo
-  }
-
-  class "Saldo del ítem" as SaldoItem {
-    cantidadCliente: decimal
-    cantidadAdendas: decimal
-    asignadaAContratos: decimal
-    medida: decimal
-    certificada: decimal
-    liquidada: decimal
-    /saldoContractual: decimal
-    --
-    + saldoContractual(): decimal
-    + estaContada(cantidad, medición): lógico
-    + registrarMedición(cantidad): vacío
-    + revertirMedición(cantidad): vacío
-    + cantidadCertificable(): decimal
-  }
-
-  class "Medición" as Medicion {
-    cantidad: decimal
-    unidad: texto
-    ejecutor: propio | subcontratado
-    estado: EstadoMedición
-    motivo: texto [0..1]
-    insumosConsumidos: lista de Insumo
-    registradaPor: Usuario
-    fecha: fecha y hora
-    --
-    + corregirInsumo(insumo, cantidad): vacío
-    + adjuntarEvidencia(archivo): vacío
-    + validarCompleta(): lista de texto
-    + confirmar(actor): vacío
-    + anular(motivo, actor): vacío
-    + puedeAnularse(): lógico
-    + registrarAjuste(cantidad, motivo, actor): MediciónAjuste
-    + incluirEn(versión): vacío
-  }
-
-  class "Medición de ajuste" as MedicionAjuste {
-    signo: positivo | negativo
-  }
-
-  class Evidencia {
-    tipo: foto | planilla | acta
-    archivo: archivo
-  }
-
-  class "Certificado de avance" as Certificado {
-    --
-    + generarVersiónSiguiente(actor): VersiónCertificado
-  }
-
-  class "Versión del certificado" as VersionCertificado {
-    número: entero
-    estado: cantidades cerradas | valorizada
-    --
-    + tomarCantidades(): vacío
-    + cerrarCantidades(actor): vacío
-  }
-
-  class "Línea del certificado" as LineaCertificado {
-    tipo: cantidad | ajuste | regularización
-    avanceAnterior: decimal
-    cantidad: decimal
-    /acumulado: decimal
-  }
-
-  enum EstadoMedición <<enumeration>> {
-    registrada
-    incluida
-    certificada
-    anulada
-  }
-}
-
 package "ERP" {
   class Obra {
-    estado: EstadoObra
+    código: texto
     --
-    + permiteMediciones(): lógico
+    + vincularPresupuestoCliente(presupuesto): vacío
   }
-
-  class Contrato {
-    número: texto
-    --
-    + descontarSaldo(ítem, cantidad): vacío
-  }
-
 }
 
-ItemCostos "1" *-- "1" SaldoItem : lleva
-Medicion "0..*" --> "1" ItemCostos : mide
-Medicion "0..*" --> "1" Obra : de la obra
-Medicion "0..*" --> "0..1" Contrato : a nombre de
-Medicion "1" *-- "1..*" Evidencia : respaldo
-Medicion <|-- MedicionAjuste
-MedicionAjuste "0..*" --> "1" Medicion : corrige
-Certificado "0..1" --> "1" Obra : de la obra
-Certificado "1" *-- "0..*" VersionCertificado : versiones numeradas
-VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
-LineaCertificado "0..1" --> "0..*" Medicion : incluye
-LineaCertificado "0..*" --> "1" SaldoItem : ítem
+package "ECMS" {
 
-Medicion ..> EstadoMedición : estado
+  class "Presupuesto del cliente" as PresupuestoCliente {
+    estado: EstadoPresupuestoCliente
+    totalDeclarado: guaraníes [0..1]
+    totalRecalculado: guaraníes
+    /diferenciaTotal: guaraníes [0..1]
+    finalizadoPor: Usuario [0..1]
+    fechaFinalización: fecha y hora [0..1]
+    --
+    + validarDatos(): Informe de importación
+    + recalcularTotales(): guaraníes
+    + compararTotales(): Informe de importación
+    + finalizar(actor): vacío
+  }
+
+  class Hoja {
+    nombre: texto
+    --
+    + validarFilas(informe): vacío
+  }
+
+  class Columna {
+    campoDestino: texto
+    obligatoria: lógico
+    --
+    + validarValor(valor: texto): lógico
+  }
+
+  class Rubro {
+    código: texto
+    totalDeclarado: guaraníes [0..1]
+    --
+    + recalcularTotal(): guaraníes
+  }
+
+  class "Ítem" as Item {
+    código: texto
+    cantidad: decimal
+    precioUnitario: guaraníes
+    /total: guaraníes
+    --
+    + recalcularTotal(): guaraníes
+  }
+
+  class "Informe de importación" as InformeImportacion {
+    fecha: fecha y hora
+    diferenciasAceptadas: lógico
+    --
+    + registrarError(hoja, fila, columna, motivo): vacío
+    + registrarDiferencia(rubro, declarado, recalculado): vacío
+    + aceptarDiferencias(): vacío
+  }
+
+  enum EstadoPresupuestoCliente <<enumeration>> {
+    propuesta
+    finalizado
+  }
+}
+
+Obra "1" *-- "0..1" PresupuestoCliente : presupuesto contractual
+PresupuestoCliente "1" *-- "0..*" Hoja : estructura
+Hoja "1" *-- "1..*" Columna : define
+PresupuestoCliente "1" *-- "1..*" Rubro : contiene
+Rubro "1" *-- "1..*" Item : agrupa
+PresupuestoCliente "1" *-- "0..*" InformeImportacion : informes
+
+PresupuestoCliente ..> EstadoPresupuestoCliente : estado
+note bottom of PresupuestoCliente
+  Finalizado no se modifica (RF-04): los cambios van
+  por el presupuesto de costos (CU-05) o por adendas (CU-11«QUITADO»).
+end note
 
 @enduml

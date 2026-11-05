@@ -32,7 +32,7 @@ skinparam note {
   BackgroundColor #FFFFFF
   BorderColor #17324D
 }
-title CU-02 · Actividades · Cargar el presupuesto del cliente
+title CU-03 · Actividades · Cargar el presupuesto del cliente
 |Ingeniero de obra|
 start
 :Seleccionar la obra;
@@ -58,6 +58,6 @@ endif
 |Ingeniero de obra|
 :Confirmar la estructura, los rubros y las unidades;
 |Ctrl+ · ECMS|
-:Guardar la carga lista para validar (CU-16);
+:Guardar la carga lista para validar (CU-04);
 stop
 @enduml

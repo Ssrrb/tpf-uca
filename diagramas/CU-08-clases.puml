@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title CU-08 · Generar factura interna del certificado
+title CU-08 · Calcular el certificado y el consumo de recursos
 hide circle
 hide empty methods
 hide empty fields
@@ -26,81 +26,111 @@ skinparam note {
   BorderColor #17324D
 }
 package "Motor de finanzas" {
-  class "Facturación interna" as Facturacion {
+  class "Cálculo del certificado" as CalculoCertificado {
     --
-    + listarPendientes(obra): lista
-    + generarFactura(versión, actor): DocumentoInterno
-    + generarFacturaAnticipo(anticipo, actor): DocumentoInterno
-  }
-
-  enum EstadoDocumento <<enumeration>> {
-    generada
-    pendiente_de_adjuntar
-    a_cobrar
-    cobrada_parcial
-    cobrada
-  }
-
-  class "Documento interno" as DocumentoInterno {
-    tipo: texto {factura interna | nota de crédito interna}
-    número: entero
-    moneda: texto = PYG
-    neto: guaraníes
-    iva: guaraníes
-    /total: guaraníes
-    sinValidezFiscal: lógico = verdadero
-    estado: EstadoDocumento
-    motivoDiferencia: texto [0..1]
-    --
-    + adjuntarFacturaLegal(número, fecha, importe, archivo): vacío
-    + compararConLegal(): guaraníes
-    + registrarMotivoDiferencia(motivo): vacío
-    + confirmar(actor): vacío
-  }
-
-
-  class "Factura legal" as FacturaLegal {
-    número: texto
-    fecha: fecha
-    importe: guaraníes
-    archivo: archivo
-  }
-
-  class "Cuenta a cobrar" as CuentaACobrar {
-    saldoPendiente: guaraníes
+    + calcularVersión(versión, actor): vacío
+    + confirmar(versión, actor): vacío
   }
 }
 
 package "ECMS" {
   class "Versión del certificado" as VersionCertificado {
+    número: entero
+    estado: cantidades cerradas | valorizada
+    bruto: guaraníes
+    amortizaciónAnticipo: guaraníes
+    fondoReparo: guaraníes
     neto: guaraníes
     iva: guaraníes
+    guardadaPor: Usuario [0..1]
     --
-    + importeSinFacturar(): guaraníes
+    + estaCerrada(): lógico
+    + agregarLíneaAjuste(versiónCorregida, cantidad, importe, motivo): vacío
+    + agregarLíneaRegularización(ítem, cantidad, precio): vacío
+    + registrarImportes(bruto, amortización, fondoReparo, neto, iva): vacío
+    + guardar(actor): vacío
+  }
+
+  class "Línea del certificado" as LineaCertificado {
+    tipo: cantidad | ajuste | regularización
+    cantidad: decimal
+    precioUnitario: guaraníes
+    importe: guaraníes
+    exceso: guaraníes [0..1]
+    --
+    + valorizar(precio: guaraníes): guaraníes
+    + señalarExceso(montoContractual: guaraníes): guaraníes [0..1]
+  }
+
+  class "Medición" as Medicion {
+    cantidad: decimal
+    --
+    + insumosConsumidos(): lista de Insumo
+    + marcarCertificada(versión): vacío
+  }
+
+  class "Saldo del ítem" as SaldoItem {
+    certificada: decimal
+    exceso: guaraníes
+    --
+    + registrarCertificado(cantidad): vacío
+    + montoContractual(): guaraníes
+    + registrarExceso(importe): vacío
+    + regularizarExceso(importe): vacío
+  }
+
+  class "Presupuesto del cliente" as PresupuestoCliente {
+    --
+    + precioUnitario(ítem): guaraníes [0..1]
+  }
+
+  class "Apartado Adendas" as ApartadoAdendas {
+    --
+    + ítemsAprobadosDesde(versión): lista de ItemAdenda
+    + precioAprobado(ítem): guaraníes [0..1]
   }
 }
 
 package "ERP" {
   class Obra {
+    estado: EstadoObra
+    porcentajeIVA: decimal
+    porcentajeFondoReparo: decimal
     --
-    + datosDeFacturación(): texto [0..1]
+    + permiteCertificar(): lógico
   }
 
   class Anticipo {
-    importe: guaraníes
-    facturado: lógico
+    saldoPorAmortizar: guaraníes
     --
-    + marcarFacturado(): vacío
+    + amortizar(bruto: guaraníes): guaraníes
+  }
+
+  class Insumo {
+    código: texto
+    --
+    + precioVigente(fecha): guaraníes [0..1]
+  }
+
+  class "Consumos de la obra" as ConsumosObra {
+    consumos: lista de Insumo
+    --
+    + prepararConsumo(insumo, cantidad, precio, medición): vacío
+    + registrar(versión): vacío
   }
 }
 
-DocumentoInterno "0..*" --> "0..1" VersionCertificado : corresponde a
-DocumentoInterno "0..1" --> "0..1" Anticipo : factura
-DocumentoInterno "1" *-- "0..1" FacturaLegal : adjunta
-DocumentoInterno "1" *-- "1" CuentaACobrar : registra
-DocumentoInterno "0..*" --> "1" Obra : de la obra
-Facturacion ..> DocumentoInterno : genera
-
-DocumentoInterno ..> EstadoDocumento : estado
+CalculoCertificado ..> VersionCertificado : <<use>>
+CalculoCertificado ..> ConsumosObra : <<use>>
+VersionCertificado "1" *-- "1..*" LineaCertificado : líneas
+LineaCertificado "0..1" --> "0..*" Medicion : certifica
+LineaCertificado "0..*" --> "1" SaldoItem : ítem
+VersionCertificado "0..*" --> "1" PresupuestoCliente : precios
+VersionCertificado "0..*" --> "0..1" ApartadoAdendas : adendas registradas
+ApartadoAdendas ..> SaldoItem : suma al monto contractual
+VersionCertificado "0..*" --> "0..1" Anticipo : amortiza
+VersionCertificado "0..*" --> "1" Obra : de la obra
+Obra "1" *-- "1" ConsumosObra : consumos
+ConsumosObra "0..*" --> "0..*" Insumo : registra el consumo de
 
 @enduml
