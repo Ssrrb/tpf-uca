@@ -26,7 +26,7 @@ participant "obra:\nObra" as Obra
 participant "contrato:\nContrato" as Con
 end box
 box "ECMS" #EAF2F6
-participant "item:\nItemCostos" as Item
+participant "item:\nItem" as Item
 participant "saldo:\nSaldoItem" as Saldo
 participant "medicion:\nMedicion" as Med
 participant "adjunto:\nArchivoAdjunto" as Evi

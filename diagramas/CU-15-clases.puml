@@ -78,7 +78,7 @@ package "ECMS" {
 
   class Adjunto {
     nombre: texto
-    archivo: archivo
+    archivo: Archivo
   }
 
   enum EstadoIncidencia <<enumeration>> {
@@ -100,7 +100,7 @@ package "ERP" {
     + esMiembro(usuario): lógico
     + abrirIncidencia(datos, ancla, actor): Incidencia
     + pendientesDe(usuario): lista de Incidencia
-    + exportarBCF(): archivo
+    + exportarBCF(): Archivo
     + importarBCF(archivo, actor): lista de Incidencia
     + existeIncidencia(guidBCF): lógico
   }

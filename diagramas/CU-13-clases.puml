@@ -30,7 +30,7 @@ left to right direction
 package "ECMS" {
   class "Versión de modelo" as VersionModelo {
     número: entero
-    archivo: archivo IFC
+    archivo: Archivo
     procesamiento: EstadoProcesamiento
     motivoFalla: texto [0..1]
     --
@@ -44,8 +44,8 @@ package "ECMS" {
     fecha: fecha y hora
     --
     + calcular()
-    + armarXLSX(): archivo XLSX
-    + descargarXLSX(): archivo XLSX
+    + armarXLSX(): Archivo
+    + descargarXLSX(): Archivo
   }
 
   class "Rubro del cómputo" as RubroComputo {

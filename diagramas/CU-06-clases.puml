@@ -44,7 +44,7 @@ package "ERP" {
     número: texto
     fechaInicio: fecha
     fechaFin: fecha
-    archivo: archivo
+    archivo: Archivo
     impuestos: decimal
     porcentajeFondoReparo: decimal
     registradoPor: Usuario
@@ -78,7 +78,7 @@ package "ECMS" {
     + reservarParaContrato(cantidad): vacío
   }
 
-  class "Ítem de costos" as ItemCostos {
+  class "Ítem" as Item {
     código: texto {estable}
   }
 }
@@ -86,8 +86,8 @@ package "ECMS" {
 Obra "1" *-- "0..*" Contrato : subcontratos
 Contrato "0..*" --> "1" Proveedor : con
 Contrato "1" *-- "1..*" ItemContrato : alcance
-ItemContrato "0..*" --> "1" ItemCostos : ítem
-ItemCostos "1" *-- "1" SaldoItem : saldo
+ItemContrato "0..*" --> "1" Item : ítem
+Item "1" *-- "1" SaldoItem : saldo
 Contrato "0..*" --> "0..*" Retencion : aplica
 
 note bottom of SaldoItem

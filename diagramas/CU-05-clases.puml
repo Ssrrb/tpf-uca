@@ -28,27 +28,27 @@ skinparam note {
 package "ECMS" {
   class "Presupuesto de costos" as PresupuestoCostos {
     --
-    + consultarVersiones(): lista de VersionCostos
-    + obtenerVigente(): VersionCostos [0..1]
-    + guardarPrimeraVersión(base: PresupuestoCliente, actor): VersionCostos
-    + guardarVersión(cambios, motivo, actor): VersionCostos
+    + consultarVersiones(): lista de VersionPresupuestoCostos
+    + obtenerVigente(): VersionPresupuestoCostos [0..1]
+    + guardarPrimeraVersión(base: PresupuestoCliente, actor): VersionPresupuestoCostos
+    + guardarVersión(cambios, motivo, actor): VersionPresupuestoCostos
   }
 
-  enum EstadoVersionCostos <<enumeration>> {
+  enum EstadoVersionPresupuestoCostos <<enumeration>> {
     vigente
     historica
   }
 
-  class "Versión del presupuesto de costos" as VersionCostos {
+  class "Versión del presupuesto de costos" as VersionPresupuestoCostos {
     número: entero
-    estado: EstadoVersionCostos
+    estado: EstadoVersionPresupuestoCostos
     motivo: texto [0..1]
     creadaPor: Usuario
     fecha: fecha y hora
     --
     + copiarRubros(base: PresupuestoCliente): vacío
     + agregarRubroGastosGenerales(): vacío
-    + copiarDe(anterior: VersionCostos): vacío
+    + copiarDe(anterior: VersionPresupuestoCostos): vacío
     + difiereDe(cambios): lógico
     + pasarAHistórica(): vacío
   }
@@ -75,13 +75,13 @@ package "ECMS" {
   }
 }
 
-PresupuestoCostos "1" *-- "1..*" VersionCostos : versiones
-VersionCostos "0..*" --> "1" PresupuestoCliente : se basa en
-VersionCostos "0..1" --> "0..1" VersionCostos : versión anterior
-VersionCostos "1" *-- "1..*" Rubro : contiene
+PresupuestoCostos "1" *-- "1..*" VersionPresupuestoCostos : versiones
+VersionPresupuestoCostos "0..*" --> "1" PresupuestoCliente : se basa en
+VersionPresupuestoCostos "0..1" --> "0..1" VersionPresupuestoCostos : versión anterior
+VersionPresupuestoCostos "1" *-- "1..*" Rubro : contiene
 Rubro "1" *-- "0..*" Item : agrupa
 
-VersionCostos ..> EstadoVersionCostos : estado
+VersionPresupuestoCostos ..> EstadoVersionPresupuestoCostos : estado
 
 note bottom of Item
   El código se conserva entre versiones y lo vincula con su ítem
@@ -89,7 +89,7 @@ note bottom of Item
   y los documentos (CU-14) siguen al ítem por su código.
 end note
 
-note bottom of VersionCostos
+note bottom of VersionPresupuestoCostos
   La versión que se guarda nace vigente y la anterior pasa a histórica.
   El ejecutor, los insumos, el ACU y el costo de cada ítem
   quedan fuera del MVP.

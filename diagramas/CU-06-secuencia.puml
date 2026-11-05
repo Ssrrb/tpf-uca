@@ -30,7 +30,7 @@ participant "retencion:\nRetencion" as Ret
 end box
 box "ECMS" #EAF2F6
 participant "saldo:\nSaldoItem" as Saldo
-participant "item:\nItemCostos" as Item
+participant "item:\nItem" as Item
 end box
 
 Admin -> Obra: registrarContrato(subcontratista, número, fechas, archivo)

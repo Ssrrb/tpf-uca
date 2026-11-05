@@ -57,7 +57,7 @@ package "ECMS" {
 
   class "Versión de modelo" as VersionModelo {
     número: entero
-    archivo: archivo IFC
+    archivo: Archivo
     hash: texto
     origen: carpeta | web | Speckle
     estado: EstadoVersion
@@ -130,7 +130,7 @@ package "ECMS" {
 }
 
 class "Visor de modelos" as VisorModelos <<servicio externo>> {
-  + obtenerPublicacion(referencia): archivo
+  + obtenerPublicacion(referencia): Archivo
   + prepararVista(archivo)
 }
 

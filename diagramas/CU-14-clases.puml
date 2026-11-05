@@ -141,7 +141,7 @@ package "ERP" {
 
   class "Versión del documento" as VersionDocumento {
     número: entero
-    archivo: archivo
+    archivo: Archivo
     autor: Usuario
     fecha: fecha y hora
     --
