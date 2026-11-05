@@ -75,7 +75,6 @@ Incidencia -- Modelo
 
 CalculoCertificado -- Medicion
 RegistroLiquidacion -- Liquidacion
-Liquidacion -- Contrato
 PresupuestoCostos -- Contrato
 Usuario -- Documento
 Modelo -- Documento
