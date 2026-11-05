@@ -1,0 +1,47 @@
+# Glosario de Ctrl+ (fuente de verdad)
+
+Todo texto y todo diagrama usan estos nombres. Un término nuevo entra aquí en
+la misma iteración del CU que lo necesita. La columna «No usar» lista los
+sinónimos prohibidos.
+
+## Actores
+
+| Término | Definición | No usar |
+|---|---|---|
+| Usuario | Actor abstracto: persona de la organización que entra a Ctrl+. | — |
+| Administrador | Usuario que administra la empresa en Ctrl+: crea obras, asigna ingenieros, mantiene catálogos. Rol de la organización. | administrador técnico |
+| Ingeniero de obra | Usuario que trabaja en una obra a la que está asignado. Rol en la obra. | responsable, miembro, integrante |
+
+Cliente y Proveedor **no** son actores: son datos del catálogo.
+
+## Subsistemas
+
+Módulos de la misma aplicación web. No son actores. En los diagramas de clases
+son paquetes.
+
+| Término | Responsabilidad |
+|---|---|
+| ERP | Organización, usuarios, obras, catálogos, contratos, documentación de la obra. |
+| ECMS | Presupuestos, estructura de trabajo, mediciones, modelos, incidencias. |
+| Motor de finanzas | Cálculo de las versiones del certificado y de las liquidaciones. |
+
+## Clases y estados
+
+Se completa a medida que se cierran los CU. «Desde» indica el CU que la introduce.
+
+| Clase | Subsistema | Definición | Desde | Estados |
+|---|---|---|---|---|
+| Organización | ERP | La constructora. Hay una sola. | CU-01 | — |
+| Obra | ERP | Proyecto de construcción con código único, cliente, fechas, tasa de IVA, anticipo y fondo de reparo. | CU-01 | En ejecución, Recepción provisoria, Recepción definitiva, Cerrada |
+| Anticipo | ERP | Adelanto opcional de una obra, por porcentaje o por importe, que cada versión del certificado amortiza. | CU-01 | — |
+| Asignación | ERP | Vínculo de un Ingeniero de obra con una obra, con actor y fecha. | CU-01 | — |
+| Cliente | ERP | Comitente de una obra, en el catálogo, identificado por RUC. | CU-01 (se mantiene en CU-02) | Activo, Inactivo |
+
+## Términos generales
+
+| Término | Definición | No usar |
+|---|---|---|
+| Asignar | Dar a un Ingeniero de obra acceso a una obra. | dar membresía |
+| Avanzar el estado | Pasar la obra a su estado siguiente, sin volver atrás. | cambiar de fase |
+| Actor y fecha | Quién hizo una operación y cuándo; se guarda en toda operación (NF-03). | auditoría (en el texto de un CU) |
+| Montos | Guaraníes enteros (PYG). | — |
