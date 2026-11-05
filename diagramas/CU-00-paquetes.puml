@@ -33,78 +33,15 @@ skinparam note {
   BorderColor #17324D
 }
 title Diagrama de Subsistemas de Ctrl+
-hide circle
-hide members
-hide empty methods
-hide empty fields
-skinparam classAttributeIconSize 0
-skinparam nodesep 40
-skinparam ranksep 60
-skinparam class {
-  BackgroundColor #F5F8FA
-  BorderColor #17324D
-  HeaderBackgroundColor #EAF2F6
-}
+skinparam nodesep 60
+skinparam ranksep 80
 
 package "ERP" as erp {
-  class Organizacion
-  class Usuario
-  class Asignacion
-  class Obra
-  class Cliente
-  class Proveedor
-  class Contrato
-  class Carpeta
-  class Documento
 }
-
 package "ECMS" as ecms {
-  class PresupuestoCliente
-  class VersionPresupuestoCostos
-  class Item
-  class Medicion
-  class VersionCertificado
-  class Modelo
-  class VersionModelo
-  class VinculoEstructura
-  class Incidencia
 }
-
 package "Motor de finanzas" as mf {
-  class CalculoCertificado
-  class Liquidacion
-  class DetalleLiquidacion
-  class Deduccion
 }
-
-Organizacion -- Usuario
-Usuario -- Asignacion
-Asignacion -- Obra
-Obra -- Cliente
-Contrato -- Proveedor
-Contrato -- Obra
-Obra -- Carpeta
-Carpeta -- Documento
-
-PresupuestoCliente -- VersionPresupuestoCostos
-VersionPresupuestoCostos -- Item
-Item -- Medicion
-Medicion -- VersionCertificado
-Modelo -- VersionModelo
-VinculoEstructura -- Item
-VinculoEstructura -- VersionModelo
-Incidencia -- VersionModelo
-
-PresupuestoCliente -- Obra
-Incidencia -- Usuario
-VinculoEstructura -- Documento
-Medicion -- Contrato
-
-CalculoCertificado -- VersionCertificado
-Liquidacion -- VersionCertificado
-Liquidacion -- Contrato
-Liquidacion *-- DetalleLiquidacion
-Liquidacion *-- Deduccion
 
 ecms ..> erp
 mf ..> ecms

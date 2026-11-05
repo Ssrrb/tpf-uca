@@ -1,0 +1,109 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title Diagrama de Subsistemas de Ctrl+ · con las clases principales
+hide circle
+hide members
+hide empty methods
+hide empty fields
+skinparam classAttributeIconSize 0
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+
+package "ERP" as erp {
+  class Organizacion
+  class Usuario
+  class Asignacion
+  class Obra
+  class Cliente
+  class Proveedor
+  class Contrato
+  class Carpeta
+  class Documento
+}
+
+package "ECMS" as ecms {
+  class PresupuestoCliente
+  class VersionPresupuestoCostos
+  class Item
+  class Medicion
+  class VersionCertificado
+  class Modelo
+  class VersionModelo
+  class VinculoEstructura
+  class Incidencia
+}
+
+package "Motor de finanzas" as mf {
+  class CalculoCertificado
+  class Liquidacion
+  class DetalleLiquidacion
+  class Deduccion
+}
+
+Organizacion -- Usuario
+Usuario -- Asignacion
+Asignacion -- Obra
+Obra -- Cliente
+Contrato -- Proveedor
+Contrato -- Obra
+Obra -- Carpeta
+Carpeta -- Documento
+
+PresupuestoCliente -- VersionPresupuestoCostos
+VersionPresupuestoCostos -- Item
+Item -- Medicion
+Medicion -- VersionCertificado
+Modelo -- VersionModelo
+VinculoEstructura -- Item
+VinculoEstructura -- VersionModelo
+Incidencia -- VersionModelo
+
+PresupuestoCliente -- Obra
+Incidencia -- Usuario
+VinculoEstructura -- Documento
+Medicion -- Contrato
+
+CalculoCertificado -- VersionCertificado
+Liquidacion -- VersionCertificado
+Liquidacion -- Contrato
+Liquidacion *-- DetalleLiquidacion
+Liquidacion *-- Deduccion
+
+@enduml
