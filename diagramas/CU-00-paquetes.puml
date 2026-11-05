@@ -63,7 +63,7 @@ package "ECMS" {
 package "ERP" {
   class "Presupuesto del cliente" as Contrato
   class "Usuario" as Usuario
-  class "Documento" as Documento
+  class "Documentos" as Documento
 }
 
 CalculoCertificado -- Certificado
