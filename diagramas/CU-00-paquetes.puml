@@ -33,63 +33,62 @@ skinparam note {
   BorderColor #17324D
 }
 title Diagrama de Subsistemas de Ctrl+
-skinparam nodesep 30
-skinparam ranksep 50
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam linetype ortho
 skinparam package {
   BackgroundColor #EAF2F6
   BorderColor #17324D
 }
 
-package "ERP" as erp #EAF2F6 {
-  package "Obras y usuarios\n(CU-01)" as obr #FFFFFF {
-  }
-  package "Catálogos\n(CU-02)" as cat #FFFFFF {
-  }
-  package "Contratos\n(CU-06)" as con #FFFFFF {
-  }
-  package "Documentación de obra\n(CU-10, CU-11)" as doc #FFFFFF {
-  }
+package "Tablero y actividad\n(CU-16)" as tab #FFF4D6 {
+}
+package "Registro de liquidaciones\n(CU-09)" as reg #E3F1E3 {
+}
+package "Incidencias\n(CU-15)" as inc #FFF4D6 {
+}
+package "Liquidación de subcontratistas\n(CU-09)" as liq #FFF4D6 {
+}
+package "Cálculo del certificado\n(CU-08)" as cal #E3F1E3 {
+}
+package "Mediciones\n(CU-07)" as med #FFF4D6 {
+}
+package "Vínculos\n(CU-14)" as vin #FFF4D6 {
+}
+package "Modelos\n(CU-12, CU-13)" as mod #FFF4D6 {
+}
+package "Presupuestos\n(CU-03, CU-04, CU-05)" as pre #FFF4D6 {
+}
+package "Contratos\n(CU-06)" as con #EAF2F6 {
+}
+package "Documentación de obra\n(CU-10, CU-11)" as doc #EAF2F6 {
+}
+package "Obras y usuarios\n(CU-01)" as obr #EAF2F6 {
+}
+package "Catálogos\n(CU-02)" as cat #EAF2F6 {
 }
 
-package "ECMS" as ecms #EAF2F6 {
-  package "Presupuestos\n(CU-03, CU-04, CU-05)" as pre #FFFFFF {
-  }
-  package "Modelos\n(CU-12, CU-13)" as mod #FFFFFF {
-  }
-  package "Vínculos\n(CU-14)" as vin #FFFFFF {
-  }
-  package "Incidencias\n(CU-15)" as inc #FFFFFF {
-  }
-  package "Mediciones\n(CU-07)" as med #FFFFFF {
-  }
-  package "Liquidación de subcontratistas\n(CU-09)" as liq #FFFFFF {
-  }
-  package "Tablero y actividad\n(CU-16)" as tab #FFFFFF {
-  }
-}
+legend right
+  | <back:#EAF2F6>   </back> ERP |
+  | <back:#FFF4D6>   </back> ECMS |
+  | <back:#E3F1E3>   </back> Motor de finanzas |
+endlegend
 
-package "Motor de finanzas" as mf #EAF2F6 {
-  package "Cálculo del certificado\n(CU-08)" as cal #FFFFFF {
-  }
-  package "Registro de liquidaciones\n(CU-09)" as reg #FFFFFF {
-  }
-}
-
-tab ..> cal
-tab ..> inc
-reg ..> liq
-liq ..> cal
-liq ..> con
-cal ..> med
-med ..> vin
-med ..> con
-inc ..> mod
-vin ..> mod
-mod ..> pre
-mod ..> doc
-pre ..> obr
-doc ..> obr
-con ..> obr
-obr ..> cat
+tab .down.> inc
+tab .down.> cal
+reg .down.> liq
+liq .down.> cal
+liq .down.> con
+cal .down.> med
+med .down.> vin
+med .down.> con
+inc .down.> mod
+vin .down.> mod
+mod .down.> pre
+mod .down.> doc
+pre .down.> obr
+doc .down.> obr
+con .down.> obr
+obr .down.> cat
 
 @enduml
