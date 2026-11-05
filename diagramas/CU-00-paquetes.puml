@@ -61,7 +61,7 @@ package "ECMS" {
 }
 
 package "ERP" {
-  class "Contrato" as Contrato
+  class "Presupuesto del cliente" as Contrato
   class "Obra" as Obra
   class "Usuario" as Usuario
   class "Documento" as Documento
