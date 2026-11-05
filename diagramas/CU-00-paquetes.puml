@@ -35,16 +35,21 @@ skinparam note {
 title Diagrama de Subsistemas de Ctrl+
 skinparam nodesep 50
 skinparam ranksep 70
-skinparam linetype ortho
 skinparam package {
   BackgroundColor #EAF2F6
   BorderColor #17324D
 }
 
 
+show circle
+skinparam classBackgroundColor #FFF9DB
+skinparam classBorderColor #17324D
+
 package "Motor de finanzas" {
   class "Cálculo del certificado" as CalculoCertificado
+  class "Certificado" as Certificado
   class "Registro de liquidaciones" as RegistroLiquidacion
+  class "Retención" as Retencion
 }
 
 package "ECMS" {
@@ -62,11 +67,21 @@ package "ERP" {
   class "Documento" as Documento
 }
 
-CalculoCertificado -down- Medicion
-RegistroLiquidacion -down- Liquidacion
-Liquidacion -down- Contrato
-PresupuestoCostos -down- Obra
-Incidencia -down- Usuario
-Modelo -down- Documento
+CalculoCertificado -- Certificado
+CalculoCertificado -- Retencion
+Certificado -- RegistroLiquidacion
+Medicion -- Liquidacion
+Medicion -- PresupuestoCostos
+Incidencia -- Modelo
+Contrato -- Obra
+Obra -- Usuario
+Obra -- Documento
+
+CalculoCertificado -- Medicion
+RegistroLiquidacion -- Liquidacion
+Liquidacion -- Contrato
+PresupuestoCostos -- Obra
+Incidencia -- Usuario
+Modelo -- Documento
 
 @enduml
