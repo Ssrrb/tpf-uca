@@ -1,0 +1,51 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Casos de Uso · Estructura de trabajo
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+left to right direction
+skinparam nodesep 30
+skinparam ranksep 80
+
+actor "Administrador" as ADM
+actor "Ingeniero de obra" as ING
+
+rectangle "Ctrl+" {
+  usecase "CU-03 Cargar el presupuesto\ndel cliente\n--\npuntos de extensión:\nvalidar en el momento (5a)" as CU03
+  usecase "CU-04 Validar y finalizar el\npresupuesto del cliente" as CU04
+  usecase "CU-05 Armar y versionar el\npresupuesto de costos" as CU05
+  usecase "CU-13 Calcular el cómputo\ndel modelo\n--\npuntos de extensión:\nimportar el XLSX (4a)" as CU13
+  usecase "CU-14 Vincular la estructura de trabajo\ncon el modelo y los documentos" as CU14
+}
+
+ADM -- CU14
+ING -- CU03
+ING -- CU04
+ING -- CU05
+ING -- CU13
+ING -- CU14
+
+' UML 2: el «extend» va del caso que agrega comportamiento al caso base
+CU04 ..> CU03 : <<extend>>
+CU03 ..> CU13 : <<extend>>
+
+@enduml

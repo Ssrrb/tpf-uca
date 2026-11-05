@@ -1,0 +1,45 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Casos de Uso · Obra y catálogos
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+left to right direction
+skinparam nodesep 30
+skinparam ranksep 80
+
+actor "Administrador" as ADM
+
+rectangle "Ctrl+" {
+  usecase "CU-01 Gestionar obra\n--\npuntos de extensión:\ncliente sin cargar (2a)" as CU01
+  usecase "CU-02 Mantener catálogos" as CU02
+  usecase "CU-06 Registrar contrato\nde subcontratista\n--\npuntos de extensión:\nsubcontratista sin cargar (1a)" as CU06
+}
+
+ADM -- CU01
+ADM -- CU02
+ADM -- CU06
+
+' UML 2: el «extend» va del caso que agrega comportamiento al caso base
+CU02 ..> CU01 : <<extend>>
+CU02 ..> CU06 : <<extend>>
+
+@enduml

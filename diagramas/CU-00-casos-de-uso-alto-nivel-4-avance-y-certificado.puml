@@ -1,0 +1,45 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Casos de Uso · Avance y certificado
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+left to right direction
+skinparam nodesep 30
+skinparam ranksep 80
+
+actor "Ingeniero de obra" as ING
+
+rectangle "Ctrl+" {
+  usecase "CU-07 Medir el avance\ndel certificado\n--\npuntos de extensión:\ncalcular en el momento (6a)" as CU07
+  usecase "CU-08 Calcular el certificado\n--\npuntos de extensión:\nliquidar subcontratistas (6a)" as CU08
+  usecase "CU-09 Liquidar subcontratista" as CU09
+}
+
+ING -- CU07
+ING -- CU08
+ING -- CU09
+
+' UML 2: el «extend» va del caso que agrega comportamiento al caso base
+CU08 ..> CU07 : <<extend>>
+CU09 ..> CU08 : <<extend>>
+
+@enduml

@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Casos de Uso · Documentos, modelos e incidencias
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+left to right direction
+skinparam nodesep 30
+skinparam ranksep 80
+
+actor "Administrador" as ADM
+actor "Ingeniero de obra" as ING
+
+rectangle "Ctrl+" {
+  usecase "CU-10 Gestionar la documentación\nde la obra" as CU10
+  usecase "CU-11 Importar la carpeta\nexistente de la obra" as CU11
+  usecase "CU-12 Publicar y revisar una\nversión de modelo" as CU12
+  usecase "CU-15 Abrir, asignar y cerrar\nuna incidencia" as CU15
+}
+
+ADM -- CU10
+ADM -- CU11
+ADM -- CU12
+ADM -- CU15
+ING -- CU10
+ING -- CU12
+ING -- CU15
+
+@enduml

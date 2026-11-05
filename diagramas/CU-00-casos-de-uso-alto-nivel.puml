@@ -1,7 +1,7 @@
 @startuml
 !theme plain
 skinparam style strictuml
-title Diagrama de Casos de Uso (Alto Nivel) · 1/2 · Actores y casos de uso
+title Diagrama de Casos de Uso (Alto Nivel)
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14
@@ -24,65 +24,57 @@ skinparam package {
 }
 left to right direction
 skinparam nodesep 25
-skinparam ranksep 110
+skinparam ranksep 90
 
-actor "Ingeniero de obra\n(1)" as ING
-actor "Administrador\n(1)" as ADM
-actor "Ingeniero de obra\n(2)" as ING2
-actor "Administrador\n(2)" as ADM2
-actor "Finanzas y tesorería" as FIN
+actor "Administrador" as ADM
+actor "Ingeniero de obra" as ING
 
 rectangle "Ctrl+" {
   package "ERP" {
     usecase "CU-01 Gestionar obra" as CU01
-    usecase "CU-05 Mantener catálogos\ny banco de insumos" as CU05
-    usecase "CU-09 Registrar contrato\nde subcontratista" as CU09
+    usecase "CU-02 Mantener catálogos" as CU02
+    usecase "CU-06 Registrar contrato\nde subcontratista" as CU06
+    usecase "CU-10 Gestionar la documentación\nde la obra" as CU10
+    usecase "CU-11 Importar la carpeta\nexistente de la obra" as CU11
   }
   package "ECMS" {
-    usecase "CU-02 Cargar el\npresupuesto del cliente" as CU02
-    usecase "CU-16 Validar y finalizar el\npresupuesto del cliente" as CU16
-    usecase "CU-03 Armar y versionar el\npresupuesto de costos" as CU03
-    usecase "CU-04 Medir el avance\ndel certificado" as CU04
-    usecase "CU-10 Controlar el costo\nde la obra con el ACU" as CU10
-    usecase "CU-11 Registrar adenda" as CU11
-    usecase "CU-12 Liquidar subcontratista" as CU12
-    usecase "CU-15 Cargar presupuesto\nde adendas del cliente" as CU15
+    usecase "CU-03 Cargar el presupuesto\ndel cliente" as CU03
+    usecase "CU-04 Validar y finalizar el\npresupuesto del cliente" as CU04
+    usecase "CU-05 Armar y versionar el\npresupuesto de costos" as CU05
+    usecase "CU-07 Medir el avance\ndel certificado" as CU07
+    usecase "CU-09 Liquidar subcontratista" as CU09
+    usecase "CU-12 Publicar y revisar una\nversión de modelo" as CU12
+    usecase "CU-13 Calcular el cómputo\ndel modelo" as CU13
+    usecase "CU-14 Vincular la estructura de trabajo\ncon el modelo y los documentos" as CU14
+    usecase "CU-15 Abrir, asignar y cerrar\nuna incidencia" as CU15
+    usecase "CU-16 Consultar el tablero y\nla actividad de la obra" as CU16
   }
   package "Motor de finanzas" {
-    usecase "CU-06 Calcular el certificado\ny el consumo de recursos" as CU06
-    usecase "CU-07 Registrar gasto de obra" as CU07
-    usecase "CU-08 Generar factura interna\ndel certificado" as CU08
-    usecase "CU-13 Consultar tablero\nfinanciero" as CU13
-    usecase "CU-14 Registrar cobros\ny pagos" as CU14
+    usecase "CU-08 Calcular el certificado" as CU08
   }
 }
 
-' Los actores (1) quedan a la izquierda y los (2) a la derecha,
-' junto a los CU que usan, para que ninguna asociación cruce el diagrama.
-' Ingeniero de obra (1): CU del ECMS que quedan a la izquierda
-ING -- CU02
-ING -- CU16
-ING -- CU15
-ING -- CU11
-ING -- CU04
-ING -- CU12
-ING -- CU03
-ING -- CU10
-
-' Administrador (1): ERP y control de costos
-ADM -- CU10
 ADM -- CU01
-ADM -- CU05
-ADM -- CU09
+ADM -- CU02
+ADM -- CU06
+ADM -- CU10
+ADM -- CU11
+ADM -- CU12
+ADM -- CU14
+ADM -- CU15
+ADM -- CU16
 
-' Ingeniero de obra (2), Administrador (2) y Finanzas y tesorería: a la derecha
-
-CU06 -- ING2
-CU07 -- ING2
-CU07 -- ADM2
-CU13 -- ADM2
-CU13 -- FIN
-CU08 -- FIN
-CU14 -- FIN
+ING -- CU03
+ING -- CU04
+ING -- CU05
+ING -- CU07
+ING -- CU08
+ING -- CU09
+ING -- CU10
+ING -- CU12
+ING -- CU13
+ING -- CU14
+ING -- CU15
+ING -- CU16
 
 @enduml

@@ -1,0 +1,39 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Casos de Uso · Seguimiento de la obra
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+left to right direction
+skinparam nodesep 30
+skinparam ranksep 80
+
+actor "Administrador" as ADM
+actor "Ingeniero de obra" as ING
+
+rectangle "Ctrl+" {
+  usecase "CU-16 Consultar el tablero y\nla actividad de la obra" as CU16
+}
+
+ADM -- CU16
+ING -- CU16
+
+@enduml

@@ -28,15 +28,13 @@ skinparam ranksep 70
 actor "<i>Usuario</i>\n{abstract}" as USR
 actor "Administrador" as ADM
 actor "Ingeniero de obra" as ING
-actor "Finanzas y tesorería" as FIN
 
 USR <|-- ADM
 USR <|-- ING
-USR <|-- FIN
 
 note bottom of ING
   Mide en terreno también lo que ejecuta
-  un subcontratista (CU-04, 3a).
+  un subcontratista (CU-07, 3a).
 end note
 
 @enduml
