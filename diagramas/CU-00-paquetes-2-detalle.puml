@@ -1,0 +1,164 @@
+@startuml
+!theme plain
+skinparam style strictuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam activity {
+  StartColor #17324D
+  EndColor #17324D
+  BarColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  DiamondBackgroundColor #EAF2F6
+  DiamondBorderColor #17324D
+}
+skinparam swimlane {
+  BorderColor #17324D
+  TitleBackgroundColor #EAF2F6
+}
+skinparam state {
+  StartColor #17324D
+  EndColor #17324D
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+title Diagrama de Subsistemas de Ctrl+ (detalle de clases)
+skinparam nodesep 50
+skinparam ranksep 70
+skinparam package {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+
+
+skinparam classBackgroundColor #FFF9DB
+skinparam classBorderColor #17324D
+
+hide circle
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #FFF9DB
+skinparam classBorderColor #17324D
+skinparam nodesep 60
+skinparam ranksep 70
+
+package "Motor de finanzas" {
+  class "Cálculo del certificado" as CalculoCertificado {
+    + calcularVersión(versión, actor): vacío
+    + confirmar(versión, actor): vacío
+  }
+  class "Certificado" as Certificado {
+    + generarVersiónSiguiente(actor): VersionCertificado
+  }
+  class "Versión del certificado" as VersionCertificado {
+    número: entero
+    estado: EstadoVersionCertificado
+    + tomarCantidades(): vacío
+    + cerrarCantidades(actor): vacío
+  }
+  class "Retención" as Retencion {
+    tipo: IVA | renta
+    porcentaje: decimal
+  }
+  class "Registro de liquidaciones" as RegistroLiquidacion {
+    + liquidar(versión, contrato, mediciones, alcance, condiciones): Liquidacion
+    + buscar(versión, contrato): Liquidacion [0..1]
+  }
+}
+
+package "ECMS" {
+  class "Medición" as Medicion {
+    cantidad: decimal
+    unidad: texto
+    estado: EstadoMedicion
+    fecha: fecha y hora
+    + confirmar(actor): vacío
+    + anular(motivo, actor): vacío
+    + registrarAjuste(cantidad, motivo, actor): MedicionAjuste
+  }
+  class "Liquidación" as Liquidacion {
+    número: entero
+    bruto: guaraníes
+    neto: guaraníes
+    /aPagar: guaraníes
+    + calcular(alcance, condiciones): vacío
+    + aplicarDeducciones(condiciones): vacío
+  }
+  class "Detalle de la liquidación" as DetalleLiquidacion {
+    cantidadCertificada: decimal
+    importe: guaraníes
+    + calcularImporte(): guaraníes
+  }
+  class "Presupuesto de costos" as PresupuestoCostos {
+    + obtenerVigente(): VersionPresupuestoCostos [0..1]
+    + guardarVersión(cambios, motivo, actor): VersionPresupuestoCostos
+  }
+  class "Incidencia" as Incidencia {
+    número: entero
+    estado: EstadoIncidencia
+    + marcarCambio(globalIds, versión)
+  }
+  class "BIM" as Modelo {
+    nombre: texto
+    + agregarVersion(archivo, origen, actor): VersionModelo
+    + fijarVersionVigente(versión)
+  }
+  class "Versión de modelo" as VersionModelo {
+    número: entero
+    estado: EstadoVersion
+    + publicar(actor)
+    + archivar(actor)
+  }
+}
+
+package "ERP" {
+  class "Presupuesto del cliente" as PresupuestoCliente {
+    estado: EstadoPresupuestoCliente
+    + cargarArchivo(archivo): vacío
+    + confirmarEstructura(): vacío
+  }
+  class "Usuario" as Usuario {
+    nombre: texto
+    correo: texto
+    + perteneceA(organización): lógico
+  }
+  class "Documentos" as Documento {
+    nombre: texto
+    estado: EstadoDocumento
+    + abrirParaEditar(actor): Archivo
+    + agregarVersión(archivo, actor, rutaOriginal): VersionDocumento
+  }
+  class "Versión del documento" as VersionDocumento {
+    número: entero
+    fecha: fecha y hora
+  }
+}
+
+Certificado "1" *-- "1..*" VersionCertificado
+CalculoCertificado "1" -- "*" Certificado : calcula >
+CalculoCertificado "1" -- "*" Retencion : aplica >
+Certificado "1" -- "*" RegistroLiquidacion : se liquida en >
+RegistroLiquidacion "1" -- "*" Liquidacion : registra >
+CalculoCertificado "*" -- "*" Medicion : toma >
+
+Liquidacion "1" *-- "*" DetalleLiquidacion
+Medicion "*" -- "1" PresupuestoCostos : mide >
+Incidencia "*" -- "1" Modelo : sobre >
+Modelo "1" *-- "1..*" VersionModelo
+
+PresupuestoCostos "*" -- "1" PresupuestoCliente : parte de >
+Modelo "*" -- "1" Documento : parte de >
+Usuario "1" -- "*" Documento : sube >
+Documento "1" *-- "1..*" VersionDocumento
+
+@enduml
