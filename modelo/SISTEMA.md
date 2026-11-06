@@ -33,6 +33,9 @@ recién al final, a partir de estos archivos, sin escribir nada a mano en él.
 - **Actores:** solo Administrador e Ingeniero de obra (y Usuario, abstracto).
   Un actor nunca es un subsistema ni una clase de diseño.
 - **Ids de requerimientos** tal como están en la lista: `RF-01`, `NF-01`, `PR-01`.
+- **Requerimiento agregado:** PR-09 «La autenticación de los usuarios se
+  delega en el servicio externo Clerk; Ctrl+ no gestiona contraseñas ni
+  sesiones». Por eso no hay CU de inicio de sesión.
 
 ## 3. Orden de trabajo
 
@@ -101,7 +104,7 @@ los anteriores, así que el glosario del bloque queda cerrado al terminarlo.
 
 | CU | Descripción | Diagramas | Estado |
 |---|---|---|---|
-| CU-01 | borrador v1 | — | en revisión |
+| CU-01 | borrador v2 | — | en revisión |
 | CU-02 a CU-16 | — | — | pendiente |
 
 Los `.puml` que hoy están en `diagramas/` son de la v11 (numeración vieja). Se

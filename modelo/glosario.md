@@ -14,6 +14,11 @@ sinónimos prohibidos.
 
 Cliente y Proveedor **no** son actores: son datos del catálogo.
 
+**Clerk** tampoco es actor ni subsistema: es el servicio externo que autentica a
+los usuarios (PR-09). Ctrl+ no tiene casos de uso de inicio de sesión ni de
+registro, porque es mono-empresa (PR-02) y el alta de usuarios la resuelve
+Clerk. En los CU aparece solo como precondición: «el usuario inició sesión».
+
 ## Subsistemas
 
 Módulos de la misma aplicación web. No son actores. En los diagramas de clases
@@ -36,6 +41,7 @@ Se completa a medida que se cierran los CU. «Desde» indica el CU que la introd
 | Anticipo | ERP | Adelanto opcional de una obra, por porcentaje o por importe, que cada versión del certificado amortiza. | CU-01 | — |
 | Asignación | ERP | Vínculo de un Ingeniero de obra con una obra, con actor y fecha. | CU-01 | — |
 | Cliente | ERP | Comitente de una obra, en el catálogo, identificado por RUC. | CU-01 (se mantiene en CU-02) | Activo, Inactivo |
+| Carpeta de la obra | ERP | Carpeta compartida de una obra; nace con las carpetas principales de la plantilla de la empresa. | CU-01 (se trabaja en CU-10 y CU-11) | — |
 
 ## Términos generales
 
@@ -45,3 +51,5 @@ Se completa a medida que se cierran los CU. «Desde» indica el CU que la introd
 | Avanzar el estado | Pasar la obra a su estado siguiente, sin volver atrás. | cambiar de fase |
 | Actor y fecha | Quién hizo una operación y cuándo; se guarda en toda operación (NF-03). | auditoría (en el texto de un CU) |
 | Montos | Guaraníes enteros (PYG). | — |
+| Parámetros del certificado | Tasa de IVA, porcentaje de fondo de reparo y anticipo de una obra; los fija CU-01 y los usa CU-08. | impuestos de la obra |
+| Desde cero / proyecto ya aprobado | Las dos formas de iniciar una obra en CU-01. | — |
