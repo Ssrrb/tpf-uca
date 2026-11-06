@@ -14,10 +14,10 @@ sinónimos prohibidos.
 
 Cliente y Proveedor **no** son actores: son datos del catálogo.
 
-**Clerk** tampoco es actor ni subsistema: es el servicio externo que autentica a
-los usuarios (PR-09). Ctrl+ no tiene casos de uso de inicio de sesión ni de
-registro, porque es mono-empresa (PR-02) y el alta de usuarios la resuelve
-Clerk. En los CU aparece solo como precondición: «el usuario inició sesión».
+**Alcance:** Ctrl+ está hecho para una sola empresa (organización) (PR-02) y
+delega la autenticación de los usuarios en un servicio externo (PR-09). Por eso
+no hay casos de uso de inicio de sesión ni de registro: en los CU aparece solo
+como precondición, «el usuario inició sesión».
 
 ## Subsistemas
 

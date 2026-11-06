@@ -33,9 +33,9 @@ recién al final, a partir de estos archivos, sin escribir nada a mano en él.
 - **Actores:** solo Administrador e Ingeniero de obra (y Usuario, abstracto).
   Un actor nunca es un subsistema ni una clase de diseño.
 - **Ids de requerimientos** tal como están en la lista: `RF-01`, `NF-01`, `PR-01`.
-- **Requerimiento agregado:** PR-09 «La autenticación de los usuarios se
-  delega en el servicio externo Clerk; Ctrl+ no gestiona contraseñas ni
-  sesiones». Por eso no hay CU de inicio de sesión.
+- **Alcance:** el sistema está hecho para una sola empresa (organización)
+  (PR-02). Requerimiento agregado PR-09: «La autenticación de los usuarios se
+  delega en un servicio externo». Por eso no hay CU de inicio de sesión.
 
 ## 3. Orden de trabajo
 

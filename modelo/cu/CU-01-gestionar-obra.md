@@ -91,4 +91,4 @@ calcula cada versión del certificado con los parámetros de CU-01.
 ## Glosario que fija este CU
 
 Organización, Obra, Anticipo, Asignación, Cliente, Carpeta de la obra; estados
-de la Obra; Clerk. Ver `modelo/glosario.md`.
+de la Obra. Ver `modelo/glosario.md`.
