@@ -1,0 +1,114 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Paquetes · Motor de finanzas y Seguimiento
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 55
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+package "Seguimiento" as SEGF {
+  package "Tablero y actividad" as SEG {
+    class "Tablero" as Tab <<control>> {
+      + avanceFísico(obra): porcentaje
+      + plazoTranscurrido(obra): porcentaje
+    }
+  }
+}
+
+package "Motor de finanzas" as MF {
+  package "Certificación" as CER {
+    interface "ICertificados" as ICer {
+      + cantidadCertificada(ítem): decimal
+      + versión(número): VersiónDelCertificado
+    }
+    class "CálculoDelCertificado" as CCer <<control>>
+    class "Certificado" as Cer
+    class "VersiónDelCertificado" as VCer {
+      número: entero
+      bruto: guaraníes
+      neto: guaraníes
+    }
+    class "LíneaDelCertificado" as LCer {
+      cantidad: decimal
+      importe: guaraníes
+    }
+    class "LíneaDeAjuste" as LAj
+  }
+
+  package "Liquidaciones" as LIQ {
+    class "CálculoDeLiquidación" as CLiq <<control>>
+    class "Liquidación" as Liq {
+      bruto: guaraníes
+      neto: guaraníes
+    }
+    class "DetalleDeLiquidación" as DLiq
+  }
+}
+
+package "ERP" as ERP {
+  interface "IObras" as IObr
+}
+
+package "ECMS" as ECMS {
+  interface "IMediciones" as IMed
+  interface "IPresupuestoDelCliente" as IPre
+  interface "IContratos" as ICon
+  interface "IIncidencias" as IInc
+  interface "IModelos" as IMod
+}
+
+CCer ..|> ICer
+LCer <|-- LAj
+
+Cer "1" *-- "1..*" VCer
+VCer "1" *-- "1..*" LCer
+Liq "1" *-- "1..*" DLiq
+DLiq "0..*" --> "1" LCer
+
+CCer ..> IMed
+CCer ..> IPre
+CCer ..> IObr
+CLiq ..> ICer
+CLiq ..> ICon
+Tab ..> ICer
+Tab ..> IMed
+Tab ..> IInc
+Tab ..> IMod
+Tab ..> IObr
+
+note right of LAj
+  Una versión guardada no se modifica:
+  los errores se corrigen con líneas de
+  ajuste en la versión siguiente (RF-09).
+end note
+
+Tab -[hidden]down- CLiq
+CLiq -[hidden]down- CCer
+VCer -[hidden]down- IMed
+
+legend bottom
+  UML 2: línea discontinua con triángulo hueco = realización (la clase implementa la interfaz);
+  línea continua con triángulo hueco = generalización (herencia); rombo negro = composición;
+  flecha discontinua abierta = dependencia «use», sin rótulo (solo hacia interfaces de otro subsistema).
+  Seguimiento solo lee; nadie depende de él. El Motor de finanzas usa al ECMS en un solo sentido.
+endlegend
+@enduml

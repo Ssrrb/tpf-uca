@@ -1,0 +1,146 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Paquetes · ECMS: presupuesto, estructura, subcontratos y avance
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 55
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+package "ECMS" as ECMS {
+  package "Presupuesto del cliente" as PRE {
+    interface "IPresupuestoDelCliente" as IPre {
+      + precioUnitario(ítem): guaraníes
+    }
+    class "GestorDePresupuestos" as GPre <<control>>
+    class "PresupuestoDelCliente" as Pre {
+      estado: EstadoPresupuesto
+    }
+    class "ÍtemDelCliente" as IC
+  }
+
+  package "Estructura de trabajo" as EST {
+    interface "IEstructuraDeTrabajo" as IEst {
+      + vigente(obra): VersiónDeEstructura
+      + ítem(código): ÍtemDeTrabajo
+    }
+    class "GestorDeEstructura" as GEst <<control>>
+    class "VersiónDeEstructura" as VEst {
+      estado: Vigente | Histórica
+    }
+    class "ÍtemDeTrabajo" as IT {
+      códigoEstable: texto
+      cantidad: decimal
+    }
+    abstract class "Vínculo" as Vin {
+      cantidadConfirmada: decimal
+    }
+    class "VínculoConElemento" as VEl
+    class "VínculoConDocumento" as VDo
+  }
+
+  package "Subcontratos" as SUB {
+    interface "IContratos" as ICon {
+      + contratoDe(ítem): Contrato [0..1]
+    }
+    class "GestorDeContratos" as GCon <<control>>
+    class "ContratoDeSubcontratista" as Con
+    class "LíneaDelContrato" as LCon {
+      cantidad: decimal
+      precio: guaraníes
+    }
+  }
+
+  package "Avance" as AVA {
+    interface "IMediciones" as IMed {
+      + noCertificadas(obra): Medición[*]
+      + marcarIncluidas(mediciones)
+    }
+    class "GestorDeAvance" as GAva <<control>>
+    class "Medición" as Med {
+      cantidad: decimal
+      estado: EstadoMedición
+    }
+    class "MediciónDeAjuste" as MAj {
+      motivo: texto
+    }
+  }
+}
+
+package "ERP" as ERP {
+  interface "IObras" as IObr
+  interface "ICatálogos" as ICat
+}
+
+package "ECMS: contenido" as CONT {
+  interface "IDocumentos" as IDoc
+  interface "IModelos" as IMod
+  interface "IObservadorDeModelo" as IObs
+}
+
+package "Servicios técnicos" as ST {
+  interface "ILectorXLSX" as IXls
+}
+
+GPre ..|> IPre
+GEst ..|> IEst
+GEst ..|> IObs
+GCon ..|> ICon
+GAva ..|> IMed
+
+Vin <|-- VEl
+Vin <|-- VDo
+Med <|-- MAj
+
+Pre "1" *-- "1..*" IC
+VEst "1" *-- "1..*" IT
+IT "0..*" --> "0..1" IC
+IT "1" *-- "0..*" Vin
+Con "1" *-- "1..*" LCon
+LCon "0..*" --> "1" IT
+Med "0..*" --> "1" IT
+Med "0..*" --> "0..1" LCon
+MAj "0..*" --> "1" Med : corrige
+
+GPre ..> IObr
+GPre ..> ICat
+GPre ..> IXls
+GEst ..> IPre
+GEst ..> IMod
+GEst ..> IDoc
+GCon ..> IEst
+GCon ..> ICat
+GAva ..> IEst
+GAva ..> ICon
+
+IMed -[hidden]down- GCon
+ICon -[hidden]down- GEst
+IEst -[hidden]down- GPre
+IPre -[hidden]down- IObr
+IPre -[hidden]down- IXls
+
+legend bottom
+  UML 2: línea discontinua con triángulo hueco = realización (la clase implementa la interfaz);
+  línea continua con triángulo hueco = generalización (herencia); rombo negro = composición;
+  flecha discontinua abierta = dependencia «use», sin rótulo (solo hacia interfaces de otro subsistema).
+  El ítem de trabajo conserva su código estable entre versiones (RF-05); la medición se atribuye a una línea de contrato (RF-08).
+endlegend
+@enduml
