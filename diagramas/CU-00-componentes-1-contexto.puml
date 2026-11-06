@@ -1,0 +1,66 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Contexto de Ctrl+ · sistemas externos e interfaces
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam component {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam interface {
+  BackgroundColor #EAF2F6
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+actor "Administrador" as ADM
+actor "Ingeniero de obra" as ING
+
+interface "Interfaz web" as IWEB
+component "Ctrl+\n(aplicación web, una base de datos)" <<sistema>> as CTRL
+interface "Archivo IFC / XLSX" as IARCH
+interface "Autenticación\n(identidad del usuario)" as IAUT
+interface "Publicación de modelos\ny visor 3D" as ISPK
+component "Servicio de autenticación" <<sistema externo>> as IDP
+component "Speckle" <<sistema externo>> as SPK
+interface "Conector de Speckle" as ICON
+component "Programa de modelado\n(Revit, ArchiCAD, Rhino, AutoCAD)" <<sistema externo>> as CAD
+
+ADM -- IWEB
+ING -- IWEB
+IWEB -- CTRL
+CTRL -right- IARCH
+CTRL -down-( IAUT
+IAUT -down- IDP
+CTRL -down-( ISPK
+ISPK -down- SPK
+SPK -right- ICON
+ICON )-right- CAD
+
+note bottom of IAUT
+  PR-09: Ctrl+ no guarda contraseñas ni tiene CU de login.
+  Recibe del servicio quién es la persona; el rol
+  (Administrador o Ingeniero de obra) y las asignaciones
+  a obras los guarda Ctrl+ (NF-01). No se nombra el proveedor.
+end note
+
+note bottom of IARCH
+  El Ingeniero de obra sube el IFC o el XLSX por la web
+  (CU-03, CU-12); exportar a XLSX crea un archivo nuevo
+  (PR-04). Un archivo es un formato, no un actor.
+end note
+
+legend bottom
+  Componente con interfaz provista (círculo) e interfaz requerida (semicírculo), UML 2.
+  Fuera del MVP, y por eso fuera de este diagrama: Odoo, Marangatu y el correo.
+endlegend
+@enduml

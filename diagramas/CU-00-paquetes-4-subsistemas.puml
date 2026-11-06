@@ -1,0 +1,134 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Paquetes · Descomposición en subsistemas de Ctrl+
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam ArrowColor #17324D
+skinparam nodesep 30
+skinparam ranksep 60
+skinparam package {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+package "Seguimiento" as SEGP {
+  package "Tablero y actividad\nCU-16" as SEG {
+  }
+}
+
+package "Motor de finanzas" as MF {
+  package "Certificación\nCU-08" as CER {
+  }
+  package "Liquidaciones\nCU-09" as LIQ {
+  }
+}
+
+package "ECMS (ingeniería y contenido)" as ECMS {
+  package "Presupuesto del cliente\nCU-03, CU-04" as PRE {
+  }
+  package "Estructura de trabajo\nCU-05, CU-14" as EST {
+  }
+  package "Subcontratos\nCU-06" as SUB {
+  }
+  package "Avance\nCU-07" as AVA {
+  }
+  package "Incidencias\nCU-15" as INC {
+  }
+  package "Modelos BIM\nCU-12, CU-13" as MOD {
+  }
+  package "Documentación\nCU-10, CU-11" as DOC {
+  }
+}
+
+package "ERP (organización y recursos)" as ERP {
+  package "Obras\nCU-01" as OBR {
+  }
+  package "Catálogos\nCU-02" as CAT {
+  }
+  package "Organización y acceso\nNF-01" as ACC {
+  }
+}
+
+package "Servicios técnicos" as ST {
+  package "Adaptador de\nautenticación" as IDN {
+  }
+  package "Almacén de archivos" as ALM {
+  }
+  package "Procesador IFC" as PIFC {
+  }
+  package "Pasarela Speckle" as SPK {
+  }
+  package "Lectura y\nescritura XLSX" as XLS {
+  }
+}
+
+' Seguimiento: solo lee
+SEG ..> CER
+SEG ..> AVA
+SEG ..> INC
+SEG ..> MOD
+SEG ..> OBR
+
+' Motor de finanzas
+LIQ ..> CER
+LIQ ..> SUB
+CER ..> AVA
+CER ..> PRE
+CER ..> OBR
+
+' ECMS
+AVA ..> SUB
+AVA ..> EST
+AVA ..> ALM
+SUB ..> EST
+SUB ..> CAT
+INC ..> EST
+INC ..> MOD
+INC ..> DOC
+EST ..> PRE
+EST ..> MOD
+EST ..> DOC
+PRE ..> OBR
+PRE ..> CAT
+PRE ..> XLS
+PRE ..> ALM
+MOD ..> DOC
+MOD ..> PIFC
+MOD ..> SPK
+MOD ..> XLS
+DOC ..> OBR
+DOC ..> ALM
+
+' ERP
+OBR ..> CAT
+OBR ..> ACC
+CAT ..> ACC
+ACC ..> IDN
+
+note right of OBR
+  Al crear la obra (CU-01) pide su carpeta por la
+  interfaz «Preparar carpeta de obra», que define
+  Obras y realiza Documentación. Así Obras no
+  depende de Documentación (inversión de dependencia).
+end note
+
+note left of MOD
+  Avisa «versión procesada» a quien se suscribe
+  (Incidencias y Estructura de trabajo marcan los
+  elementos que cambiaron). Modelos no depende
+  de ellos: patrón observador.
+end note
+
+legend bottom
+  Flecha discontinua con punta abierta = dependencia «use» (UML 2): el origen usa al destino.
+  Todo subsistema de negocio usa Organización y acceso para comprobar organización,
+  asignación y rol (NF-01); esas flechas se omiten salvo la de Obras y Catálogos.
+  Sin dependencias circulares (PK2). Bajo cada nombre, los CU que resuelve.
+endlegend
+@enduml
