@@ -1,0 +1,126 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Paquetes · ERP (organización y recursos)
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 55
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+package "ERP" as ERP {
+  package "Organización y acceso" as ACC {
+    interface "IControlDeAcceso" as IAcc {
+      + puede(usuario, obra, operación): lógico
+    }
+    class "ControlDeAcceso" as CAcc <<control>>
+    class "Organización" as Org
+    class "Usuario" as Usr {
+      nombre: texto
+      correo: texto
+    }
+    class "Membresía" as Mem {
+      rol: Rol
+    }
+    enum "Rol" as Rol {
+      Administrador
+      Ingeniero de obra
+    }
+  }
+
+  package "Catálogos" as CAT {
+    interface "ICatálogos" as ICat {
+      + buscarPorRuc(ruc): Contraparte
+      + unidades(): Unidad[*]
+    }
+    class "GestorDeCatálogos" as GCat <<control>>
+    abstract class "Contraparte" as Cp {
+      ruc: texto
+      razónSocial: texto
+      estado: Activo | Inactivo
+    }
+    class "Cliente" as Cli
+    class "Empresa subcontratista" as Emp
+    class "Unidad" as Uni {
+      código: texto
+    }
+  }
+
+  package "Obras" as OBR {
+    interface "IObras" as IObr {
+      + obtener(código): Obra
+      + parámetrosDelCertificado(obra): Parámetros
+      + permite(obra, operación): lógico
+    }
+    interface "IPrepararCarpetaDeObra" as IPrep {
+      + prepararCarpeta(obra)
+    }
+    class "GestorDeObras" as GObr <<control>>
+    class "Obra" as Obra {
+      código: texto
+      estado: EstadoObra
+      tasaIVA: decimal
+      fondoDeReparo: decimal
+    }
+    class "Anticipo" as Ant
+    class "Asignación" as Asig
+  }
+}
+
+package "Servicios técnicos" as ST {
+  interface "IAutenticación" as IAut {
+    + identidad(token): Identidad
+  }
+}
+
+CAcc ..|> IAcc
+GCat ..|> ICat
+GObr ..|> IObr
+
+Cp <|-- Cli
+Cp <|-- Emp
+
+Org "1" *-- "0..*" Mem
+Usr "1" -- "0..*" Mem
+Mem "0..*" --> "1" Rol
+Obra "1" *-- "0..1" Ant
+Obra "1" *-- "0..*" Asig
+Asig "0..*" --> "1" Usr
+Obra "0..*" --> "1" Cli
+
+CAcc ..> IAut
+GCat ..> IAcc
+GObr ..> IAcc
+GObr ..> ICat
+GObr ..> IPrep
+
+
+IObr -[hidden]down- GCat
+ICat -[hidden]down- CAcc
+IAcc -[hidden]down- IAut
+
+legend bottom
+  UML 2: línea discontinua con triángulo hueco = realización (la clase implementa la interfaz);
+  línea continua con triángulo hueco = generalización (herencia); rombo negro = composición;
+  flecha discontinua abierta = dependencia «use», sin rótulo (solo hacia interfaces de otro subsistema).
+  IPrepararCarpetaDeObra la define Obras y la realiza Documentación (ECMS): inversión de dependencia.
+  Rol y estado son valores, no actores: el actor es la persona externa que juega ese papel.
+endlegend
+@enduml

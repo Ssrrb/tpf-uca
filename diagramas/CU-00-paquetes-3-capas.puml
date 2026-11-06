@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Paquetes · Capas y subsistemas de Ctrl+
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #17324D
+skinparam package {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+package "Presentación" as PRES {
+}
+package "Seguimiento" as SEG {
+}
+package "Motor de finanzas" as MF {
+}
+package "ECMS (ingeniería y contenido)" as ECMS {
+}
+package "ERP (organización y recursos)" as ERP {
+}
+package "Servicios técnicos" as ST {
+}
+
+PRES ..> SEG : <<use>>
+PRES ..> MF : <<use>>
+PRES ..> ECMS : <<use>>
+PRES ..> ERP : <<use>>
+SEG ..> MF : <<use>>
+SEG ..> ECMS : <<use>>
+SEG ..> ERP : <<use>>
+MF ..> ECMS : <<use>>
+MF ..> ERP : <<use>>
+ECMS ..> ERP : <<use>>
+ECMS ..> ST : <<use>>
+ERP ..> ST : <<use>>
+MF ..> ST : <<use>>
+
+note right of SEG
+  Solo lee: tablero y actividad (CU-16).
+  Nadie depende de él, por eso puede leer
+  de todos sin crear ciclos.
+end note
+
+note right of ST
+  Infraestructura sin reglas del negocio:
+  autenticación, archivos, IFC, servidor BIM,
+  XLSX y persistencia.
+end note
+
+legend bottom
+  Flecha discontinua con punta abierta = dependencia (UML 2): el origen usa al destino.
+  Arquitectura en capas abierta (Bruegge y Dutoit, 6.3): cada capa usa solo a las de abajo.
+  Sin dependencias circulares.
+endlegend
+@enduml

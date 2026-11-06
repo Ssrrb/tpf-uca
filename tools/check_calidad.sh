@@ -11,7 +11,7 @@ fallas=0
 falla() { echo "::error file=$1::$2"; fallas=$((fallas + 1)); }
 
 # Tipos de diagrama admitidos. CU-00 usa los dos tipos generales del sistema.
-TIPOS='clases|secuencia|actividades|estados|paquetes|modelo-estructural|casos-de-uso-alto-nivel|generalizacion-actores'
+TIPOS='clases|secuencia|actividades|estados|paquetes|modelo-estructural|casos-de-uso-alto-nivel|generalizacion-actores|componentes'
 DETALLE='[a-z0-9]+(-[a-z0-9]+)*'
 NOMBRE_RE="^CU-[0-9]{2}-(${TIPOS})(-[0-9]+-${DETALLE})?\.puml$"
 

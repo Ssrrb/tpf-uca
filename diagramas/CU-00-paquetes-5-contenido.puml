@@ -1,0 +1,126 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Paquetes · ECMS: documentación, modelos e incidencias
+hide circle
+hide empty members
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 55
+skinparam ArrowColor #167C80
+skinparam class {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+  HeaderBackgroundColor #EAF2F6
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+
+package "ECMS" as ECMS {
+  package "Documentación" as DOC {
+    interface "IDocumentos" as IDoc {
+      + obtener(id): Documento
+      + agregarVersión(documento, archivo, actor)
+    }
+    class "GestorDeDocumentos" as GDoc <<control>>
+    class "Carpeta" as Car
+    class "Documento" as Doc {
+      nombre: texto
+    }
+    class "VersiónDeDocumento" as VDoc {
+      número: entero
+      huella: texto
+    }
+  }
+
+  package "Modelos BIM" as MOD {
+    interface "IModelos" as IMod {
+      + elementos(versión): Elemento[*]
+      + cambios(versión): Cambio[*]
+    }
+    interface "IObservadorDeModelo" as IObs {
+      + versiónProcesada(versión)
+    }
+    class "GestorDeModelos" as GMod <<control>>
+    class "VersiónDeModelo" as VMod {
+      estado: EstadoVersión
+    }
+    class "ElementoDelModelo" as Ele {
+      globalId: texto
+    }
+  }
+
+  package "Incidencias" as INC {
+    interface "IIncidencias" as IInc {
+      + abiertas(obra): Incidencia[*]
+    }
+    class "GestorDeIncidencias" as GInc <<control>>
+    class "Incidencia" as Inc {
+      estado: EstadoIncidencia
+    }
+  }
+}
+
+package "ERP" as ERP {
+  interface "IObras" as IObr
+  interface "IPrepararCarpetaDeObra" as IPrep
+}
+
+package "Servicios técnicos" as ST {
+  interface "IAlmacénDeArchivos" as IAlm {
+    + guardar(contenido): Huella
+  }
+  interface "IProcesadorIFC" as IIfc {
+    + indexar(archivo): Elemento[*]
+  }
+  interface "IServidorBIM" as ISrv {
+    + publicar(versión)
+  }
+}
+
+GDoc ..|> IDoc
+GDoc ..|> IPrep
+GMod ..|> IMod
+GInc ..|> IObs
+GInc ..|> IInc
+
+VDoc <|-- VMod
+
+Car "1" *-- "0..*" Car
+Car "1" *-- "0..*" Doc
+Doc "1" *-- "1..*" VDoc
+VMod "1" *-- "0..*" Ele
+Inc "0..*" --> "0..1" Ele
+
+GDoc ..> IObr
+GDoc ..> IAlm
+GMod ..> IDoc
+GMod ..> IIfc
+GMod ..> ISrv
+GMod ..> IObs
+GInc ..> IMod
+GInc ..> IDoc
+
+
+IInc -[hidden]down- GMod
+IMod -[hidden]down- GDoc
+IDoc -[hidden]down- IObr
+IDoc -[hidden]down- IAlm
+
+legend bottom
+  UML 2: línea discontinua con triángulo hueco = realización (la clase implementa la interfaz);
+  línea continua con triángulo hueco = generalización (herencia); rombo negro = composición;
+  flecha discontinua abierta = dependencia «use», sin rótulo (solo hacia interfaces de otro subsistema).
+  VersiónDeModelo hereda de VersiónDeDocumento: un IFC es una versión más del documento (CU-12).
+  Observador: Modelos avisa por IObservadorDeModelo sin conocer a quien escucha (Incidencias, Estructura de trabajo).
+endlegend
+@enduml

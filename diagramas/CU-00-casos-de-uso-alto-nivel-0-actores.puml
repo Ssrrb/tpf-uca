@@ -1,0 +1,92 @@
+@startuml
+!theme plain
+skinparam style strictuml
+title Actores de Ctrl+ · personas y sistemas externos
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #167C80
+skinparam actor {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam usecase {
+  BackgroundColor #F5F8FA
+  BorderColor #17324D
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #17324D
+}
+left to right direction
+
+actor "<i>Usuario</i>\n{abstract}" as USR
+actor "Administrador" as ADM
+actor "Ingeniero de obra" as ING
+actor "Servidor BIM" as SPK <<sistema>>
+
+USR <|-- ADM
+USR <|-- ING
+
+rectangle "Ctrl+" {
+  usecase "CU-01 Gestionar obra" as CU01
+  usecase "CU-02 Mantener catálogos" as CU02
+  usecase "CU-06 Registrar contrato\nde subcontratista" as CU06
+  usecase "CU-11 Importar la carpeta\nexistente de la obra" as CU11
+
+  usecase "CU-10 Gestionar la\ndocumentación de la obra" as CU10
+  usecase "CU-12 Publicar y revisar\nuna versión de modelo" as CU12
+  usecase "CU-14 Vincular la estructura de\ntrabajo con el modelo y los documentos" as CU14
+  usecase "CU-15 Abrir, asignar y\ncerrar una incidencia" as CU15
+  usecase "CU-16 Consultar el tablero\ny la actividad de la obra" as CU16
+
+  usecase "CU-03 Cargar el\npresupuesto del cliente" as CU03
+  usecase "CU-04 Validar y finalizar el\npresupuesto del cliente" as CU04
+  usecase "CU-05 Armar y versionar el\npresupuesto de costos" as CU05
+  usecase "CU-07 Medir el avance\ndel certificado" as CU07
+  usecase "CU-08 Calcular el certificado" as CU08
+  usecase "CU-09 Liquidar subcontratista" as CU09
+  usecase "CU-13 Calcular el\ncómputo del modelo" as CU13
+}
+
+ADM -- CU01
+ADM -- CU02
+ADM -- CU06
+ADM -- CU11
+
+USR -- CU10
+USR -- CU12
+USR -- CU14
+USR -- CU15
+USR -- CU16
+
+ING -- CU03
+ING -- CU04
+ING -- CU05
+ING -- CU07
+ING -- CU08
+ING -- CU09
+ING -- CU13
+
+CU12 -- SPK
+
+note right of SPK
+  Actor secundario de CU-12: recibe la
+  publicación de los conectores del servidor BIM
+  (Revit, Rhino, AutoCAD) y sirve el visor 3D.
+  Los programas de modelado no son actores:
+  no hablan con Ctrl+, hablan con el servidor BIM.
+end note
+
+legend bottom
+  Actor = papel que juega una entidad externa frente a Ctrl+ (persona o sistema), no un rol de permisos.
+  Usuario es abstracto; un CU asociado a Usuario lo inician el Administrador y el Ingeniero de obra.
+  El servicio de autenticación externo (PR-09) no es actor de ningún CU: es una interfaz requerida
+  de Ctrl+ (ver el diagrama de contexto) y aparece solo como precondición «el usuario inició sesión».
+  Cliente, Subcontratista y Proveedor no son actores: son datos del catálogo y no entran a Ctrl+.
+endlegend
+@enduml
