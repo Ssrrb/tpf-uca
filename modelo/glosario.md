@@ -11,6 +11,7 @@ sinónimos prohibidos.
 | Usuario | Actor abstracto: persona de la organización que entra a Ctrl+. | — |
 | Administrador | Usuario que administra la empresa en Ctrl+: crea obras, asigna ingenieros, mantiene catálogos. Rol de la organización. | administrador técnico |
 | Ingeniero de obra | Usuario que trabaja en una obra a la que está asignado. Rol en la obra. | responsable, miembro, integrante |
+| Servidor BIM | Sistema externo, actor secundario de CU-12: recibe las publicaciones de los conectores de los programas de modelado y sirve el visor 3D. | Speckle (no se nombra el producto) |
 
 Cliente y Proveedor **no** son actores: son datos del catálogo.
 
@@ -52,5 +53,4 @@ Se completa a medida que se cierran los CU. «Desde» indica el CU que la introd
 | Actor y fecha | Quién hizo una operación y cuándo; se guarda en toda operación (NF-03). | auditoría (en el texto de un CU) |
 | Montos | Guaraníes enteros (PYG). | — |
 | Parámetros del certificado | Tasa de IVA, porcentaje de fondo de reparo y anticipo de una obra; los fija CU-01 y los usa CU-08. | impuestos de la obra |
-| Servidor BIM | Servicio externo donde se publican y de donde se leen los modelos (CU-12). Se escribe siempre así. | Speckle |
 | Desde cero / proyecto ya aprobado | Las dos formas de iniciar una obra en CU-01. | — |
