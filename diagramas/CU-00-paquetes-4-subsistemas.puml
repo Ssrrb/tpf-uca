@@ -62,7 +62,7 @@ package "Servicios técnicos" as ST {
   }
   package "Procesador IFC" as PIFC {
   }
-  package "Pasarela Speckle" as SPK {
+  package "Pasarela al\nservidor BIM" as SPK {
   }
   package "Lectura y\nescritura XLSX" as XLS {
   }

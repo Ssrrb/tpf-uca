@@ -27,7 +27,7 @@ left to right direction
 actor "<i>Usuario</i>\n{abstract}" as USR
 actor "Administrador" as ADM
 actor "Ingeniero de obra" as ING
-actor "Speckle" as SPK <<sistema>>
+actor "Servidor BIM" as SPK <<sistema>>
 
 USR <|-- ADM
 USR <|-- ING
@@ -76,10 +76,10 @@ CU12 -- SPK
 
 note right of SPK
   Actor secundario de CU-12: recibe la
-  publicación de los conectores de Speckle
+  publicación de los conectores del servidor BIM
   (Revit, Rhino, AutoCAD) y sirve el visor 3D.
   Los programas de modelado no son actores:
-  no hablan con Ctrl+, hablan con Speckle.
+  no hablan con Ctrl+, hablan con el servidor BIM.
 end note
 
 legend bottom

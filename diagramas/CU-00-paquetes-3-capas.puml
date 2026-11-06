@@ -50,7 +50,7 @@ end note
 
 note right of ST
   Infraestructura sin reglas del negocio:
-  autenticación, archivos, IFC, Speckle,
+  autenticación, archivos, IFC, servidor BIM,
   XLSX y persistencia.
 end note
 

@@ -31,8 +31,8 @@ interface "Archivo IFC / XLSX" as IARCH
 interface "Autenticación\n(identidad del usuario)" as IAUT
 interface "Publicación de modelos\ny visor 3D" as ISPK
 component "Servicio de autenticación" <<sistema externo>> as IDP
-component "Speckle" <<sistema externo>> as SPK
-interface "Conector de Speckle" as ICON
+component "Servidor BIM" <<sistema externo>> as SPK
+interface "Conector del servidor BIM" as ICON
 component "Programa de modelado\n(Revit, ArchiCAD, Rhino, AutoCAD)" <<sistema externo>> as CAD
 
 ADM -- IWEB
